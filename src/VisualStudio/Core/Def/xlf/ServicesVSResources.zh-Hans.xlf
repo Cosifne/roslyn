@@ -30,6 +30,9 @@
       <trans-unit id="Avoid_unused_value_assignments">
         <source>Avoid unused value assignments</source>
         <target state="new">Avoid unused value assignments</target>
+      <trans-unit id="Back">
+        <source>Back</source>
+        <target state="new">Back</target>
         <note />
       </trans-unit>
       <trans-unit id="Colorize_regular_expressions">
@@ -45,6 +48,14 @@
       <trans-unit id="Generate_dot_editorconfig_file_from_settings">
         <source>Generate .editorconfig file from settings</source>
         <target state="new">Generate .editorconfig file from settings</target>
+      <trans-unit id="Finish">
+        <source>Finish</source>
+        <target state="new">Finish</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Found_Problems">
+        <source>Found Problems:</source>
+        <target state="new">Found Problems:</target>
         <note />
       </trans-unit>
       <trans-unit id="Highlight_related_components_under_cursor">
@@ -100,6 +111,14 @@
       <trans-unit id="Prefer_range_operator">
         <source>Prefer range operator</source>
         <target state="new">Prefer range operator</target>
+      <trans-unit id="Pull_Up_Description">
+        <source>Select destination and members to pull up.</source>
+        <target state="new">Select destination and members to pull up.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Pull_Up_Members">
+        <source>Pull Up Members</source>
+        <target state="new">Pull Up Members</target>
         <note />
       </trans-unit>
       <trans-unit id="Regular_Expressions">
@@ -130,6 +149,29 @@
       <trans-unit id="Unused_value_is_explicitly_assigned_to_discard">
         <source>Unused value is explicitly assigned to discard</source>
         <target state="new">Unused value is explicitly assigned to discard</target>
+      <trans-unit id="Review_Problems">
+        <source>Review problems below. Click Finish to proceed pull up.</source>
+        <target state="new">Review problems below. Click Finish to proceed pull up.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Select_Dependents">
+        <source>Select dependents</source>
+        <target state="new">Select dependents</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Select_Destination">
+        <source>Select destination type:</source>
+        <target state="new">Select destination type:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Select_Members">
+        <source>Select members:</source>
+        <target state="new">Select members:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Select_Public">
+        <source>Select public</source>
+        <target state="new">Select public</target>
         <note />
       </trans-unit>
       <trans-unit id="Use_expression_body_for_lambdas">
