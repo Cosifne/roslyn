@@ -76,6 +76,14 @@
       <trans-unit id="Kind">
         <source>Kind</source>
         <target state="new">Kind</target>
+      <trans-unit id="Make_Abs">
+        <source>Make Abstract</source>
+        <target state="new">Make Abstract</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Members">
+        <source>Members</source>
+        <target state="new">Members</target>
         <note />
       </trans-unit>
       <trans-unit id="Never_if_unnecessary">

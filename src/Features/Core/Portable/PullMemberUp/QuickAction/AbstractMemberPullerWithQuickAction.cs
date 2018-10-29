@@ -78,6 +78,7 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                 solutionEditor, solution, editorMap, syntaxMap);
         }
 
+<<<<<<< HEAD
         private IMethodSymbol FilterGetterOrSetter(IMethodSymbol getterOrSetter)
         {
             return getterOrSetter?.DeclaredAccessibility == Accessibility.Public ? getterOrSetter : null;
@@ -130,6 +131,30 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
 
             // Remove the original members since we are pulling members into class
             foreach (var analysisResult in result.MemberAnalysisResults)
+=======
+        internal async virtual Task<CodeAction> ComputeRefactoring(
+            INamedTypeSymbol targetTypeSymbol,
+            CodeRefactoringContext context,
+            SyntaxNode userSelectedNode,
+            ISymbol userSelectNodeSymbol)
+        {
+            Title = FeaturesResources.Add_To + targetTypeSymbol.Name;
+            CodeGenerationService = context.Document.Project.LanguageServices.GetService<ICodeGenerationService>();
+            RemoveService = context.Document.Project.LanguageServices.GetRequiredService<IPullMemberUpSyntaxChangeService>();
+            _cancellationToken = context.CancellationToken;
+            ContextDocument = context.Document;
+            UserSelectedNode = userSelectedNode;
+            TargetTypeSymbol = targetTypeSymbol;
+
+            if (userSelectNodeSymbol is IMethodSymbol methodSymbol &&
+                methodSymbol.MethodKind != MethodKind.Ordinary)
+            {
+                return default;
+            }
+
+            if (IsDeclarationAlreadyInTarget(targetTypeSymbol, userSelectNodeSymbol) ||
+                !AreModifiersValid(targetTypeSymbol, userSelectNodeSymbol))
+>>>>>>> Fix most UI issues
             {
                 foreach (var syntax in syntaxMap[analysisResult.Member])
                 {
