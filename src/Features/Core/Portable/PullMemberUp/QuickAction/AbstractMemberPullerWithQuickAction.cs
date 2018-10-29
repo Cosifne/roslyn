@@ -53,7 +53,10 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                     string.Format(FeaturesResources.Add_to_0, result.Destination),
                     cancellationToken => PullMembersUpAsync(result, contextDocument, cancellationToken));
             }
-            else
+
+            TargetTypeNode = await CodeGenerationService.FindMostRelevantNameSpaceOrTypeDeclarationAsync(context.Document.Project.Solution, targetTypeSymbol);
+
+            if (TargetTypeNode == null)
             {
                 throw ExceptionUtilities.UnexpectedValue(result.Destination);
             }
