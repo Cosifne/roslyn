@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Shared.Utilities;
 
 namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
 {
-    internal class ClassPullerWithQuickAction : AbstractMemberPullerWithQuickAction
+    internal abstract class AbstractClassPullerWithQuickAction : AbstractMemberPullerWithQuickAction, ILanguageService
     {
         internal readonly static ClassPullerWithQuickAction Instance = new ClassPullerWithQuickAction();
 
@@ -35,5 +35,7 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                 return overrideMembersSet.Intersect(destination.GetMembers(), SymbolEquivalenceComparer.Instance).Any();
             }
         }
+
+        protected abstract void RemoveNode(DocumentEditor editor, SyntaxNode node, ISymbol symbol);
     }
 }
