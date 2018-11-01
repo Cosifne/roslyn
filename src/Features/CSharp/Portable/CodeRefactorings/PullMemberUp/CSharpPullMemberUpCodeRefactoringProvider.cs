@@ -3,48 +3,45 @@
 using System.Composition;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
-using Microsoft.CodeAnalysis.CSharp.Extensions;
+using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp
 {
-    [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = nameof(PredefinedCodeRefactoringProviderNames.PullMemberUp)), Shared]
+    [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = nameof(PredefinedCodeRefactoringProviderNames.PullMember)), Shared]
     internal class CSharpPullMemberUpCodeRefactoringProvider : AbstractPullMemberUpRefactoringProvider
     {
-        protected override bool IsSelectionValid(TextSpan span, SyntaxNode selectedNode)
+        /// <summary>
+        /// For test purpose only.
+        /// </summary>
+        public CSharpPullMemberUpCodeRefactoringProvider(IPullMemberUpOptionsService pullMemberUpService) : base(pullMemberUpService)
         {
-            var identifier = GetIdentifier(selectedNode);
-            if (identifier == default)
-            {
-                return false;
-            }
-            else if (identifier.FullSpan.Contains(span) && span.Contains(identifier.Span))
-            {
-                // Selection lies within the identifier's span
-                return true;
-            }
-            else if (identifier.Span.Contains(span) && span.Length == 0)
-            {
-                // Cursor stands on the identifier
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
 
-        private SyntaxToken GetIdentifier(SyntaxNode selectedNode)
+        internal CSharpPullMemberUpCodeRefactoringProvider() : this(null)
         {
-            switch (selectedNode)
+        }
+
+        internal override bool IsUserSelectIdentifer(SyntaxNode userSelectedSyntax, CodeRefactoringContext context)
+        {
+            var identifier = GetIdentifier(userSelectedSyntax);
+            return identifier.Span.Contains(context.Span);
+        }
+
+        private SyntaxToken GetIdentifier(SyntaxNode userSelectedSyntax)
+        {
+            switch (userSelectedSyntax)
             {
-                case MemberDeclarationSyntax memberDeclarationSyntax:
-                    // Nested type is checked in before this method is called.
-                    return memberDeclarationSyntax.GetNameToken();
-                case VariableDeclaratorSyntax variableDeclaratorSyntax:
-                    // It handles multiple fields or events declared in one line
-                    return variableDeclaratorSyntax.Identifier;
+                case VariableDeclaratorSyntax variableSyntax:
+                    return variableSyntax.Identifier;
+                case MethodDeclarationSyntax methodSyntax:
+                    return methodSyntax.Identifier;
+                case PropertyDeclarationSyntax propertySyntax:
+                    return propertySyntax.Identifier;
+                case IndexerDeclarationSyntax indexerSyntax:
+                    return indexerSyntax.ThisKeyword;
+                case EventDeclarationSyntax eventDeclartionSyntax:
+                    return eventDeclartionSyntax.Identifier;
                 default:
                     return default;
             }

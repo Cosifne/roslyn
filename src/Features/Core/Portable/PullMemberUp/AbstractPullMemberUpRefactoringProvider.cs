@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 {
-    internal abstract class AbstractPullMemberUpRefactoringProvider : CodeRefactoringProvider
+    internal abstract partial class AbstractPullMemberUpRefactoringProvider : CodeRefactoringProvider
     {
         protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode selectedMemberNode);
 
@@ -28,28 +28,16 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 return;
             }
 
-<<<<<<< HEAD
             var selectedMember = semanticModel.GetDeclaredSymbol(selectedMemberNode);
             if (selectedMember == null || selectedMember.ContainingType == null)
-=======
-            var userSelectNodeSymbol = semanticModel.GetDeclaredSymbol(userSelectedNode);
-            if (userSelectNodeSymbol == null)
->>>>>>> Move location of services
             {
                 return;
             }
 
-<<<<<<< HEAD
             if (!selectedMember.IsKind(SymbolKind.Property) &&
                 !selectedMember.IsKind(SymbolKind.Event) &&
                 !selectedMember.IsKind(SymbolKind.Field) &&
                 !selectedMember.IsKind(SymbolKind.Method))
-=======
-            var allTargetClasses = FindAllTargetBaseClasses(userSelectNodeSymbol.ContainingType, context.Document.Project.Solution, context.CancellationToken);
-            var allTargetInterfaces = FindAllTargetInterfaces(userSelectNodeSymbol.ContainingType, context.Document.Project.Solution, context.CancellationToken);
-
-            if (allTargetInterfaces.Count == 0 && allTargetClasses.Count == 0)
->>>>>>> Move location of services
             {
                 // Static, abstract and accessiblity are not checked here but in PullMemberUpAnalyzer.cs since there are
                 // two refactoring options provided for pull members up,
@@ -58,7 +46,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 return;
             }
 
-<<<<<<< HEAD
             if (selectedMember is IMethodSymbol methodSymbol && !methodSymbol.IsOrdinaryMethod())
             {
                 return;
@@ -67,20 +54,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             if (!IsSelectionValid(context.Span, selectedMemberNode))
             {
                 return;
-=======
-            if (userSelectNodeSymbol.Kind == SymbolKind.Method ||
-                userSelectNodeSymbol.Kind == SymbolKind.Property ||
-                userSelectNodeSymbol.Kind == SymbolKind.Event)
-            {
-                await AddPullUpMemberToClassRefactoringViaQuickAction(allTargetClasses, userSelectedNode, userSelectNodeSymbol, context);
-                await AddPullUpMemberToInterfaceRefactoringViaQuickAction(allTargetInterfaces, userSelectedNode, userSelectNodeSymbol, context);
-                AddPullUpMemberRefactoringViaDialogBox(userSelectNodeSymbol, context, root, semanticModel);
-            }
-            else if (userSelectNodeSymbol.Kind == SymbolKind.Field)
-            {
-                await AddPullUpMemberToClassRefactoringViaQuickAction(allTargetClasses, userSelectedNode, userSelectNodeSymbol, context);
-                AddPullUpMemberRefactoringViaDialogBox(userSelectNodeSymbol, context, root, semanticModel);
->>>>>>> Move location of services
             }
 
             var allDestinations = FindAllValidDestinations(
@@ -113,7 +86,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 IsLocationValid(baseType, solution, cancellationToken));
         }
 
-<<<<<<< HEAD
         private bool IsLocationValid(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)
         {
             return symbol.Locations.Any(location => location.IsInSource &&
@@ -131,36 +103,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                     ? InterfacePullerWithQuickAction.Instance as AbstractMemberPullerWithQuickAction
                     : ClassPullerWithQuickAction.Instance;
                 var action = puller.TryComputeRefactoring(context.Document, selectedMember, destination);
-=======
-        protected async Task AddPullUpMemberToClassRefactoringViaQuickAction(
-            List<INamedTypeSymbol> targetClasses,
-            SyntaxNode userSelectedNode,
-            ISymbol userSelectNodeSymbol,
-            CodeRefactoringContext context)
-        {
-            var puller = context.Document.Project.LanguageServices.GetService<AbstractClassPullerWithQuickAction>();
-            foreach (var eachClass in targetClasses)
-            {
-                var action = await puller.ComputeRefactoring(eachClass, context, userSelectedNode, userSelectNodeSymbol);
-                if (action != null)
-                {
-                    context.RegisterRefactoring(action);
-                }
-            }
-        }
-
-        protected async virtual Task AddPullUpMemberToInterfaceRefactoringViaQuickAction(
-            List<INamedTypeSymbol> targetInterfaces,
-            SyntaxNode userSelectedNode,
-            ISymbol userSelectNodeSymbol,
-            CodeRefactoringContext context)
-        {
-            var puller = new InterfacePullerWithQuickAction();
-            foreach (var eachInterface in targetInterfaces)
-            {
-                var action = await puller.ComputeRefactoring(eachInterface, context, userSelectedNode, userSelectNodeSymbol);
-
->>>>>>> Move location of services
                 if (action != null)
                 {
                     context.RegisterRefactoring(action);
