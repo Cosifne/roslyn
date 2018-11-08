@@ -94,6 +94,9 @@
       <trans-unit id="Make_Abs">
         <source>Make Abstract</source>
         <target state="new">Make Abstract</target>
+      <trans-unit id="Make_abstract">
+        <source>Make abstract</source>
+        <target state="new">Make abstract</target>
         <note />
       </trans-unit>
       <trans-unit id="Members">
@@ -335,6 +338,21 @@
       <trans-unit id="Not_a_valid_value">
         <source>Not a valid value</source>
         <target state="translated">Valore non valido</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="_0_will_be_changed_to_abstract">
+        <source>{0} will be changed to abstract.</source>
+        <target state="new">{0} will be changed to abstract.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="_0_will_be_changed_to_non_static_since_1_is_an_interface">
+        <source>{0} will be changed to non-static since {1} is an interface.</source>
+        <target state="new">{0} will be changed to non-static since {1} is an interface.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="_0_will_be_changed_to_public_since_1_is_an_interface">
+        <source>{0} will be changed to public since {1} is an interface.</source>
+        <target state="new">{0} will be changed to public since {1} is an interface.</target>
         <note />
       </trans-unit>
       <trans-unit id="given_workspace_doesn_t_support_undo">

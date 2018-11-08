@@ -25,9 +25,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 }
             });
 
-<<<<<<< HEAD
-            return new PullMembersUpAnalysisResult(destination, membersAnalysisResult);
-=======
             if (targetSymbol.TypeKind == TypeKind.Interface)
             {
                 return new AnalysisResult(false, targetSymbol, memberResult);
@@ -50,11 +47,14 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
         public bool ChangeOriginToNonStatic { get; }
 
-        internal MemberAnalysisResult(ISymbol member, bool changeOriginToPublic = false, bool changeOriginToNonStatic = false)
+        public bool MakeAbstract { get; }
+
+        internal MemberAnalysisResult(ISymbol member, bool changeOriginToPublic = false, bool changeOriginToNonStatic = false, bool makeAbstract = false)
         {
             Member = member;
             ChangeOriginToPublic = changeOriginToPublic;
             ChangeOriginToNonStatic = changeOriginToNonStatic;
+            MakeAbstract = makeAbstract;
         }
     }
 
@@ -78,12 +78,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             MembersAnalysisResults = membersAnalysisResults;
             IsValid = !MembersAnalysisResults.Aggregate(
                 ChangeTargetAbstract,
-<<<<<<< HEAD
-                (acc, result) => acc || result.ChangeOriginToNonPublic || result.ChangeOriginToNonStatic);
->>>>>>> Fix most UI issues
-=======
-                (acc, result) => acc || result.ChangeOriginToPublic || result.ChangeOriginToNonStatic);
->>>>>>> Make the UI can resize proper
+                (acc, result) => acc || result.ChangeOriginToPublic || result.ChangeOriginToNonStatic || result.MakeAbstract);
         }
     }
 }

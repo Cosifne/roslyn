@@ -24,6 +24,7 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                     return true;
                 }
             }
+
             return false;
         }
     }

@@ -90,6 +90,33 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} will be changed to abstract..
+        /// </summary>
+        internal static string _0_will_be_changed_to_abstract {
+            get {
+                return ResourceManager.GetString("_0_will_be_changed_to_abstract", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} will be changed to non-static since {1} is an interface..
+        /// </summary>
+        internal static string _0_will_be_changed_to_non_static_since_1_is_an_interface {
+            get {
+                return ResourceManager.GetString("_0_will_be_changed_to_non_static_since_1_is_an_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} will be changed to public since {1} is an interface..
+        /// </summary>
+        internal static string _0_will_be_changed_to_public_since_1_is_an_interface {
+            get {
+                return ResourceManager.GetString("_0_will_be_changed_to_public_since_1_is_an_interface", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 1 reference.
         /// </summary>
         internal static string _1_reference {
@@ -335,6 +362,7 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
+<<<<<<< HEAD
         ///   Looks up a localized string similar to Avoid expression statements that implicitly ignore value.
         /// </summary>
         internal static string Avoid_expression_statements_that_implicitly_ignore_value {
@@ -367,6 +395,8 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
+=======
+>>>>>>> Put all the logic of solutionChange to generator class, change warning window from dialog to a messagebox
         ///   Looks up a localized string similar to Base Types.
         /// </summary>
         internal static string Base_Types {
@@ -484,38 +514,11 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} will be changed to non-static since {1} is an interface..
-        /// </summary>
-        internal static string Change_Member_To_NonStatic {
-            get {
-                return ResourceManager.GetString("Change_Member_To_NonStatic", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} will be changed to public since {1} is an interface..
-        /// </summary>
-        internal static string Change_Member_To_Public {
-            get {
-                return ResourceManager.GetString("Change_Member_To_Public", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Change Signature.
         /// </summary>
         internal static string Change_Signature {
             get {
                 return ResourceManager.GetString("Change_Signature", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to {0} will be changed to abstract..
-        /// </summary>
-        internal static string Change_Target_To_Abstract {
-            get {
-                return ResourceManager.GetString("Change_Target_To_Abstract", resourceCulture);
             }
         }
         
@@ -1075,15 +1078,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finish.
-        /// </summary>
-        internal static string Finish {
-            get {
-                return ResourceManager.GetString("Finish", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to First word upper.
         /// </summary>
         internal static string First_word_upper {
@@ -1408,11 +1402,11 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Make Abstract.
+        ///   Looks up a localized string similar to Make abstract.
         /// </summary>
-        internal static string Make_Abs {
+        internal static string Make_abstract {
             get {
-                return ResourceManager.GetString("Make_Abs", resourceCulture);
+                return ResourceManager.GetString("Make_abstract", resourceCulture);
             }
         }
         
