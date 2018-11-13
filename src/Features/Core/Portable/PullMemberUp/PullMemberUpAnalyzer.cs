@@ -7,32 +7,17 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 {
     internal class PullMembersUpAnalysisBuilder
     {
-<<<<<<< HEAD
         internal static PullMembersUpAnalysisResult BuildAnalysisResult(
             INamedTypeSymbol destination,
             ImmutableArray<ISymbol> members)
         {
             var membersAnalysisResult = members.SelectAsArray(member =>
-=======
-        internal static AnalysisResult BuildAnalysisResult(
-            INamedTypeSymbol targetSymbol,
-            IEnumerable<(ISymbol member, bool makeAbstract)> selectedMembersAndOption)
-        {
-            var memberResult = selectedMembersAndOption.Select(selection =>
->>>>>>> Resolve comments
             {
                 if (destination.TypeKind == TypeKind.Interface)
                 {
-<<<<<<< HEAD
                     var changeOriginalToPublic = member.DeclaredAccessibility != Accessibility.Public;
                     var changeOriginalToNonStatic = member.IsStatic;
                     return new MemberAnalysisResult(member, changeOriginalToPublic, changeOriginalToNonStatic);
-=======
-                    return new MemberAnalysisResult(
-                        selection.member,
-                        selection.member.DeclaredAccessibility != Accessibility.Public,
-                        selection.member.IsStatic);
->>>>>>> Resolve comments
                 }
                 else
                 {
@@ -84,7 +69,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
         public IEnumerable<MemberAnalysisResult> MembersAnalysisResults { get; }
 
-        public bool IsValid { get; }
+        public bool IsPullUpOperationCauseError { get; }
 
         internal AnalysisResult(
             bool changeTargetAbstract,
@@ -94,7 +79,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             ChangeTargetAbstract = changeTargetAbstract;
             Target = target;
             MembersAnalysisResults = membersAnalysisResults;
-            IsValid = !MembersAnalysisResults.Aggregate(
+            IsPullUpOperationCauseError = !MembersAnalysisResults.Aggregate(
                 ChangeTargetAbstract,
                 (acc, result) => acc || result.ChangeOriginToPublic || result.ChangeOriginToNonStatic || result.MakeAbstract);
         }

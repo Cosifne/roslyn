@@ -14,6 +14,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
     {
         protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode selectedMemberNode);
 
+        protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode userSelectedSyntax);
+
         public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {
             // Currently support to pull field, method, event, property and indexer up,
