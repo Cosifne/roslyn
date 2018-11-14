@@ -88,6 +88,16 @@
         <target state="translated">Diğer işleçlerde</target>
         <note />
       </trans-unit>
+      <trans-unit id="Interface_cant_have_abstract_member">
+        <source>Interface can't have abstract member.</source>
+        <target state="new">Interface can't have abstract member.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Interface_cant_have_field">
+        <source>Interface can't have field.</source>
+        <target state="new">Interface can't have field.</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Keep_all_parentheses_in_colon">
         <source>Keep all parentheses in:</source>
         <target state="translated">Şunun içindeki tüm parantezleri tut:</target>
@@ -153,8 +163,8 @@
         <note />
       </trans-unit>
       <trans-unit id="Pull_Up_Members">
-        <source>Pull Up Members</source>
-        <target state="new">Pull Up Members</target>
+        <source>Pull Members Up</source>
+        <target state="new">Pull Members Up</target>
         <note />
       </trans-unit>
       <trans-unit id="Regular_Expressions">
