@@ -56,7 +56,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
     }
 
     /// <summary>
-    /// This is struct contains all the operations needs to be done on members and destination to complete the pull up operation.
+    /// This struct contains all the operations needs to be done on members and destination to complete the pull up operation.
     /// </summary>
     internal readonly struct PullMembersUpAnalysisResult
     {

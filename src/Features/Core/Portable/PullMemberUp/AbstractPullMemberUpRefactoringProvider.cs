@@ -78,9 +78,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 containType.GetBaseTypes().ToImmutableArray():
                 containType.AllInterfaces.Concat(containType.GetBaseTypes()).ToImmutableArray();
 
-            return allDestinations.WhereAsArray(baseType => baseType != null &&
-                baseType.DeclaringSyntaxReferences.Length > 0 &&
-                IsLocationValid(baseType, solution, cancellationToken));
+            //return allDestinations.WhereAsArray(baseType => baseType != null &&
+            //    baseType.DeclaringSyntaxReferences.Length > 0 &&
+            //    IsLocationValid(baseType, solution, cancellationToken));
+
+            return allDestinations.WhereAsArray(baseType => baseType != null);
         }
 
         private bool IsLocationValid(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)

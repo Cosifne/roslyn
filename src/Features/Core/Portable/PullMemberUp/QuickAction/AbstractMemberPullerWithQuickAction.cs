@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeGeneration;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.Editing;
+using Microsoft.CodeAnalysis.SymbolMapping;
 using Roslyn.Utilities;
 using static Microsoft.CodeAnalysis.CodeActions.CodeAction;
 
@@ -77,7 +78,6 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
             PullMembersUpAnalysisResult result,
             Document contextDocument)
         {
-            var codeGenerationService = contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
             var symbolsToPullUp = result.MembersAnalysisResults.
                 SelectAsArray(analysisResult =>
                 {
@@ -98,12 +98,30 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                 });
             return new DocumentChangeAction(
                 string.Format(FeaturesResources.Add_to_0, result.Destination),
-                cancellationToken =>
+                async cancellationToken =>
                 {
                     var options = new CodeGenerationOptions(generateMethodBodies: false, generateMembers: false);
-                    return codeGenerationService.AddMembersAsync(
+                    var codeGenerationService = await GetCodeGenerationService(result, contextDocument, cancellationToken);
+                    return await codeGenerationService.AddMembersAsync(
                         contextDocument.Project.Solution, result.Destination, symbolsToPullUp, options: options, cancellationToken: cancellationToken);
                 });
+        }
+
+        private async Task<ICodeGenerationService> GetCodeGenerationService(
+            PullMembersUpAnalysisResult result,
+            Document contextDocument,
+            CancellationToken cancellationToken)
+        {
+            if (result.Destination.Language.Equals(contextDocument.Project.Language))
+            {
+                return contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+            }
+            else
+            {
+                var symbolMappingService = contextDocument.Project.Solution.Workspace.Services.GetRequiredService<ISymbolMappingService>();
+                var symbolMappingResult = await symbolMappingService.MapSymbolAsync(contextDocument, result.Destination, cancellationToken).ConfigureAwait(false);
+                return symbolMappingResult.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+            }
         }
 
         private IMethodSymbol FilterGetterOrSetter(IMethodSymbol getterOrSetter)
