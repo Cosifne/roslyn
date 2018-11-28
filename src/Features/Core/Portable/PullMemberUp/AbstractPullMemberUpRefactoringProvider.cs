@@ -78,17 +78,13 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 containType.GetBaseTypes().ToImmutableArray():
                 containType.AllInterfaces.Concat(containType.GetBaseTypes()).ToImmutableArray();
 
-            //return allDestinations.WhereAsArray(baseType => baseType != null &&
-            //    baseType.DeclaringSyntaxReferences.Length > 0 &&
-            //    IsLocationValid(baseType, solution, cancellationToken));
-
-            return allDestinations.WhereAsArray(baseType => baseType != null);
+            return allDestinations.WhereAsArray(baseType => baseType != null &&
+                IsLocationValid(baseType, solution, cancellationToken));
         }
 
         private bool IsLocationValid(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)
         {
-            return symbol.Locations.Any(location => location.IsInSource &&
-                !solution.GetDocument(location.SourceTree).IsGeneratedCode(cancellationToken));
+            return symbol.Locations.Any(location => !solution.GetDocument(location.SourceTree).IsGeneratedCode(cancellationToken));
         }
 
         private void PullMemberUpViaQuickAction(
@@ -96,8 +92,17 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             ISymbol selectedMember,
             ImmutableArray<INamedTypeSymbol> destinations)
         {
-            foreach (var destination in destinations)
+            foreach (var original in destinations)
             {
+                var project = context.Document.Project.Solution.GetProject(original.ContainingAssembly);
+                if (project == null)
+                {
+                    continue;
+                }
+                var compilation = project.GetCompilationAsync(context.CancellationToken).Result;
+                var symbolId = SymbolKey.Create(original, context.CancellationToken);
+
+                var destination = symbolId.Resolve(compilation, cancellationToken: context.CancellationToken).Symbol as INamedTypeSymbol;
                 var puller = destination.TypeKind == TypeKind.Interface
                     ? InterfacePullerWithQuickAction.Instance as AbstractMemberPullerWithQuickAction
                     : ClassPullerWithQuickAction.Instance;

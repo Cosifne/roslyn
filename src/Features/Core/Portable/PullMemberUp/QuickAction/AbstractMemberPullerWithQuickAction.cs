@@ -65,7 +65,8 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
         {
             var solution = contextDocument.Project.Solution;
             var solutionEditor = new SolutionEditor(solution);
-            var codeGenerationService = contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+            //var codeGenerationService = contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+            var codeGenerationService = GetCodeGenerationService(result, contextDocument, cancellationToken);
             var destinationNodeSyntax = await codeGenerationService.FindMostRelevantNameSpaceOrTypeDeclarationAsync(
                 contextDocument.Project.Solution, result.Destination, default, cancellationToken).ConfigureAwait(false);
             var (editorMap, syntaxMap) = await InitializeEditorMapsAndSyntaxMapAsync(result, destinationNodeSyntax, solutionEditor, solution, cancellationToken).ConfigureAwait(false);
@@ -98,34 +99,31 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                 });
             return new DocumentChangeAction(
                 string.Format(FeaturesResources.Add_to_0, result.Destination),
-                async cancellationToken =>
+                cancellationToken =>
                 {
                     var options = new CodeGenerationOptions(generateMethodBodies: false, generateMembers: false);
-                    var codeGenerationService = await GetCodeGenerationService(result, contextDocument, cancellationToken);
-                    return await codeGenerationService.AddMembersAsync(
+                    var codeGenerationService = GetCodeGenerationService(result, contextDocument, cancellationToken);
+                    return codeGenerationService.AddMembersAsync(
                         contextDocument.Project.Solution, result.Destination, symbolsToPullUp, options: options, cancellationToken: cancellationToken);
                 });
         }
 
-        private async Task<ICodeGenerationService> GetCodeGenerationService(
+        private ICodeGenerationService GetCodeGenerationService(
             PullMembersUpAnalysisResult result,
             Document contextDocument,
             CancellationToken cancellationToken)
         {
-            if (result.Destination.Language.Equals(contextDocument.Project.Language))
+            var project = contextDocument.Project.Solution.GetProject(result.Destination.ContainingAssembly, cancellationToken);
+            if (project == null)
             {
-                return contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+                // real metadata symbol                
             }
-            else
-            {
-                var symbolMappingService = contextDocument.Project.Solution.Workspace.Services.GetRequiredService<ISymbolMappingService>();
-                var symbolMappingResult = await symbolMappingService.MapSymbolAsync(contextDocument, result.Destination, cancellationToken).ConfigureAwait(false);
-                return symbolMappingResult.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
-            }
+
+            return project.LanguageServices.GetRequiredService<ICodeGenerationService>();
         }
 
         private IMethodSymbol FilterGetterOrSetter(IMethodSymbol getterOrSetter)
-        {
+            {
             return getterOrSetter?.DeclaredAccessibility == Accessibility.Public ? getterOrSetter : null;
         }
 
