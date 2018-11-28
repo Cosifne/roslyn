@@ -1002,86 +1002,82 @@ namespace PushUpTest
         {
             // Moving member from C# to Visual Basic is not supported currently since the FindMostRelevantDeclarationAsync method in 
             // AbstractCodeGenerationService will return null.
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
-using VBAssembly;
-public class TestClass : VBClass
-{
-    public int Bar[||]bar()
-    {
-        return 12345;
-    }
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Class VBClass
-End Class
-"))).ToString();
-
+            var input = @"
+<Workspace>
+    <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+        <ProjectReferences>VBAssembly</ProjectReferences>
+        <Document>
+            using VBAssembly;
+            public class TestClass : VBClass
+            {
+                public int Bar[||]bar()
+                {
+                    return 12345;
+                }
+            }
+        </Document>
+  </Project>
+  <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+        <Document>
+            Public Class VBClass
+            End Class
+        </Document>
+  </Project>
+</Workspace>";
             await TestMissingAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullMethodUpToVBInterface()
         {
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
-using VBAssembly;
-public class TestClass : VBInterface
-{
-    public int Bar[||]bar()
-    {
-        return 12345;
-    }
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Interface VBInterface
-End Interface
-"))).ToString();
-
+            var input = @"
+<Workspace>
+    <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+    <ProjectReferences>VBAssembly</ProjectReferences>
+    <Document>
+        using VBAssembly;
+        public class TestClass : VBInterface
+        {
+            public int Bar[||]bar()
+            {
+                return 12345;
+            }
+        }
+    </Document>
+  </Project>
+    <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+        <Document>
+            Public Interface VBInterface
+            End Interface
+        </Document>
+    </Project>
+</Workspace>
+";
             await TestMissingAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullFieldUpToVBClass()
         {
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
-using VBAssembly;
-public class TestClass : VBClass
-{
-    public int fo[||]obar = 0;
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Class VBClass
-End Class
-"))).ToString();
+            var input = @"
+<Workspace>
+    <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+        <ProjectReferences>VBAssembly</ProjectReferences>
+        <Document>
+            using VBAssembly;
+            public class TestClass : VBClass
+            {
+                public int fo[||]obar = 0;
+            }
+        </Document>
+  </Project>
+    <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+    <Document>
+        Public Class VBClass
+        End Class
+    </Document>
+    </Project>
+</Workspace>";
 
             await TestMissingAsync(input);
         }
@@ -1089,13 +1085,11 @@ End Class
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullPropertyUpToVBClass()
         {
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
+            var input = @"
+<Workspace>
+  <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+    <ProjectReferences>VBAssembly</ProjectReferences>
+    <Document>
 using VBAssembly;
 public class TestClass : VBClass
 {
@@ -1104,101 +1098,94 @@ public class TestClass : VBClass
         get;
         set;
     }
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Class VBClass
-End Class
-"))).ToString();
-
+}</Document>
+  </Project>
+  <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+    <Document>
+        Public Class VBClass
+        End Class
+    </Document>
+  </Project>
+</Workspace>
+";
             await TestMissingAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullPropertyUpToVBInterface()
         {
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
+            var input = @"<Workspace>
+    <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+        <ProjectReferences>VBAssembly</ProjectReferences>
+        <Document>
 using VBAssembly;
 public class TestClass : VBInterface
-{
-    public int foo[||]bar
-    {
-        get;
-        set;
-    }
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Interface VBInterface
-End Interface
-"))).ToString();
-
+        {
+            public int foo[||]bar
+            {
+                get;
+                set;
+            }
+        }
+        </Document>
+  </Project>
+    <Project Language = ""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+        <Document>
+            Public Interface VBInterface
+            End Interface
+        </Document>
+    </Project>
+</Workspace>";
             await TestMissingAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullEventUpToVBClass()
         {
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
-using VBAssembly;
-public class TestClass : VBClass
-{
-    public event EventHandler BarEve[||]nt;
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Class VBClass
-End Class
-"))).ToString();
-
+            var input = @"
+<Workspace>
+    <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+        <ProjectReferences>VBAssembly</ProjectReferences>
+            <Document>
+            using VBAssembly;
+            public class TestClass : VBClass
+            {
+                public event EventHandler BarEve[||]nt;
+            }
+            </Document>
+    </Project>
+    <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+        <Document>
+            Public Class VBClass
+            End Class
+        </Document>
+    </Project>
+</Workspace>";
             await TestMissingAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullEventUpToVBInterface()
         {
-            var input = new XElement("Workspace",
-                    new XElement("Project",
-                        new XAttribute("Language", "C#"),
-                        new XAttribute("AssemblyName", "CSAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("ProjectReferences", "VBAssembly"),
-                        new XElement("Document", @"
-using VBAssembly;
-public class TestClass : VBInterface
-{
-    public event EventHandler BarEve[||]nt;
-}")),
-                    new XElement("Project",
-                        new XAttribute("Language", "Visual Basic"),
-                        new XAttribute("AssemblyName", "VBAssembly"),
-                        new XAttribute("CommonReferences", "true"),
-                        new XElement("Document", @"
-Public Interface VBInterface
-End Interface
-"))).ToString();
-
+            var input = @"
+<Workspace>
+    <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
+    <ProjectReferences>VBAssembly</ProjectReferences>
+    <Document>
+        using VBAssembly;
+        public class TestClass : VBInterface
+        {
+            public event EventHandler BarEve[||]nt;
+        }
+    </Document>
+    </Project>
+    <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+    <Document>
+        Public Interface VBInterface
+        End Interface
+    </Document>
+    </Project>
+</Workspace>";
             await TestMissingAsync(input);
         }
         
