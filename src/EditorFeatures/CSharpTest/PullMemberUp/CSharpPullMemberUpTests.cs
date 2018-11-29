@@ -1034,7 +1034,7 @@ namespace PushUpTest
             var input = @"
 <Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-    <ProjectReferences>VBAssembly</ProjectReferences>
+    <ProjectReference>VBAssembly</ProjectReference>
     <Document>
         public class TestClass : VBInterface
         {
