@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeRefactorings;
@@ -318,7 +317,7 @@ namespace PushUpTest
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
-        public async Task TestPullPublicEventWithAccessorsToInterfaceViaDialog()
+        public async Task TestPullPublicEventWithAccessorsToInterface()
         {
             var testText = @"
 using System;
@@ -1005,7 +1004,7 @@ namespace PushUpTest
             var input = @"
 <Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-        <ProjectReferences>VBAssembly</ProjectReferences>
+        <ProjectReference>VBAssembly</ProjectReference>
         <Document>
             using VBAssembly;
             public class TestClass : VBClass
@@ -1033,9 +1032,8 @@ namespace PushUpTest
             var input = @"
 <Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-    <ProjectReferences>VBAssembly</ProjectReferences>
+    <ProjectReference>VBAssembly</ProjectReference>
     <Document>
-        using VBAssembly;
         public class TestClass : VBInterface
         {
             public int Bar[||]bar()
@@ -1062,7 +1060,7 @@ namespace PushUpTest
             var input = @"
 <Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-        <ProjectReferences>VBAssembly</ProjectReferences>
+        <ProjectReference>VBAssembly</ProjectReference>
         <Document>
             using VBAssembly;
             public class TestClass : VBClass
@@ -1088,7 +1086,7 @@ namespace PushUpTest
             var input = @"
 <Workspace>
   <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-    <ProjectReferences>VBAssembly</ProjectReferences>
+    <ProjectReference>VBAssembly</ProjectReference>
     <Document>
 using VBAssembly;
 public class TestClass : VBClass
@@ -1116,7 +1114,7 @@ public class TestClass : VBClass
         {
             var input = @"<Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-        <ProjectReferences>VBAssembly</ProjectReferences>
+        <ProjectReference>VBAssembly</ProjectReference>
         <Document>
 using VBAssembly;
 public class TestClass : VBInterface
@@ -1145,7 +1143,7 @@ public class TestClass : VBInterface
             var input = @"
 <Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-        <ProjectReferences>VBAssembly</ProjectReferences>
+        <ProjectReference>VBAssembly</ProjectReference>
             <Document>
             using VBAssembly;
             public class TestClass : VBClass
@@ -1170,7 +1168,7 @@ public class TestClass : VBInterface
             var input = @"
 <Workspace>
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
-    <ProjectReferences>VBAssembly</ProjectReferences>
+    <ProjectReference>VBAssembly</ProjectReference>
     <Document>
         using VBAssembly;
         public class TestClass : VBInterface
