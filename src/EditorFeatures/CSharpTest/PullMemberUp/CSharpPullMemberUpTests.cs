@@ -1018,6 +1018,7 @@ namespace PushUpTest
         </Document>
   </Project>
   <Project Language=""Visual Basic"" AssemblyName=""VBAssembly"" CommonReferences=""true"">
+        <ProjectReferences>CSAssembly</ProjectReferences>
         <Document>
             Public Class VBClass
             End Class
@@ -1035,7 +1036,6 @@ namespace PushUpTest
     <Project Language=""C#"" AssemblyName=""CSAssembly"" CommonReferences=""true"">
     <ProjectReferences>VBAssembly</ProjectReferences>
     <Document>
-        using VBAssembly;
         public class TestClass : VBInterface
         {
             public int Bar[||]bar()

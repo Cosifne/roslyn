@@ -56,9 +56,9 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 return;
             }
 
-            var allDestinations = FindAllValidDestinations(
+            var allDestinations = await FindAllValidDestinations(
                 selectedMember,
-                document.Project.Solution,
+                document.Project,
                 context.CancellationToken);
             if (allDestinations.Length == 0)
             {
@@ -68,9 +68,9 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             PullMemberUpViaQuickAction(context, selectedMember, allDestinations);
         }
 
-        private ImmutableArray<INamedTypeSymbol> FindAllValidDestinations(
+        private async Task<ImmutableArray<INamedTypeSymbol>> FindAllValidDestinations(
             ISymbol selectedMember,
-            Solution solution,
+            Project contextProject,
             CancellationToken cancellationToken)
         {
             var containingType = selectedMember.ContainingType;
@@ -78,15 +78,51 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 ? containingType.GetBaseTypes().ToImmutableArray()
                 : containingType.AllInterfaces.Concat(containingType.GetBaseTypes()).ToImmutableArray();
 
-            return allDestinations.WhereAsArray(baseType => baseType != null &&
-                baseType.DeclaringSyntaxReferences.Length > 0 &&
-                IsLocationValid(baseType, solution, cancellationToken));
+            var solution = contextProject.Solution;
+            var validDestinations = await allDestinations.WhereAsArray(baseType => !IsGeneratedCode(baseType, solution, cancellationToken)).
+                GroupBy(destination => solution.GetProject(destination.ContainingAssembly)).
+                Where(groupedDestination => groupedDestination.Key != null).
+                SelectManyAsync(async (groupedDestinations, token) =>
+                {
+                    var project = groupedDestinations.Key;
+                    if (project.Language != contextProject.Language)
+                    {
+                        return await GetDestinationSymbolForDifferentProject(groupedDestinations, token);
+                    }
+                    else
+                    {
+                        return await Task.FromResult(groupedDestinations.AsEnumerable());
+                    }
+                }, cancellationToken);
+
+            return validDestinations.ToImmutableArray();
         }
 
-        private bool IsLocationValid(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)
+        private async Task<ImmutableArray<INamedTypeSymbol>> GetDestinationSymbolForDifferentProject(
+            IGrouping<Project, INamedTypeSymbol> groupedDestinations, CancellationToken cancellationToken)
         {
-            return symbol.Locations.Any(location => location.IsInSource &&
-                !solution.GetDocument(location.SourceTree).IsGeneratedCode(cancellationToken));
+            var compilation = await groupedDestinations.Key.GetCompilationAsync(cancellationToken).ConfigureAwait(false);
+            var symbolFromDestinationProject = groupedDestinations.
+                Select(originalDestination =>
+                {
+                    if (originalDestination.TypeKind == TypeKind.Interface)
+                    {
+                        var symbolId = SymbolKey.Create(originalDestination, cancellationToken);
+                        return symbolId.Resolve(compilation, cancellationToken: cancellationToken).Symbol as INamedTypeSymbol;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }).Where(namedTypeSymbol => namedTypeSymbol != null).ToImmutableArray();
+
+            return symbolFromDestinationProject;
+        }
+
+        private bool IsGeneratedCode(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)
+        {
+            return symbol.Locations.Any(location =>
+                solution.GetDocument(location.SourceTree).IsGeneratedCode(cancellationToken));
         }
 
         private void PullMemberUpViaQuickAction(
@@ -96,13 +132,17 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
         {
             foreach (var destination in destinations)
             {
-                var puller = destination.TypeKind == TypeKind.Interface
-                    ? InterfacePullerWithQuickAction.Instance as AbstractMemberPullerWithQuickAction
-                    : ClassPullerWithQuickAction.Instance;
-                var action = puller.TryComputeRefactoring(context.Document, selectedMember, destination);
-                if (action != null)
+                if (destination.TypeKind == TypeKind.Interface ||
+                    destination.TypeKind == TypeKind.Class)
                 {
-                    context.RegisterRefactoring(action);
+                    var puller = destination.TypeKind == TypeKind.Interface
+                        ? InterfacePullerWithQuickAction.Instance as AbstractMemberPullerWithQuickAction
+                        : ClassPullerWithQuickAction.Instance;
+                    var action = puller.TryComputeRefactoring(context.Document, selectedMember, destination);
+                    if (action != null)
+                    {
+                        context.RegisterRefactoring(action);
+                    }
                 }
             }
         }

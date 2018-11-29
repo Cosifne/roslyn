@@ -66,7 +66,7 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
         {
             var solution = contextDocument.Project.Solution;
             var solutionEditor = new SolutionEditor(solution);
-            var codeGenerationService = contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+            var codeGenerationService = GetDestinationCodeGenerationService(result, contextDocument.Project.Solution);
             var destinationNodeSyntax = await codeGenerationService.FindMostRelevantNameSpaceOrTypeDeclarationAsync(
                 contextDocument.Project.Solution, result.Destination, default, cancellationToken).ConfigureAwait(false);
             var (editorMap, syntaxMap) = await InitializeEditorMapsAndSyntaxMapAsync(result, destinationNodeSyntax, solutionEditor, solution, cancellationToken).ConfigureAwait(false);
@@ -103,7 +103,7 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
                         return analysisResult.Member;
                     }
                 });
-            var codeGenerationService = contextDocument.Project.LanguageServices.GetRequiredService<ICodeGenerationService>();
+            var codeGenerationService = GetDestinationCodeGenerationService(result, contextDocument.Project.Solution);
             var options = new CodeGenerationOptions(generateMethodBodies: false, generateMembers: false);
             return await codeGenerationService.AddMembersAsync(
                 contextDocument.Project.Solution, result.Destination, symbolsToPullUp, options: options, cancellationToken: cancellationToken);
@@ -136,6 +136,13 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
             }
 
             return solutionEditor.GetChangedSolution();
+        }
+
+        private ICodeGenerationService GetDestinationCodeGenerationService(PullMembersUpAnalysisResult result, Solution solution)
+        {
+            // We have already filtered all destinations which have no containing project in AbstractPullMemberUpRefactoringProvider
+            var project = solution.GetProject(result.Destination.ContainingAssembly);
+            return project.LanguageServices.GetRequiredService<ICodeGenerationService>();
         }
 
         private async Task<(EditorMap editorMap, SyntaxMap syntaxMap)> InitializeEditorMapsAndSyntaxMapAsync(
