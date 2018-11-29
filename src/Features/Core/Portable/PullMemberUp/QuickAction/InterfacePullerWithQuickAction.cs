@@ -6,19 +6,7 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
 {
     internal class InterfacePullerWithQuickAction : AbstractMemberPullerWithQuickAction
     {
-        private static InterfacePullerWithQuickAction s_puller;
-
-        internal static InterfacePullerWithQuickAction Instance
-        {
-            get
-            {
-                if (s_puller == null)
-                {
-                    s_puller = new InterfacePullerWithQuickAction();
-                }
-                return s_puller;
-            }
-        }
+        internal readonly static InterfacePullerWithQuickAction Instance = new InterfacePullerWithQuickAction();
 
         private InterfacePullerWithQuickAction()
         {
@@ -28,11 +16,10 @@ namespace Microsoft.CodeAnalysis.PullMemberUp.QuickAction
             INamedTypeSymbol destination,
             ISymbol selectedNode)
         {
-            var comparer = SymbolEquivalenceComparer.Instance;
             foreach (var interfaceMember in destination.GetMembers())
             {
                 var implementationOfMember = selectedNode.ContainingType.FindImplementationForInterfaceMember(interfaceMember);
-                if (comparer.Equals(selectedNode, implementationOfMember?.OriginalDefinition))
+                if (SymbolEquivalenceComparer.Instance.Equals(selectedNode, implementationOfMember?.OriginalDefinition))
                 {
                     return true;
                 }
