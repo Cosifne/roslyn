@@ -1111,8 +1111,8 @@ I agree to all of the foregoing:</value>
   <data name="Global_name_space" xml:space="preserve">
     <value>Gobal namespace</value>
   </data>
-  <data name="Namespace" xml:space="preserve">
-    <value>Namespace:</value>
+  <data name="Namespace_0" xml:space="preserve">
+    <value>Namespace: {0}</value>
   </data>
   <data name="Back" xml:space="preserve">
     <value>Back</value>

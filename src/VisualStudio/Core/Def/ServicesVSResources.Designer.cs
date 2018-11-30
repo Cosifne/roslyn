@@ -1551,11 +1551,11 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Namespace:.
+        ///   Looks up a localized string similar to Namespace: {0}.
         /// </summary>
-        internal static string Namespace {
+        internal static string Namespace_0 {
             get {
-                return ResourceManager.GetString("Namespace", resourceCulture);
+                return ResourceManager.GetString("Namespace_0", resourceCulture);
             }
         }
         

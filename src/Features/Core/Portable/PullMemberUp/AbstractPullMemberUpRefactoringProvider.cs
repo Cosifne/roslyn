@@ -1,10 +1,9 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
 using Microsoft.CodeAnalysis.PullMemberUp.QuickAction;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
@@ -13,60 +12,78 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 {
     internal abstract partial class AbstractPullMemberUpRefactoringProvider : CodeRefactoringProvider
     {
-        protected readonly IPullMemberUpOptionsService _pullMemberUpOptionsService;
-
-        protected AbstractPullMemberUpRefactoringProvider(IPullMemberUpOptionsService pullMemberUpService)
-        {
-            _pullMemberUpOptionsService = pullMemberUpService;
-        }
-
-        protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode userSelectedSyntax);
+        protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode selectedMemberNode);
 
         public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {
             // Currently support to pull field, method, event, property and indexer up,
             // constructor, operator and finalizer are excluded.
-            var semanticModel = await context.Document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-            var userSelectedNode = root.FindNode(context.Span);
+            var document = context.Document;
+            var semanticModel = await document.GetSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+            var root = await document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+            var selectedMemberNode = root.FindNode(context.Span);
 
-            if (!IsSelectionValid(context.Span, userSelectedNode))
+            if (selectedMemberNode == null)
             {
                 return;
             }
 
-            var userSelectNodeSymbol = semanticModel.GetDeclaredSymbol(userSelectedNode);
-            if (userSelectNodeSymbol == null || userSelectNodeSymbol.ContainingType == null)
+            var selectedMember = semanticModel.GetDeclaredSymbol(selectedMemberNode);
+            if (selectedMember == null || selectedMember.ContainingType == null)
             {
                 return;
             }
 
-            var allTargets = FindAllValidTargets(userSelectNodeSymbol.ContainingType, context.Document.Project.Solution, context.CancellationToken);
+            if (!selectedMember.IsKind(SymbolKind.Property) &&
+                !selectedMember.IsKind(SymbolKind.Event) &&
+                !selectedMember.IsKind(SymbolKind.Field) &&
+                !selectedMember.IsKind(SymbolKind.Method))
+            {
+                // Static, abstract and accessiblity are not checked here but in PullMemberUpAnalyzer.cs since there are
+                // two refactoring options provided for pull members up,
+                // 1. Quick Action (Only allow members that don't cause error)
+                // 2. Dialog box (Allow modifers may cause errors and will provide fixing)
+                return;
+            }
 
-            if (allTargets.Count() == 0)
+            if (selectedMember is IMethodSymbol methodSymbol && !methodSymbol.IsOrdinaryMethod())
             {
                 return;
             }
 
-            if ((userSelectNodeSymbol is IMethodSymbol methodSymbol && methodSymbol.IsOrdinaryMethod()) ||
-                userSelectNodeSymbol.Kind == SymbolKind.Property ||
-                userSelectNodeSymbol.Kind == SymbolKind.Event ||
-                userSelectNodeSymbol.Kind == SymbolKind.Field)
+            if (!IsSelectionValid(context.Span, selectedMemberNode))
             {
-                PullMemberUpViaQuickAction(context, userSelectNodeSymbol, allTargets);
-                AddPullUpMemberRefactoringViaDialogBox(context, semanticModel, userSelectNodeSymbol);
+                return;
             }
+
+            var allDestinations = FindAllValidDestinations(
+                selectedMember,
+                document.Project.Solution,
+                context.CancellationToken);
+            if (allDestinations.Length == 0)
+            {
+                return;
+            }
+            
+            PullMemberUpViaQuickAction(context, selectedMember, allDestinations);
         }
 
-        private IEnumerable<INamedTypeSymbol> FindAllValidTargets(
-            INamedTypeSymbol selectedNodeOwnerSymbol,
+        private ImmutableArray<INamedTypeSymbol> FindAllValidDestinations(
+            ISymbol selectedMember,
             Solution solution,
             CancellationToken cancellationToken)
         {
-            return selectedNodeOwnerSymbol.AllInterfaces.Concat(selectedNodeOwnerSymbol.GetBaseTypes()).
-                Where(baseType => baseType != null &&
-                    baseType.DeclaringSyntaxReferences.Length > 0 &&
-                    IsLocationValid(baseType, solution, cancellationToken));
+            var containingType = selectedMember.ContainingType;
+            var allDestinations = selectedMember.IsKind(SymbolKind.Field)
+                ? containingType.GetBaseTypes().ToImmutableArray()
+                : containingType.AllInterfaces.Concat(containingType.GetBaseTypes()).ToImmutableArray();
+
+            return allDestinations.WhereAsArray(baseType =>
+                baseType != null &&
+                // It could be ErrorType if there is syntax error on the baseType
+                (baseType.TypeKind == TypeKind.Interface || baseType.TypeKind == TypeKind.Class) &&
+                baseType.DeclaringSyntaxReferences.Length > 0 &&
+                IsLocationValid(baseType, solution, cancellationToken));
         }
 
         private bool IsLocationValid(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)
@@ -77,23 +94,15 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
         private void PullMemberUpViaQuickAction(
             CodeRefactoringContext context,
-            ISymbol userSelectNodeSymbol,
-            IEnumerable<INamedTypeSymbol> targets)
+            ISymbol selectedMember,
+            ImmutableArray<INamedTypeSymbol> destinations)
         {
-            foreach (var target in targets)
+            foreach (var destination in destinations)
             {
-                AbstractMemberPullerWithQuickAction puller = default;
-                if (target.TypeKind == TypeKind.Interface &&
-                    userSelectNodeSymbol.Kind != SymbolKind.Field)
-                {
-                    puller = new InterfacePullerWithQuickAction();
-                }
-                else
-                {
-                    puller = new ClassPullerWithQuickAction();
-                }
-
-                var action = puller.ComputeRefactoring(context.Document, userSelectNodeSymbol, target);
+                var puller = destination.TypeKind == TypeKind.Interface
+                    ? InterfacePullerWithQuickAction.Instance as AbstractMemberPullerWithQuickAction
+                    : ClassPullerWithQuickAction.Instance;
+                var action = puller.TryComputeRefactoring(context.Document, selectedMember, destination);
                 if (action != null)
                 {
                     context.RegisterRefactoring(action);
@@ -103,10 +112,9 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
         private void AddPullUpMemberRefactoringViaDialogBox(
             CodeRefactoringContext context,
-            SemanticModel semanticModel,
             ISymbol userSelectedNodeSymbol)
         {
-            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, semanticModel, userSelectedNodeSymbol, this);
+            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, userSelectedNodeSymbol);
             context.RegisterRefactoring(dialogAction);
         }
     }

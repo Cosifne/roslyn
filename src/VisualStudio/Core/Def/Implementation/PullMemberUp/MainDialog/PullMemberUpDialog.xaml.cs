@@ -64,7 +64,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
 
         private void TargetMembersContainer_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (TargetMembersContainer.SelectedItem is MemberSymbolViewModelGraphNode memberGraphNode)
+            if (TargetMembersContainer.SelectedItem is BaseTypeTreeNodeViewModel memberGraphNode)
             {
                 ViewModel.SelectedTarget = memberGraphNode;
                 if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&

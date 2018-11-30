@@ -1,11 +1,14 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.  
 
+using System.Collections.Immutable;
 using System.Composition;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
 using Microsoft.CodeAnalysis.Host.Mef;
+using Microsoft.CodeAnalysis.PullMemberUp;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
 {
@@ -14,21 +17,18 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
     {
         private readonly IGlyphService _glyphService;
 
-        private PullMemberUpViewModel ViewModel { get; set; }
-
-        private AnalysisResult MembersInfo { get; set; }
-
         [ImportingConstructor]
         public VisualStudioPullMemberUpService(IGlyphService glyphService)
         {
             _glyphService = glyphService;
         }
 
-        public PullMemberDialogResult GetPullTargetAndMembers(
-            SemanticModel semanticModel,
-            ISymbol selectedNodeSymbol)
+        public PullMembersUpAnalysisResult GetPullTargetAndMembers(
+            ISymbol selectedMember)
         {
-            ViewModel = new PullMemberUpViewModel(semanticModel, selectedNodeSymbol, _glyphService);
+            var baseTypeRootViewModel = BaseTypeTreeNodeViewModel.CreateBaseTypeTree(selectedMember.ContainingType, _glyphService);
+
+            ViewModel = new PullMemberUpViewModel(selectedNodeSymbol, _glyphService);
             var dialog = new PullMemberUpDialog(ViewModel);
             if (dialog.ShowModal().GetValueOrDefault())
             {
@@ -38,6 +38,34 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
             else
             {
                 return PullMemberDialogResult.CanceledResult;
+            }
+        }
+
+        private ImmutableArray<PullUpMemberSymbolViewModel> CreateMembersViewModel(ISymbol selectedMember)
+        {
+            var members = selectedMember.ContainingType.GetMembers().
+                WhereAsArray(member => FilterNotSupportedMembers(member)).
+                SelectAsArray(member => new PullUpMemberSymbolViewModel(member, _glyphService)
+                {
+                    // The member user selects will be checked at the begining.
+                    IsChecked = member.Equals(selectedMember),
+                    MakeAbstract = false,
+                    IsMakeAbstractCheckable = member.Kind != SymbolKind.Field && !member.IsAbstract,
+                    IsCheckable = true
+                });
+        }
+
+        private bool FilterNotSupportedMembers(ISymbol member)
+        {
+            // Support field, ordinary method, event and property.
+            switch (member)
+            {
+                case IMethodSymbol methodSymbol:
+                    return methodSymbol.MethodKind == MethodKind.Ordinary;
+                case IFieldSymbol fieldSymbol:
+                    return fieldSymbol.IsImplicitlyDeclared;
+                default:
+                    return member.IsKind(SymbolKind.Property) || member.IsKind(SymbolKind.Event);
             }
         }
     }
