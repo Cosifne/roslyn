@@ -14,8 +14,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
     {
         protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode selectedMemberNode);
 
-        protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode userSelectedSyntax);
-
         public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {
             // Currently support to pull field, method, event, property and indexer up,
@@ -110,6 +108,14 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                     context.RegisterRefactoring(action);
                 }
             }
+        }
+
+        private void AddPullUpMemberRefactoringViaDialogBox(
+            CodeRefactoringContext context,
+            ISymbol userSelectedNodeSymbol)
+        {
+            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, userSelectedNodeSymbol);
+            context.RegisterRefactoring(dialogAction);
         }
     }
 }

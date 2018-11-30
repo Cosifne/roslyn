@@ -24,34 +24,41 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp
         {
         }
 
-        protected override bool IsSelectionValid(TextSpan span, SyntaxNode userSelectedSyntax)
+        protected override bool IsSelectionValid(TextSpan span, SyntaxNode selectedNode)
         {
-            var identifier = GetIdentifier(userSelectedSyntax);
+            var identifier = GetIdentifier(selectedNode);
             if (identifier == default)
             {
                 return false;
             }
+            else if (identifier.FullSpan.Contains(span) && span.Contains(identifier.Span))
+            {
+                // Selection lies within the identifier's span
+                return true;
+            }
+            else if (identifier.Span.Contains(span) && span.Length == 0)
+            {
+                // Cursor stands on the identifier
+                return true;
+            }
             else
             {
-                return (identifier.FullSpan.Contains(span) && span.Contains(identifier.Span)) ||  
-                    (identifier.Span.Contains(span) && span.Length == 0);
+                return false;
             }
         }
 
-        private SyntaxToken GetIdentifier(SyntaxNode userSelectedSyntax)
+        private SyntaxToken GetIdentifier(SyntaxNode selectedNode)
         {
-            if (userSelectedSyntax is MemberDeclarationSyntax memberDeclarationSyntax)
+            switch (selectedNode)
             {
-                return memberDeclarationSyntax.GetNameToken();
-            }
-            else if (userSelectedSyntax is VariableDeclaratorSyntax variableDeclaratorSyntax)
-            {
-            // It handles multiple fields or events declared in one line
-                return variableDeclaratorSyntax.Identifier;
-            }
-            else
-            {
-                return default;
+                case MemberDeclarationSyntax memberDeclarationSyntax:
+                    // Nested type is checked in before this method is called.
+                    return memberDeclarationSyntax.GetNameToken();
+                case VariableDeclaratorSyntax variableDeclaratorSyntax:
+                    // It handles multiple fields or events declared in one line
+                    return variableDeclaratorSyntax.Identifier;
+                default:
+                    return default;
             }
         }
     }

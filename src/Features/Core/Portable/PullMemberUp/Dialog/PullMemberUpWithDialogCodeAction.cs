@@ -17,40 +17,28 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
             private readonly Document _contextDocument;
 
-            private readonly IPullMemberUpOptionsService _service;
-
-            private readonly SemanticModel _semanticModel;
-
-            public override string Title => FeaturesResources.DotDotDot;
+            public override string Title => "A very cool name";
 
             internal PullMemberUpWithDialogCodeAction(
                 Document document,
-                SemanticModel semanticModel,
-                ISymbol selectedNodeSymbol,
-                AbstractPullMemberUpRefactoringProvider provider)
+                ISymbol selectedNodeSymbol)
             {
                 _contextDocument = document;
-                _semanticModel = semanticModel;
                 _selectedNodeSymbol = selectedNodeSymbol;
-                _service = provider._pullMemberUpOptionsService;
             }
 
             public override object GetOptions(CancellationToken cancellationToken)
             {
-                var pullMemberUpService = _service ?? _contextDocument.Project.Solution.Workspace.Services.GetService<IPullMemberUpOptionsService>();
-                return pullMemberUpService.GetPullTargetAndMembers(_semanticModel, _selectedNodeSymbol);
+                var pullMemberUpService = _contextDocument.Project.Solution.Workspace.Services.GetService<IPullMemberUpOptionsService>();
+                return pullMemberUpService.GetPullTargetAndMembers(_selectedNodeSymbol);
             }
             
             protected async override Task<IEnumerable<CodeActionOperation>> ComputeOperationsAsync(object options, CancellationToken cancellationToken)
             {
-                if (options is PullMemberDialogResult result && !result.IsCanceled)
+                if (options is PullMembersUpAnalysisResult result)
                 {
-                    var generator = new CodeActionAndSolutionGenerator();
-                    var changedSolution = await generator.GetSolutionAsync(
-                        result.PullMembersAnalysisResult,
-                        _contextDocument, cancellationToken).ConfigureAwait(false);
-                    var operation = new ApplyChangesOperation(changedSolution);
-                    return new CodeActionOperation[] { operation };
+                    // Calculate changed solution and code action
+                    return null;
                 }
                 else
                 {

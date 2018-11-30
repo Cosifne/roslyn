@@ -81,7 +81,7 @@
                           MinHeight="115"
                           MinWidth="360"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          ItemsSource="{Binding TargetMembersContainer}"
+                          ItemsSource="{Binding Destinations}"
                           ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}"
                           SelectedItemChanged="TargetMembersContainer_SelectedItemChanged">
                     <TreeView.ItemTemplate>
@@ -120,7 +120,7 @@
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                     SelectionMode="Single"
                     HorizontalContentAlignment="Stretch"
-                    ItemsSource="{Binding SelectedMembersContainer}">
+                    ItemsSource="{Binding Members}">
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -154,10 +154,10 @@
                                                 IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
                                                 Checked="MemberSelectionCheckBox_Checked"
                                                 Width="Auto"
-                                                IsEnabled="{Binding IsSelectable, UpdateSourceTrigger=PropertyChanged}"
+                                                IsEnabled="{Binding IsCheckable, UpdateSourceTrigger=PropertyChanged}"
                                                 Focusable="True"
                                                 ToolTipService.ShowOnDisabled="True"
-                                                ToolTipService.IsEnabled="{Binding IsSelectable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                                ToolTipService.IsEnabled="{Binding IsCheckable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
                                                 ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveField}"/>
                                             <Image 
                                                x:Name="GlyphOfMember"
