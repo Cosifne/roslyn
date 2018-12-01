@@ -25,7 +25,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         public bool IsMakeAbstractCheckable { get => _isMakeAbstractCheckable; set => SetProperty(ref _isMakeAbstractCheckable, value); }
 
         /// <summary>
-        /// Property indicates whether 'Make abstract' check box is selected.
+        /// Property indicates whether 'Make abstract' check box is checked.
         /// </summary>
         public bool MakeAbstract { get; set; }
 
