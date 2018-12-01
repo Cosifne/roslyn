@@ -37,7 +37,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             {
                 if (options is PullMembersUpAnalysisResult result)
                 {
-                    // Calculate changed solution and code action
+                    // TODO: Calculate changed solution and code action
                     return null;
                 }
                 else

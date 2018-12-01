@@ -34,11 +34,12 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                 }
             }
 
-            if (analysisResult.)
-            {
-                Logger.Log(FunctionId.PullMembersUpWarning_ChangeTargetToAbstract);
-                warningMessagesBuilder.Add(string.Format(ServicesVSResources._0_will_be_changed_to_abstract, analysisResult.Destination.Name));
-            }
+            // TODO: add Make abstract field and generate messages.
+            //if (analysisResult.)
+            //{
+            //    Logger.Log(FunctionId.PullMembersUpWarning_ChangeTargetToAbstract);
+            //    warningMessagesBuilder.Add(string.Format(ServicesVSResources._0_will_be_changed_to_abstract, analysisResult.Destination.Name));
+            //}
 
             return warningMessagesBuilder.ToImmutableArray();
         }

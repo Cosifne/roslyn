@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.PullMemberUp;
 using Microsoft.VisualStudio.LanguageServices.Implementation.Utilities;
+using Roslyn.Utilities;
 
 namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog
 {
@@ -16,11 +17,13 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         public ImmutableArray<BaseTypeTreeNodeViewModel> Destinations { get; set; }
 
-        public ImmutableDictionary<ISymbol, PullUpMemberSymbolViewModel> SymbolToMemberViewMap { get; }
-
         private BaseTypeTreeNodeViewModel _selectedTarget;
 
         public BaseTypeTreeNodeViewModel SelectedTarget { get => _selectedTarget; set => SetProperty(ref _selectedTarget, value, nameof(SelectedTarget)); }
+
+        public ImmutableDictionary<ISymbol, AsyncLazy<ImmutableArray<ISymbol>>> DependentsMap;
+
+        public ImmutableDictionary<ISymbol, PullUpMemberSymbolViewModel> SymbolToMemberViewMap { get; }
 
         private bool _selectAllAndDeselectAllChecked;
 
@@ -34,29 +37,15 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             }
         }
 
-        private readonly Dictionary<ISymbol, ImmutableArray<ISymbol>> _dependentsMap;
-
-        internal PullMemberUpViewModel(ImmutableArray<BaseTypeTreeNodeViewModel> destinations, ImmutableArray<PullUpMemberSymbolViewModel> members)
+        internal PullMemberUpViewModel(
+            ImmutableArray<BaseTypeTreeNodeViewModel> destinations,
+            ImmutableArray<PullUpMemberSymbolViewModel> members,
+            ImmutableDictionary<ISymbol, AsyncLazy<ImmutableArray<ISymbol>>> dependentsMap)
         {
             Destinations = destinations;
+            DependentsMap = dependentsMap;
             Members = members;
             SymbolToMemberViewMap = members.ToImmutableDictionary(memberViewModel => memberViewModel.MemberSymbol);
-        }
-
-        public IEnumerable<ISymbol> FindDependents(ISymbol member)
-        {
-            if (_dependentsMap.TryGetValue(member, out var dependents))
-            {
-                return dependents;
-            }
-            else
-            {
-                dependents = DependentsBuilder.Build(
-                    _semanticModel, member,
-                    Members.Select(memberView => memberView.MemberSymbol).ToImmutableHashSet());
-                _dependentsMap.Add(member, dependents);
-                return dependents;
-            }
         }
 
         internal PullMembersUpAnalysisResult CreateAnaysisResult()
