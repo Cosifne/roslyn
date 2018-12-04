@@ -4,7 +4,6 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.PullMemberUp.QuickAction;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
 
@@ -66,6 +65,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             }
             
             PullMemberUpViaQuickAction(context, selectedMember, allDestinations);
+            PullMemberUpViaDialogBox(context, selectedMember);
         }
 
         private ImmutableArray<INamedTypeSymbol> FindAllValidDestinations(
@@ -99,10 +99,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
         {
             foreach (var destination in destinations)
             {
-                var puller = destination.TypeKind == TypeKind.Interface
-                    ? InterfacePullerWithQuickAction.Instance as AbstractMemberPullerWithQuickAction
-                    : ClassPullerWithQuickAction.Instance;
-                var action = puller.TryComputeRefactoring(context.Document, selectedMember, destination);
+                var action = MembersPuller.Instance.TryComputeCodeAction(context.Document, selectedMember, destination);
                 if (action != null)
                 {
                     context.RegisterRefactoring(action);
@@ -110,11 +107,11 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             }
         }
 
-        private void AddPullUpMemberRefactoringViaDialogBox(
+        private void PullMemberUpViaDialogBox(
             CodeRefactoringContext context,
-            ISymbol userSelectedNodeSymbol)
+            ISymbol selectedMember)
         {
-            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, userSelectedNodeSymbol);
+            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, selectedMember);
             context.RegisterRefactoring(dialogAction);
         }
     }

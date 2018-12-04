@@ -77,9 +77,9 @@
         <target state="new">Members</target>
         <note />
       </trans-unit>
-      <trans-unit id="Namespace">
-        <source>Namespace:</source>
-        <target state="new">Namespace:</target>
+      <trans-unit id="Namespace_0">
+        <source>Namespace: {0}</source>
+        <target state="new">Namespace: {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="Never_if_unnecessary">
@@ -277,9 +277,9 @@
         <target state="translated">O valor não é válido</target>
         <note />
       </trans-unit>
-      <trans-unit id="_0_will_be_changed_to_abstract">
-        <source>{0} will be changed to abstract.</source>
-        <target state="new">{0} will be changed to abstract.</target>
+      <trans-unit id="_0_will_be_changed_to_abstract_since_1_is_abstract">
+        <source>{0} will be changed to abstract since {1} is abstract.</source>
+        <target state="new">{0} will be changed to abstract since {1} is abstract.</target>
         <note />
       </trans-unit>
       <trans-unit id="_0_will_be_changed_to_non_static_since_1_is_an_interface">

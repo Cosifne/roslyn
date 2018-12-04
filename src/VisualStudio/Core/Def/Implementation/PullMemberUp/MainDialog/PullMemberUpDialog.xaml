@@ -87,7 +87,7 @@
                     <TreeView.ItemTemplate>
                         <HierarchicalDataTemplate
                             ItemsSource="{Binding BaseTypeGraphNodes}"
-                            DataType="{x:Type self:MemberSymbolViewModelGraphNode}">
+                            DataType="{x:Type self:BaseTypeTreeNodeViewModel}">
                             <StackPanel Orientation="Horizontal">
                                 <Image Source="{Binding Glyph}"/>
                                 <TextBlock

@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
+using Microsoft.CodeAnalysis.PullMemberUp;
 
 namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
 {
@@ -19,7 +20,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
             TargetBaseTypeName = targetBaseTypeName;
         }
 
-        public PullMemberDialogResult GetPullTargetAndMembers(SemanticModel semanticModel, ISymbol selectedNodeSymbol)
+        public PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedNodeSymbol, Document document)
         {
             IEnumerable<(ISymbol member, bool makeAbstract)> selectedMember = default;
             var members = selectedNodeSymbol.ContainingType.GetMembers().Where(
@@ -71,7 +72,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
                     {
                         if (i.Name == TargetBaseTypeName)
                         {
-                            return new PullMemberDialogResult(PullMembersUpAnalysisBuilder.BuildAnalysisResult(i, selectedMember));
+                            return PullMembersUpAnalysisBuilder.BuildAnalysisResult(i, selectedMember.ToImmutableArray());
                         }
                     }
                 }
@@ -83,7 +84,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
             }
             else
             {
-                return new PullMemberDialogResult(PullMembersUpAnalysisBuilder.BuildAnalysisResult(targetSymbol as INamedTypeSymbol, selectedMember));
+                return PullMembersUpAnalysisBuilder.BuildAnalysisResult(targetSymbol as INamedTypeSymbol, selectedMember.ToImmutableArray());
             }
         }
     }

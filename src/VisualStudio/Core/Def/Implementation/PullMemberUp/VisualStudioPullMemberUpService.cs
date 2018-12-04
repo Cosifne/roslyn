@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.  
 
-using System.Collections.Immutable;
 using System.Composition;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,7 +25,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
             _glyphService = glyphService;
         }
 
-        public PullMembersUpAnalysisResult GetPullTargetAndMembers(ISymbol selectedMember, Document document)
+        public PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedMember, Document document)
         {
             var baseTypeRootViewModel = BaseTypeTreeNodeViewModel.CreateBaseTypeTree(selectedMember.ContainingType, _glyphService);
             var membersInType = selectedMember.ContainingType.GetMembers().WhereAsArray(member => FilterNotSupportedMembers(member));
@@ -39,20 +38,29 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                     IsCheckable = true
                 });
 
-            var viewModel = new PullMemberUpViewModel(baseTypeRootViewModel.BaseTypeNodes, memberViewModels);
             var dependentsMap = SymbolDependentsBuilder.CreateDependentsMap(document, membersInType);
             using (var cts = new CancellationTokenSource())
             {
-                var findingDependentsTask = Task.Run(async () =>
+                // Finding the dependents of all members will be expensive, so start an new background thread calculates it.
+                var dependentsTask = Task.Run(async () =>
                 {
                     foreach (var asyncLazy in dependentsMap.Values)
                     {
-                        await asyncLazy.GetValueAsync(cts.Token);
+                        await asyncLazy.GetValueAsync(cts.Token).ConfigureAwait(false);
                     }
                 });
 
+                var viewModel = new PullMemberUpViewModel(baseTypeRootViewModel.BaseTypeNodes, memberViewModels, dependentsMap);
                 var dialog = new PullMemberUpDialog(viewModel, cts);
-                if (dialog.ShowModal().GetValueOrDefault())
+                var result = dialog.ShowModal();
+
+                // Dialog UI has finshed its work, if the finding dependents task still not finished, cancel it.
+                if (!dependentsTask.IsCompleted)
+                {
+                    cts.Cancel();
+                }
+
+                if (result.GetValueOrDefault())
                 {
                     return dialog.ViewModel.CreateAnaysisResult();
                 }
@@ -62,12 +70,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                     return default;
                 }
             }
-
         }
 
         private bool FilterNotSupportedMembers(ISymbol member)
         {
-            // Just show field, ordinary method, event and property.
+            // Just show field, ordinary method, event and property on dialog.
             switch (member)
             {
                 case IMethodSymbol methodSymbol:

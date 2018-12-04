@@ -32,14 +32,14 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                     Logger.Log(FunctionId.PullMembersUpWarning_ChangeOriginToNonStatic);
                     warningMessagesBuilder.Add(string.Format(ServicesVSResources._0_will_be_changed_to_non_static_since_1_is_an_interface, result.Member.Name, analysisResult.Destination));
                 }
-            }
 
-            // TODO: add Make abstract field and generate messages.
-            //if (analysisResult.)
-            //{
-            //    Logger.Log(FunctionId.PullMembersUpWarning_ChangeTargetToAbstract);
-            //    warningMessagesBuilder.Add(string.Format(ServicesVSResources._0_will_be_changed_to_abstract, analysisResult.Destination.Name));
-            //}
+                if (result.ChangeDestinationToAbstract)
+                {
+                    // Information here is not accurate
+                    Logger.Log(FunctionId.PullMembersUpWarning_ChangeTargetToAbstract);
+                    warningMessagesBuilder.Add(string.Format(ServicesVSResources._0_will_be_changed_to_abstract_since_1_is_abstract, analysisResult.Destination.Name));
+                }
+            }
 
             return warningMessagesBuilder.ToImmutableArray();
         }

@@ -1,8 +1,6 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.PullMemberUp;
@@ -50,18 +48,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         internal PullMembersUpAnalysisResult CreateAnaysisResult()
         {
-            // Check box won't be cleared when it is disabled. It is made to prevent user
-            // loses their choice when moves around the target type
-            var membersInfo = Members.
+            var selectedOptionFromDialog = Members.
                 WhereAsArray(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
                 SelectAsArray(memberSymbolView =>
-                    (memberSymbolView.MemberSymbol,
-                    memberSymbolView.MakeAbstract &&
+                    (member: memberSymbolView.MemberSymbol,
+                    makeAbstract: memberSymbolView.MakeAbstract &&
                     memberSymbolView.IsMakeAbstractCheckable));
-            // TODO, change the result to accept make abstract parameters
+
             var result = PullMembersUpAnalysisBuilder.BuildAnalysisResult(
                 SelectedTarget.MemberSymbol as INamedTypeSymbol,
-                membersInfo);
+                selectedOptionFromDialog);
             return result;
         }
     }

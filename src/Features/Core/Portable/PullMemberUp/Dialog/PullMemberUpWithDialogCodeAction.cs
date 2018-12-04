@@ -13,32 +13,32 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
     {
         private class PullMemberUpWithDialogCodeAction : CodeActionWithOptions
         {
-            private readonly ISymbol _selectedNodeSymbol;
+            private readonly ISymbol _selectedMember;
 
-            private readonly Document _contextDocument;
+            private readonly Document _document;
 
-            public override string Title => "A very cool name";
+            public override string Title => "A very cool name tbd";
 
             internal PullMemberUpWithDialogCodeAction(
                 Document document,
-                ISymbol selectedNodeSymbol)
+                ISymbol selectedMember)
             {
-                _contextDocument = document;
-                _selectedNodeSymbol = selectedNodeSymbol;
+                _document = document;
+                _selectedMember = selectedMember;
             }
 
             public override object GetOptions(CancellationToken cancellationToken)
             {
-                var pullMemberUpService = _contextDocument.Project.Solution.Workspace.Services.GetService<IPullMemberUpOptionsService>();
-                return pullMemberUpService.GetPullTargetAndMembers(_selectedNodeSymbol);
+                var pullMemberUpOptionService = _document.Project.Solution.Workspace.Services.GetService<IPullMemberUpOptionsService>();
+                return pullMemberUpOptionService.GetPullMemberUpAnalysisResultFromDialogBox(_selectedMember, _document);
             }
             
             protected async override Task<IEnumerable<CodeActionOperation>> ComputeOperationsAsync(object options, CancellationToken cancellationToken)
             {
                 if (options is PullMembersUpAnalysisResult result)
                 {
-                    // TODO: Calculate changed solution and code action
-                    return null;
+                    var changedSolution = await MembersPuller.Instance.PullMembersUpAsync(result, _document, cancellationToken);
+                    return new CodeActionOperation[1] { new ApplyChangesOperation(changedSolution) };
                 }
                 else
                 {

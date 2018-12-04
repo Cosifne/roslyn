@@ -29,12 +29,12 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         /// </summary>
         public bool MakeAbstract { get; set; }
 
-        private bool _isChecka;
+        private bool _isCheckable;
 
         /// <summary>
         /// Property indicates whether this member checkable.
         /// </summary>
-        public bool IsCheckable { get => _isChecka; set => SetProperty(ref _isChecka, value, nameof(IsCheckable)); }
+        public bool IsCheckable { get => _isCheckable; set => SetProperty(ref _isCheckable, value, nameof(IsCheckable)); }
 
         /// <summary>
         /// The content of the tooltip.
