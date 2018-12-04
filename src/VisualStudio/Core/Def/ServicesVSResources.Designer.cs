@@ -382,9 +382,13 @@ namespace Microsoft.VisualStudio.LanguageServices {
         /// <summary>
         ///   Looks up a localized string similar to Avoid unused value assignments.
         /// </summary>
-        internal static string Avoid_unused_value_assignments {
+        internal static string Avoid_unused_value_assignments
+        {
             get {
                 return ResourceManager.GetString("Avoid_unused_value_assignments", resourceCulture);
+            }
+        }
+        /// <summary>
         ///   Looks up a localized string similar to Back.
         /// </summary>
         internal static string Back {
@@ -1124,9 +1128,14 @@ namespace Microsoft.VisualStudio.LanguageServices {
         /// <summary>
         ///   Looks up a localized string similar to Generate .editorconfig file from settings.
         /// </summary>
-        internal static string Generate_dot_editorconfig_file_from_settings {
+        internal static string Generate_dot_editorconfig_file_from_settings
+        {
             get {
                 return ResourceManager.GetString("Generate_dot_editorconfig_file_from_settings", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Found Problems:.
         /// </summary>
         internal static string Found_Problems {
