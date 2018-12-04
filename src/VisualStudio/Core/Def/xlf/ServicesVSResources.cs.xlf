@@ -103,15 +103,12 @@
         <target state="translated">Zachovat všechny závorky v:</target>
         <note />
       </trans-unit>
-<<<<<<< HEAD
       <trans-unit id="Kind">
         <source>Kind</source>
         <target state="new">Kind</target>
       <trans-unit id="Make_Abs">
         <source>Make Abstract</source>
         <target state="new">Make Abstract</target>
-=======
->>>>>>> 39407d07295234923b8d6a17526e22f571213f3e
       <trans-unit id="Make_abstract">
         <source>Make abstract</source>
         <target state="new">Make abstract</target>
@@ -152,7 +149,6 @@
         <target state="new">Prefer compound assignments</target>
         <note />
       </trans-unit>
-<<<<<<< HEAD
       <trans-unit id="Prefer_index_operator">
         <source>Prefer index operator</source>
         <target state="new">Prefer index operator</target>
@@ -161,8 +157,6 @@
       <trans-unit id="Prefer_range_operator">
         <source>Prefer range operator</source>
         <target state="new">Prefer range operator</target>
-=======
->>>>>>> 39407d07295234923b8d6a17526e22f571213f3e
       <trans-unit id="Pull_Up_Description">
         <source>Select destination and members to pull up.</source>
         <target state="new">Select destination and members to pull up.</target>
@@ -188,7 +182,6 @@
         <target state="translated">Obnovit výchozí mapování klávesnice sady Visual Studio</target>
         <note />
       </trans-unit>
-<<<<<<< HEAD
       <trans-unit id="Save_dot_editorconfig_file">
         <source>Save .editorconfig file</source>
         <target state="new">Save .editorconfig file</target>
@@ -202,8 +195,6 @@
       <trans-unit id="Unused_value_is_explicitly_assigned_to_discard">
         <source>Unused value is explicitly assigned to discard</source>
         <target state="new">Unused value is explicitly assigned to discard</target>
-=======
->>>>>>> 39407d07295234923b8d6a17526e22f571213f3e
       <trans-unit id="Review_Problems">
         <source>Review problems below. Click Finish to proceed pull up.</source>
         <target state="new">Review problems below. Click Finish to proceed pull up.</target>

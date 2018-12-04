@@ -27,12 +27,9 @@
         <target state="translated">アクションは空にできません。</target>
         <note />
       </trans-unit>
-<<<<<<< HEAD
       <trans-unit id="Add_tuple_element_name_0">
         <source>Add tuple element name '{0}'</source>
         <target state="new">Add tuple element name '{0}'</target>
-=======
->>>>>>> 39407d07295234923b8d6a17526e22f571213f3e
       <trans-unit id="Add_to">
         <source>Add to</source>
         <target state="new">Add to</target>
