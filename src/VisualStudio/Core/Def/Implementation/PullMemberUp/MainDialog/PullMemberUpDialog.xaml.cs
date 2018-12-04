@@ -106,6 +106,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
 
         private void DisableAllFieldCheckBox()
         {
+            // Check box won't be cleared when it is disabled. It is made to prevent user
+            // loses their choice when moves around the target type
             foreach (var member in ViewModel.Members)
             {
                 if (member.MemberSymbol.Kind == SymbolKind.Field)
@@ -146,7 +148,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                     }
                 }
             }
-            _cancellationTokenSource.Cancel();
         }
 
         private bool ShowWarningDialog(PullMembersUpAnalysisResult result)
@@ -160,7 +161,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
         private void Cancel_Button_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
-            _cancellationTokenSource.Cancel();
         }
 
         private async void SelecDependentsButton_Click(object sender, RoutedEventArgs e)
@@ -171,7 +171,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
             
             foreach (var member in checkedMembers)
             {
-                var dependents = await ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token);
+                // Should we block the UI and show something to notice the user if the calculation of dependents map is not finshed?
+                var dependents = await ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
                 foreach (var symbol in dependents)
                 {
                     var memberView = ViewModel.SymbolToMemberViewMap[symbol];

@@ -13,17 +13,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp
     [ExportCodeRefactoringProvider(LanguageNames.CSharp, Name = nameof(PredefinedCodeRefactoringProviderNames.PullMember)), Shared]
     internal class CSharpPullMemberUpCodeRefactoringProvider : AbstractPullMemberUpRefactoringProvider
     {
-        /// <summary>
-        /// For test purpose only.
-        /// </summary>
-        public CSharpPullMemberUpCodeRefactoringProvider(IPullMemberUpOptionsService pullMemberUpService) : base(pullMemberUpService)
-        {
-        }
-
-        internal CSharpPullMemberUpCodeRefactoringProvider() : this(null)
-        {
-        }
-
         protected override bool IsSelectionValid(TextSpan span, SyntaxNode selectedNode)
         {
             var identifier = GetIdentifier(selectedNode);

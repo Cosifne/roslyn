@@ -90,11 +90,11 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} will be changed to abstract..
+        ///   Looks up a localized string similar to {0} will be changed to abstract since {1} is abstract..
         /// </summary>
-        internal static string _0_will_be_changed_to_abstract {
+        internal static string _0_will_be_changed_to_abstract_since_1_is_abstract {
             get {
-                return ResourceManager.GetString("_0_will_be_changed_to_abstract", resourceCulture);
+                return ResourceManager.GetString("_0_will_be_changed_to_abstract_since_1_is_abstract", resourceCulture);
             }
         }
         

@@ -7,6 +7,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog
 {
     internal interface IPullMemberUpOptionsService : IWorkspaceService
     {
-        PullMembersUpAnalysisResult GetPullTargetAndMembers(ISymbol selectedNodeSymbol);
+        PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedNodeSymbol, Document document);
     }
 }
