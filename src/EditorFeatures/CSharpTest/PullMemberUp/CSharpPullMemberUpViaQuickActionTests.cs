@@ -1,18 +1,44 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.CodeRefactorings;
 using Microsoft.CodeAnalysis.Test.Utilities;
+using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Xunit;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.PullMemberUp
 {
-    public class CSharpPullMemberUpTests : AbstractCSharpCodeActionTest
+    public class CSharpPullMemberUpViaQuickActionTests : AbstractCSharpCodeActionTest
     {
         protected override CodeRefactoringProvider CreateCodeRefactoringProvider(Workspace workspace, TestParameters parameters)
         => new CSharpPullMemberUpCodeRefactoringProvider();
+
+        private async Task TestQuickActionNotProvidedAsync(
+            string initialMarkup,
+            TestParameters parameters = default)
+        {
+            using (var workspace = CreateWorkspaceFromOptions(initialMarkup, parameters))
+            {
+                var (actions, _) = await GetCodeActionsAsync(workspace, parameters);
+                if (actions.Length == 1)
+                {
+                    // The dialog will show more frequently than quick action since it can 
+                    // fix some situation
+                    Assert.IsType<AbstractPullMemberUpRefactoringProvider.PullMemberUpWithDialogCodeAction>(actions.First());
+                }
+                else if (actions.Length > 1)
+                {
+                    Assert.True(false, "Pull Members Up is provided via quick action");
+                }
+                else
+                {
+                    Assert.True(true);
+                }
+            }
+        }
 
         #region destination interface
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -30,7 +56,7 @@ namespace PushUpTest
         public int yo[||]u = 10086;
     }
 }";
-            await TestMissingAsync(testText);
+            await TestQuickActionNotProvidedAsync(testText);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -52,7 +78,7 @@ namespace PushUpTest
         }
     }
 }";
-            await TestMissingAsync(methodTest);
+            await TestQuickActionNotProvidedAsync(methodTest);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -72,7 +98,7 @@ namespace PushUpTest
         public int TestPr[||]operty { get; private set; }
     }
 }";
-            await TestMissingAsync(propertyTest1);
+            await TestQuickActionNotProvidedAsync(propertyTest1);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -92,7 +118,7 @@ namespace PushUpTest
         public event EventHandler Event1, Eve[||]nt2, Event3;
     }
 }";
-            await TestMissingAsync(eventTest);
+            await TestQuickActionNotProvidedAsync(eventTest);
         }
 
 
@@ -115,7 +141,7 @@ namespace PushUpTest
     }
 }";
 
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -543,7 +569,7 @@ namespace PushUpTest
         }
     }
 }";
-            await TestMissingAsync(methodTest);
+            await TestQuickActionNotProvidedAsync(methodTest);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -564,7 +590,7 @@ namespace PushUpTest
     }
 }";
 
-            await TestMissingAsync(propertyTest);
+            await TestQuickActionNotProvidedAsync(propertyTest);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -605,7 +631,7 @@ namespace PushUpTest
         };
     }
 }";
-            await TestMissingAsync(eventTest);
+            await TestQuickActionNotProvidedAsync(eventTest);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -626,7 +652,7 @@ namespace PushUpTest
         public int y[||]ou = 10086;
     }
 }";
-            await TestMissingAsync(fieldTest);
+            await TestQuickActionNotProvidedAsync(fieldTest);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1023,7 +1049,7 @@ namespace PushUpTest
         </Document>
   </Project>
 </Workspace>";
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1051,7 +1077,7 @@ namespace PushUpTest
     </Project>
 </Workspace>
 ";
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1077,7 +1103,7 @@ namespace PushUpTest
     </Project>
 </Workspace>";
 
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1106,7 +1132,7 @@ public class TestClass : VBClass
   </Project>
 </Workspace>
 ";
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1134,7 +1160,7 @@ public class TestClass : VBInterface
         </Document>
     </Project>
 </Workspace>";
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1159,7 +1185,7 @@ public class TestClass : VBInterface
         </Document>
     </Project>
 </Workspace>";
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
@@ -1184,7 +1210,7 @@ public class TestClass : VBInterface
     </Document>
     </Project>
 </Workspace>";
-            await TestMissingAsync(input);
+            await TestQuickActionNotProvidedAsync(input);
         }
         
         #endregion cross language

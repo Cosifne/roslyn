@@ -11,7 +11,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 {
     internal abstract partial class AbstractPullMemberUpRefactoringProvider
     {
-        private class PullMemberUpWithDialogCodeAction : CodeActionWithOptions
+        internal class PullMemberUpWithDialogCodeAction : CodeActionWithOptions
         {
             private readonly ISymbol _selectedMember;
 
