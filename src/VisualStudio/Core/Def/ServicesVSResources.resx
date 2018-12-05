@@ -1084,61 +1084,34 @@ I agree to all of the foregoing:</value>
   <data name="Prefer_range_operator" xml:space="preserve">
     <value>Prefer range operator</value>
   </data>
-  <data name="Interface_cant_have_abstract_member" xml:space="preserve">
-    <value>Interface can't have abstract member.</value>
+  <data name="All_methods" xml:space="preserve">
+    <value>All methods</value>
   </data>
-  <data name="Interface_cant_have_field" xml:space="preserve">
-    <value>Interface can't have field.</value>
+  <data name="Avoid_expression_statements_that_implicitly_ignore_value" xml:space="preserve">
+    <value>Avoid expression statements that implicitly ignore value</value>
   </data>
-  <data name="Make_abstract" xml:space="preserve">
-    <value>Make abstract</value>
+  <data name="Avoid_unused_parameters" xml:space="preserve">
+    <value>Avoid unused parameters</value>
   </data>
-  <data name="Members" xml:space="preserve">
-    <value>Members</value>
+  <data name="Avoid_unused_value_assignments" xml:space="preserve">
+    <value>Avoid unused value assignments</value>
   </data>
-  <data name="Namespace_0" xml:space="preserve">
-    <value>Namespace: {0}</value>
+  <data name="Parameter_preferences_colon" xml:space="preserve">
+    <value>Parameter preferences:</value>
   </data>
-  <data name="Namespace_global" xml:space="preserve">
-    <value>Namespace: global</value>
+  <data name="Non_public_methods" xml:space="preserve">
+    <value>Non-public methods</value>
   </data>
-  <data name="Pull_Members_Up" xml:space="preserve">
-    <value>Pull Members Up</value>
+  <data name="Unused_value_is_explicitly_assigned_to_an_unused_local" xml:space="preserve">
+    <value>Unused value is explicitly assigned to an unused local</value>
   </data>
-  <data name="Select_Dependents" xml:space="preserve">
-    <value>Select_Dependents</value>
+  <data name="Unused_value_is_explicitly_assigned_to_discard" xml:space="preserve">
+    <value>Unused value is explicitly assigned to discard</value>
   </data>
-  <data name="Select_destinations" xml:space="preserve">
-    <value>Select destination type:</value>
+  <data name="Value_assigned_here_is_never_used" xml:space="preserve">
+    <value>Value assigned here is never used</value>
   </data>
-  <data name="Select_destination_and_members_to_pull_up" xml:space="preserve">
-    <value>Select destination and members to pull up.</value>
-  </data>
-  <data name="Select_members" xml:space="preserve">
-    <value>Select members:</value>
-  </data>
-  <data name="Select_Public" xml:space="preserve">
-    <value>Select_Public</value>
-  </data>
-  <data name="_0_will_be_changed_to_abstract_since_1_is_abstract" xml:space="preserve">
-    <value>{0} will be changed to abstract since {1} is abstract.</value>
-  </data>
-  <data name="_0_will_be_changed_to_non_static_since_1_is_an_interface" xml:space="preserve">
-    <value>{0} will be changed to non-static since {1} is an interface.</value>
-  </data>
-  <data name="_0_will_be_changed_to_public_since_1_is_an_interface" xml:space="preserve">
-    <value>{0} will be changed to public since {1} is an interface.</value>
-  </data>
-  <data name="Found_problems" xml:space="preserve">
-    <value>Found_problems:</value>
-  </data>
-  <data name="Review_problems_below_Click_finish_to_proceed_pull_up" xml:space="preserve">
-    <value>Review problem below. Click Finish to proceed pull up.</value>
-  </data>
-  <data name="Back" xml:space="preserve">
-    <value>Back</value>
-  </data>
-  <data name="Finish" xml:space="preserve">
-    <value>Finish</value>
+  <data name="Value_returned_by_invocation_is_implicitly_ignored" xml:space="preserve">
+    <value>Value returned by invocation is implicitly ignored</value>
   </data>
 </root>

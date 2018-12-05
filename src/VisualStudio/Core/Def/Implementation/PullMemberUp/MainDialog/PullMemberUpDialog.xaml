@@ -67,8 +67,8 @@
         </Grid.RowDefinitions>
         <Label
             Grid.Row="0"
-            x:Uid="Description"
-            x:Name="Description"
+            x:Uid="TitleDescription"
+            x:Name="TitleDescription"
             Margin="0,0,0,18"
             Content="{Binding ElementName=dialog, Path=Description}"/>
         <GroupBox
