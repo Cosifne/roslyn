@@ -19,6 +19,7 @@
              MinWidth="533"
              HasDialogFrame="True"
              ShowInTaskbar="False"
+             ResizeMode="CanResizeWithGrip"
              HasHelpButton="True"
              Title="{Binding ElementName=dialog, Path=PullMembersUpTitle}">
     <Window.Resources>

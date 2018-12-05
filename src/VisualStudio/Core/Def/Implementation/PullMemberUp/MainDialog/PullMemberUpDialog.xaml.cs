@@ -167,7 +167,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             
             foreach (var member in checkedMembers)
             {
-                // Should we block the UI and show something to notice the user if the calculation of dependents map is not finshed?
+                // What to do if this operation is still calculateing?
+                // 1. Change the check box to a spining roll to the current selected member 
+                // (So user still can make selection on UI)
+                // 2. Pop a dialog and block the UI.
                 var dependents = await ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
                 foreach (var symbol in dependents)
                 {

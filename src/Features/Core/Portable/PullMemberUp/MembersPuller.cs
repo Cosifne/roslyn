@@ -26,6 +26,10 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
         {
         }
 
+        /// <summary>
+        /// Return the CodeAction to pull selectedMember up to destinationType. If the pulling will cause error,
+        /// it will return null.
+        /// </summary>
         internal CodeAction TryComputeCodeAction(
             Document document,
             ISymbol selectedMember,
@@ -43,6 +47,10 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 cancellationToken => PullMembersUpAsync(result, document, cancellationToken));
         }
 
+        /// <summary>
+        /// Return the changed solution if all changes in result are applied.
+        /// </summary>
+        /// <param name="result">Contains the members to pull up and all the fix operations</param>>
         internal async Task<Solution> PullMembersUpAsync(
             PullMembersUpAnalysisResult result,
             Document contextDocument,
@@ -247,9 +255,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                     }
                 });
             var options = new CodeGenerationOptions(reuseSyntax: true, generateMethodBodies: false);
-            var membersAddedNode = codeGenerationService.AddMembers(destinationSyntaxNode, pullUpMembersSymbols, options: options);
-            var destinationEditor = editorMap[destinationSyntaxNode.SyntaxTree];
-            destinationEditor.ReplaceNode(destinationSyntaxNode, (syntaxNode, generator) => membersAddedNode);
+            var newDestination = codeGenerationService.AddMembers(destinationSyntaxNode, pullUpMembersSymbols, options: options);
 
             // Remove some original members since we are pulling members into class.
             // Note: If user chooses to make the member abstract, then the original member won't be touched,
@@ -268,20 +274,15 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             }
 
             // Change the destination to abstract class if needed.
+            var destinationEditor = editorMap[destinationSyntaxNode.SyntaxTree];
             if (!result.Destination.IsAbstract &&
                 result.MemberAnalysisResults.Any(analysis => analysis.Member.IsAbstract || analysis.MakeDeclarationAtDestinationAbstract))
             {
                 var modifiers = DeclarationModifiers.From(result.Destination).WithIsAbstract(true);
-                destinationEditor.SetModifiers(destinationSyntaxNode, modifiers);
-                /*destinationEditor.ReplaceNode(
-                    destinationSyntaxNode,
-                    (syntaxNode, generator) =>
-                    {
-                        var modifiers = DeclarationModifiers.From(result.Destination).WithIsAbstract(true);
-                        return generator.WithModifiers(syntaxNode, modifiers);
-                    }); */
+                newDestination = destinationEditor.Generator.WithModifiers(newDestination, modifiers);
             }
 
+            destinationEditor.ReplaceNode(destinationSyntaxNode, (syntaxNode, generator) => newDestination);
             return solutionEditor.GetChangedSolution();
         }
 

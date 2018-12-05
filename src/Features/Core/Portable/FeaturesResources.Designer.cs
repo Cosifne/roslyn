@@ -10,7 +10,6 @@
 
 namespace Microsoft.CodeAnalysis {
     using System;
-    using System.Reflection;
     
     
     /// <summary>
@@ -40,7 +39,7 @@ namespace Microsoft.CodeAnalysis {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CodeAnalysis.FeaturesResources", typeof(FeaturesResources).GetTypeInfo().Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CodeAnalysis.FeaturesResources", typeof(FeaturesResources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -2849,6 +2848,15 @@ namespace Microsoft.CodeAnalysis {
         internal static string Property_referenced_implicitly {
             get {
                 return ResourceManager.GetString("Property_referenced_implicitly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pull {0} up.
+        /// </summary>
+        internal static string Pull_0_up {
+            get {
+                return ResourceManager.GetString("Pull_0_up", resourceCulture);
             }
         }
         

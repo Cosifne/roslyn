@@ -4,9 +4,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
+using static Microsoft.CodeAnalysis.CodeActions.CodeAction;
 
 namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 {
@@ -74,9 +76,16 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             {
                 return;
             }
-            
-            PullMemberUpViaQuickAction(context, selectedMember, allDestinations);
-            PullMemberUpViaDialogBox(context, selectedMember);
+
+            var allActions = allDestinations.SelectAsArray(
+                destination => MembersPuller.Instance.TryComputeCodeAction(context.Document, selectedMember, destination)).
+                WhereAsArray(action => action != null).
+                Concat(new PullMemberUpWithDialogCodeAction(context.Document, selectedMember, this));
+
+            var nestedCodeAction = new CodeActionWithNestedActions(
+                string.Format(FeaturesResources.Pull_0_up, selectedMember.ToNameDisplayString()),
+                allActions, false);
+            context.RegisterRefactoring(nestedCodeAction);
         }
 
         private ImmutableArray<INamedTypeSymbol> FindAllValidDestinations(
@@ -101,29 +110,6 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
         {
             return symbol.Locations.Any(location => location.IsInSource &&
                 !solution.GetDocument(location.SourceTree).IsGeneratedCode(cancellationToken));
-        }
-
-        private void PullMemberUpViaQuickAction(
-            CodeRefactoringContext context,
-            ISymbol selectedMember,
-            ImmutableArray<INamedTypeSymbol> destinations)
-        {
-            foreach (var destination in destinations)
-            {
-                var action = MembersPuller.Instance.TryComputeCodeAction(context.Document, selectedMember, destination);
-                if (action != null)
-                {
-                    context.RegisterRefactoring(action);
-                }
-            }
-        }
-
-        private void PullMemberUpViaDialogBox(
-            CodeRefactoringContext context,
-            ISymbol selectedMember)
-        {
-            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, selectedMember, this);
-            context.RegisterRefactoring(dialogAction);
         }
     }
 }
