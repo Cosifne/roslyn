@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
 
@@ -11,7 +12,17 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 {
     internal abstract partial class AbstractPullMemberUpRefactoringProvider : CodeRefactoringProvider
     {
+        private readonly IPullMemberUpOptionsService _service;
+
         protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode selectedMemberNode);
+
+        /// <summary>
+        /// Test purpose only
+        /// </summary>
+        public AbstractPullMemberUpRefactoringProvider(IPullMemberUpOptionsService service)
+        {
+            _service = service;
+        }
 
         public override async Task ComputeRefactoringsAsync(CodeRefactoringContext context)
         {
@@ -111,7 +122,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             CodeRefactoringContext context,
             ISymbol selectedMember)
         {
-            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, selectedMember);
+            var dialogAction = new PullMemberUpWithDialogCodeAction(context.Document, selectedMember, this);
             context.RegisterRefactoring(dialogAction);
         }
     }

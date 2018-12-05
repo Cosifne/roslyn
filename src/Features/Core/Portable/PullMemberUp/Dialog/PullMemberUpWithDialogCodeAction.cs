@@ -17,19 +17,23 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
             private readonly Document _document;
 
+            private readonly IPullMemberUpOptionsService _service;
+
             public override string Title => "A very cool name tbd";
 
             internal PullMemberUpWithDialogCodeAction(
                 Document document,
-                ISymbol selectedMember)
+                ISymbol selectedMember,
+                AbstractPullMemberUpRefactoringProvider provider)
             {
                 _document = document;
                 _selectedMember = selectedMember;
+                _service = provider._service;
             }
 
             public override object GetOptions(CancellationToken cancellationToken)
             {
-                var pullMemberUpOptionService = _document.Project.Solution.Workspace.Services.GetService<IPullMemberUpOptionsService>();
+                var pullMemberUpOptionService = _service ?? _document.Project.Solution.Workspace.Services.GetService<IPullMemberUpOptionsService>();
                 return pullMemberUpOptionService.GetPullMemberUpAnalysisResultFromDialogBox(_selectedMember, _document);
             }
             

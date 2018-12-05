@@ -25,8 +25,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.PullMemberUp
                 var (actions, _) = await GetCodeActionsAsync(workspace, parameters);
                 if (actions.Length == 1)
                 {
-                    // The dialog will show more frequently than quick action since it can 
-                    // fix some situation
+                    // The dialog shows up, not quick action
                     Assert.IsType<AbstractPullMemberUpRefactoringProvider.PullMemberUpWithDialogCodeAction>(actions.First());
                 }
                 else if (actions.Length > 1)

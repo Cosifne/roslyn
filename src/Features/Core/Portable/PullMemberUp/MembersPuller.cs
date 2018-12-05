@@ -130,6 +130,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             // Add members to interface
             var options = new CodeGenerationOptions(generateMethodBodies: false, generateMembers: false);
             var destinationWithMembersAdded = codeGenerationService.AddMembers(destinationSyntaxNode, symbolsToPullUp, options: options, cancellationToken: cancellationToken);
+            var destinationEditor = editorMap[destinationSyntaxNode.SyntaxTree];
+            destinationEditor.ReplaceNode(destinationSyntaxNode, (syntaxNode, generator) => destinationWithMembersAdded);
 
             // Change to original members
             foreach (var analysisResult in result.MemberAnalysisResults)
@@ -269,13 +271,15 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             if (!result.Destination.IsAbstract &&
                 result.MemberAnalysisResults.Any(analysis => analysis.Member.IsAbstract || analysis.MakeDeclarationAtDestinationAbstract))
             {
-                destinationEditor.ReplaceNode(
+                var modifiers = DeclarationModifiers.From(result.Destination).WithIsAbstract(true);
+                destinationEditor.SetModifiers(destinationSyntaxNode, modifiers);
+                /*destinationEditor.ReplaceNode(
                     destinationSyntaxNode,
                     (syntaxNode, generator) =>
                     {
                         var modifiers = DeclarationModifiers.From(result.Destination).WithIsAbstract(true);
-                        return generator.WithModifiers(destinationSyntaxNode, modifiers);
-                    });
+                        return generator.WithModifiers(syntaxNode, modifiers);
+                    }); */
             }
 
             return solutionEditor.GetChangedSolution();
