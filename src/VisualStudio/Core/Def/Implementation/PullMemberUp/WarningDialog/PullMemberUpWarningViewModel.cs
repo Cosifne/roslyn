@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis.Internal.Log;
 using Microsoft.CodeAnalysis.PullMemberUp;
 using Microsoft.VisualStudio.LanguageServices.Implementation.Utilities;
 
-namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
+namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.WarningDialog
 {
     internal class PullMemberUpWarningViewModel : AbstractNotifyPropertyChanged
     {

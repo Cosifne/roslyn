@@ -26,7 +26,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         /// Content of the tooltip.
         /// </summary>
         public string Namespace => string.Format(ServicesVSResources.Namespace_0,
-            MemberSymbol.ContainingNamespace?.ToDisplayString() ?? ServicesVSResources.Global_name_space);
+            MemberSymbol.ContainingNamespace?.ToDisplayString() ?? ServicesVSResources.Namespace_global);
 
         private BaseTypeTreeNodeViewModel(INamedTypeSymbol node, IGlyphService glyphService) : base(node, glyphService)
         {

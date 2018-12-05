@@ -1,6 +1,6 @@
 ﻿<vs:DialogWindow
              x:Uid="PullMemberUpDialog" 
-             x:Class="Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.PullMemberUpDialog"
+             x:Class="Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog.PullMemberUpDialog"
              x:ClassModifier="internal"
              x:Name="dialog"
              xmlns:vs="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
@@ -9,7 +9,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
-             xmlns:self="clr-namespace:Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp"
+             xmlns:self="clr-namespace:Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog"
              mc:Ignorable="d" 
              SizeToContent="Width"
              WindowStartupLocation="CenterOwner"
@@ -70,7 +70,7 @@
             x:Uid="Description"
             x:Name="Description"
             Margin="0,0,0,18"
-            Content="{Binding ElementName=dialog, Path=PullUpDescription}"/>
+            Content="{Binding ElementName=dialog, Path=Description}"/>
         <GroupBox
             Grid.Row="1"
             BorderThickness="0"

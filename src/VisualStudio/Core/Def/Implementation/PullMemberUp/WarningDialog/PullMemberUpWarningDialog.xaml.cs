@@ -4,24 +4,24 @@ using System.Windows;
 using Microsoft.CodeAnalysis.Internal.Log;
 using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
+namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.WarningDialog
 {
     /// <summary>
-    /// Interaction logic for PushMemberUpDialog.xaml
+    /// Interaction logic for PushMemberUpWarningDialog.xaml
     /// </summary>
-    internal partial class PullMemberUpDialogWarning : DialogWindow
+    internal partial class PullMemberUpWarningDialog : DialogWindow
     {
         public string Back => ServicesVSResources.Back;
 
         public string Finish => ServicesVSResources.Finish;
 
-        public string PullMembersUpTitle => ServicesVSResources.Pull_Up_Members;
+        public string PullMembersUpTitle => ServicesVSResources.Pull_Members_Up;
 
-        public string TextTitle => ServicesVSResources.Review_Problems;
+        public string TextTitle => ServicesVSResources.Review_problems_below_Click_finish_to_proceed_pull_up;
 
-        public string FoundProblem => ServicesVSResources.Found_Problems;
+        public string FoundProblem => ServicesVSResources.Found_problems;
 
-        internal PullMemberUpDialogWarning(PullMemberUpWarningViewModel viewModel)
+        internal PullMemberUpWarningDialog(PullMemberUpWarningViewModel viewModel)
         {
             DataContext = viewModel;
             InitializeComponent();

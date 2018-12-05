@@ -15,9 +15,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         public ImmutableArray<BaseTypeTreeNodeViewModel> Destinations { get; set; }
 
-        private BaseTypeTreeNodeViewModel _selectedTarget;
+        private BaseTypeTreeNodeViewModel _selectedDestination;
 
-        public BaseTypeTreeNodeViewModel SelectedTarget { get => _selectedTarget; set => SetProperty(ref _selectedTarget, value, nameof(SelectedTarget)); }
+        public BaseTypeTreeNodeViewModel SelectedDestination { get => _selectedDestination; set => SetProperty(ref _selectedDestination, value, nameof(SelectedDestination)); }
 
         public ImmutableDictionary<ISymbol, AsyncLazy<ImmutableArray<ISymbol>>> DependentsMap;
 
@@ -56,7 +56,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                     memberSymbolView.IsMakeAbstractCheckable));
 
             var result = PullMembersUpAnalysisBuilder.BuildAnalysisResult(
-                SelectedTarget.MemberSymbol as INamedTypeSymbol,
+                SelectedDestination.MemberSymbol as INamedTypeSymbol,
                 selectedOptionFromDialog);
             return result;
         }

@@ -30,9 +30,6 @@
       <trans-unit id="Add_tuple_element_name_0">
         <source>Add tuple element name '{0}'</source>
         <target state="new">Add tuple element name '{0}'</target>
-      <trans-unit id="Add_to">
-        <source>Add to</source>
-        <target state="new">Add to</target>
         <note />
       </trans-unit>
       <trans-unit id="Adding_method_with_explicit_interface_specifier_will_prevernt_the_debug_session_from_continuing">
@@ -255,6 +252,16 @@
         <target state="new">Use interpolated verbatim string</target>
         <note />
       </trans-unit>
+      <trans-unit id="Value_assigned_to_0_is_never_used">
+        <source>Value assigned to '{0}' is never used</source>
+        <target state="new">Value assigned to '{0}' is never used</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Value_assigned_to_symbol_is_never_used">
+        <source>Value assigned to symbol is never used</source>
+        <target state="new">Value assigned to symbol is never used</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Warning_colon_changing_namespace_may_produce_invalid_code_and_change_code_meaning">
         <source>Warning: Changing namespace may produce invalid code and change code meaning.</source>
         <target state="new">Warning: Changing namespace may produce invalid code and change code meaning.</target>
@@ -268,16 +275,6 @@
       <trans-unit id="_0_can_be_simplified">
         <source>{0} can be simplified</source>
         <target state="new">{0} can be simplified</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Value_assigned_to_0_is_never_used">
-        <source>Value assigned to '{0}' is never used</source>
-        <target state="new">Value assigned to '{0}' is never used</target>
-        <note />
-      </trans-unit>
-      <trans-unit id="Value_assigned_to_symbol_is_never_used">
-        <source>Value assigned to symbol is never used</source>
-        <target state="new">Value assigned to symbol is never used</target>
         <note />
       </trans-unit>
       <trans-unit id="generic_overload">

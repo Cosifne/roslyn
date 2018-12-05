@@ -1,6 +1,6 @@
 ﻿<vs:DialogWindow
              x:Uid="PullMemberUpWarningDialog" 
-             x:Class="Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.PullMemberUpDialogWarning"
+             x:Class="Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.WarningDialog.PullMemberUpWarningDialog"
              x:ClassModifier="internal"
              x:Name="dialog"
              xmlns:vs="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
@@ -37,34 +37,34 @@
                 x:Name="Description"
                 Content="{Binding ElementName=dialog, Path=TextTitle}"
                 Margin="0, 0, 0, 24"/>
-        <GroupBox
+            <GroupBox
             x:Name="WarnningMessageGroupBox"
             Header="{Binding ElementName=dialog, Path=FoundProblem}"
             BorderThickness="0">
-            <u:AutomationDelegatingListView
+                <u:AutomationDelegatingListView
                 x:Name="WarningMessageList"
                 ItemsSource="{Binding WarningMessageContainer}"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                 MinHeight="165">
-                <ListView.ItemTemplate>
-                    <DataTemplate>
-                        <WrapPanel Orientation="Horizontal">
-                            <TextBlock
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <WrapPanel Orientation="Horizontal">
+                                <TextBlock
                                 Text="{Binding Path=.}"
                                 AutomationProperties.Name="{Binding Path=.}"
                                 AutomationProperties.AutomationId="{Binding Path=.}"/>
-                        </WrapPanel>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </u:AutomationDelegatingListView>
-        </GroupBox>
+                            </WrapPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </u:AutomationDelegatingListView>
+            </GroupBox>
         </StackPanel>
-            <StackPanel
+        <StackPanel
                    Grid.Row="1"
                    Orientation="Horizontal"
                    HorizontalAlignment="Right"
                    Margin="0,18,0,0">
-                    <vs:DialogButton x:Uid="BackButton"
+            <vs:DialogButton x:Uid="BackButton"
                         Grid.Column="1"
                         IsCancel="True"
                         Padding= "{StaticResource ResourceKey=okAndCancelButtonPadding}"
@@ -73,7 +73,7 @@
                         Width= "{StaticResource ResourceKey=ButtonWidth}"
                         Content="{Binding ElementName=dialog, Path=Back}"
                         Height="{StaticResource ResourceKey=ButtonHeight}"/>
-                    <vs:DialogButton x:Uid="FinishButton"
+            <vs:DialogButton x:Uid="FinishButton"
                         Click="FinishButton_Click"
                         Grid.Column="2"
                         IsDefault="True"
@@ -82,6 +82,6 @@
                         Content="{Binding ElementName=dialog, Path=Finish}"
                         Width= "{StaticResource ResourceKey=ButtonWidth}"
                         Height="{StaticResource ResourceKey=ButtonHeight}"/>
-            </StackPanel>
-        </Grid>
+        </StackPanel>
+    </Grid>
 </vs:DialogWindow>

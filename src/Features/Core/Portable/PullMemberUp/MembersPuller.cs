@@ -131,7 +131,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             var options = new CodeGenerationOptions(generateMethodBodies: false, generateMembers: false);
             var destinationWithMembersAdded = codeGenerationService.AddMembers(destinationSyntaxNode, symbolsToPullUp, options: options, cancellationToken: cancellationToken);
 
-            // Do Changes to original members
+            // Change to original members
             foreach (var analysisResult in result.MemberAnalysisResults)
             {
                 foreach (var syntax in syntaxMap[analysisResult.Member])

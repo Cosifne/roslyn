@@ -9,10 +9,10 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.PullMemberUp;
-using Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog;
+using Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.WarningDialog;
 using Microsoft.VisualStudio.PlatformUI;
 
-namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
+namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog
 {
     /// <summary>
     /// Interaction logic for PullhMemberUpDialog.xaml
@@ -23,17 +23,13 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
 
         public string Cancel => ServicesVSResources.Cancel;
 
-        public string PullMembersUpTitle => ServicesVSResources.Pull_Up_Members;
+        public string PullMembersUpTitle => ServicesVSResources.Pull_Members_Up;
 
-        public string SelectMembers => ServicesVSResources.Select_Members;
+        public string SelectMembers => ServicesVSResources.Select_members;
 
-        public string SelectDestination => ServicesVSResources.Select_Destination;
+        public string SelectDestination => ServicesVSResources.Select_destinations;
 
-        public string PullUpDescription => ServicesVSResources.Pull_Up_Description;
-
-        public string SelectAll => ServicesVSResources.Select_All;
-
-        public string DeselectAll => ServicesVSResources.Deselect_All;
+        public string Description => ServicesVSResources.Select_destination_and_members_to_pull_up;
 
         public string SelectPublic => ServicesVSResources.Select_Public;
 
@@ -70,7 +66,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
         {
             if (TargetMembersContainer.SelectedItem is BaseTypeTreeNodeViewModel memberGraphNode)
             {
-                ViewModel.SelectedTarget = memberGraphNode;
+                ViewModel.SelectedDestination = memberGraphNode;
                 if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&
                     interfaceSymbol.TypeKind == TypeKind.Interface)
                 {
@@ -133,7 +129,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
             var selectedMembers = ViewModel.Members.
                 Where(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
                 Select(memberSymbolView => memberSymbolView.MemberSymbol);
-            if (ViewModel.SelectedTarget != null && selectedMembers.Count() != 0)
+            if (ViewModel.SelectedDestination != null && selectedMembers.Count() != 0)
             {
                 var result = ViewModel.CreateAnaysisResult();
                 if (result.PullUpOperationCausesError)
@@ -153,7 +149,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
         private bool ShowWarningDialog(PullMembersUpAnalysisResult result)
         {
             var warningViewModel = new PullMemberUpWarningViewModel(result);
-            var warningDialog = new PullMemberUpDialogWarning(warningViewModel);
+            var warningDialog = new PullMemberUpWarningDialog(warningViewModel);
 
             return warningDialog.ShowModal().GetValueOrDefault();
         }

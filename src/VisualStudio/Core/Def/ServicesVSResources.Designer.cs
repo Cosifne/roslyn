@@ -216,15 +216,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All methods.
-        /// </summary>
-        internal static string All_methods {
-            get {
-                return ResourceManager.GetString("All_methods", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to ALL UPPER.
         /// </summary>
         internal static string ALL_UPPER {
@@ -361,33 +352,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
             }
         }
         
-        /// <summary>
-        ///   Looks up a localized string similar to Avoid expression statements that implicitly ignore value.
-        /// </summary>
-        internal static string Avoid_expression_statements_that_implicitly_ignore_value {
-            get {
-                return ResourceManager.GetString("Avoid_expression_statements_that_implicitly_ignore_value", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Avoid unused parameters.
-        /// </summary>
-        internal static string Avoid_unused_parameters {
-            get {
-                return ResourceManager.GetString("Avoid_unused_parameters", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Avoid unused value assignments.
-        /// </summary>
-        internal static string Avoid_unused_value_assignments
-        {
-            get {
-                return ResourceManager.GetString("Avoid_unused_value_assignments", resourceCulture);
-            }
-        }
         /// <summary>
         ///   Looks up a localized string similar to Back.
         /// </summary>
@@ -1126,21 +1090,20 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Generate .editorconfig file from settings.
+        ///   Looks up a localized string similar to Found_problems:.
         /// </summary>
-        internal static string Generate_dot_editorconfig_file_from_settings
-        {
+        internal static string Found_problems {
             get {
-                return ResourceManager.GetString("Generate_dot_editorconfig_file_from_settings", resourceCulture);
+                return ResourceManager.GetString("Found_problems", resourceCulture);
             }
         }
-
+        
         /// <summary>
-        ///   Looks up a localized string similar to Found Problems:.
+        ///   Looks up a localized string similar to Generate .editorconfig file from settings.
         /// </summary>
-        internal static string Found_Problems {
+        internal static string Generate_dot_editorconfig_file_from_settings {
             get {
-                return ResourceManager.GetString("Found_Problems", resourceCulture);
+                return ResourceManager.GetString("Generate_dot_editorconfig_file_from_settings", resourceCulture);
             }
         }
         
@@ -1195,15 +1158,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         internal static string given_workspace_doesn_t_support_undo {
             get {
                 return ResourceManager.GetString("given_workspace_doesn_t_support_undo", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Gobal namespace.
-        /// </summary>
-        internal static string Global_name_space {
-            get {
-                return ResourceManager.GetString("Global_name_space", resourceCulture);
             }
         }
         
@@ -1615,6 +1569,15 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Namespace: global.
+        /// </summary>
+        internal static string Namespace_global {
+            get {
+                return ResourceManager.GetString("Namespace_global", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Naming Rule.
         /// </summary>
         internal static string Naming_Rule {
@@ -1733,15 +1696,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Non-public methods.
-        /// </summary>
-        internal static string Non_public_methods {
-            get {
-                return ResourceManager.GetString("Non_public_methods", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Not a valid value.
         /// </summary>
         internal static string Not_a_valid_value {
@@ -1846,15 +1800,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         internal static string Parameter {
             get {
                 return ResourceManager.GetString("Parameter", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Parameter preferences:.
-        /// </summary>
-        internal static string Parameter_preferences_colon {
-            get {
-                return ResourceManager.GetString("Parameter_preferences_colon", resourceCulture);
             }
         }
         
@@ -2252,20 +2197,11 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select destination and members to pull up..
-        /// </summary>
-        internal static string Pull_Up_Description {
-            get {
-                return ResourceManager.GetString("Pull_Up_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Pull Members Up.
         /// </summary>
-        internal static string Pull_Up_Members {
+        internal static string Pull_Members_Up {
             get {
-                return ResourceManager.GetString("Pull_Up_Members", resourceCulture);
+                return ResourceManager.GetString("Pull_Members_Up", resourceCulture);
             }
         }
         
@@ -2459,11 +2395,11 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Review problems below. Click Finish to proceed pull up..
+        ///   Looks up a localized string similar to Review problem below. Click Finish to proceed pull up..
         /// </summary>
-        internal static string Review_Problems {
+        internal static string Review_problems_below_Click_finish_to_proceed_pull_up {
             get {
-                return ResourceManager.GetString("Review_Problems", resourceCulture);
+                return ResourceManager.GetString("Review_problems_below_Click_finish_to_proceed_pull_up", resourceCulture);
             }
         }
         
@@ -2504,7 +2440,7 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Dependents.
+        ///   Looks up a localized string similar to Select_Dependents.
         /// </summary>
         internal static string Select_Dependents {
             get {
@@ -2513,25 +2449,34 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select destination and members to pull up..
+        /// </summary>
+        internal static string Select_destination_and_members_to_pull_up {
+            get {
+                return ResourceManager.GetString("Select_destination_and_members_to_pull_up", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Select destination type:.
         /// </summary>
-        internal static string Select_Destination {
+        internal static string Select_destinations {
             get {
-                return ResourceManager.GetString("Select_Destination", resourceCulture);
+                return ResourceManager.GetString("Select_destinations", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Select members:.
         /// </summary>
-        internal static string Select_Members {
+        internal static string Select_members {
             get {
-                return ResourceManager.GetString("Select_Members", resourceCulture);
+                return ResourceManager.GetString("Select_members", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select Public.
+        ///   Looks up a localized string similar to Select_Public.
         /// </summary>
         internal static string Select_Public {
             get {
@@ -2960,24 +2905,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Unused value is explicitly assigned to an unused local.
-        /// </summary>
-        internal static string Unused_value_is_explicitly_assigned_to_an_unused_local {
-            get {
-                return ResourceManager.GetString("Unused_value_is_explicitly_assigned_to_an_unused_local", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unused value is explicitly assigned to discard.
-        /// </summary>
-        internal static string Unused_value_is_explicitly_assigned_to_discard {
-            get {
-                return ResourceManager.GetString("Unused_value_is_explicitly_assigned_to_discard", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Use expression body for accessors.
         /// </summary>
         internal static string Use_expression_body_for_accessors {
@@ -3046,24 +2973,6 @@ namespace Microsoft.VisualStudio.LanguageServices {
         internal static string Validating_breakpoint_location {
             get {
                 return ResourceManager.GetString("Validating_breakpoint_location", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Value assigned here is never used.
-        /// </summary>
-        internal static string Value_assigned_here_is_never_used {
-            get {
-                return ResourceManager.GetString("Value_assigned_here_is_never_used", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Value returned by invocation is implicitly ignored.
-        /// </summary>
-        internal static string Value_returned_by_invocation_is_implicitly_ignored {
-            get {
-                return ResourceManager.GetString("Value_returned_by_invocation_is_implicitly_ignored", resourceCulture);
             }
         }
         
