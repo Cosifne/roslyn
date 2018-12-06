@@ -34,7 +34,12 @@
                         Value="{Binding IsSelected, Mode=TwoWay}" />
             <Setter Property="FontWeight"
                         Value="Normal" />
-           <Setter Property="IsExpanded" Value="True"/>
+            <Setter Property="IsExpanded" Value="True"/>
+            <Style.Resources>
+                <Style TargetType="{x:Type Border}">
+                    <Setter Property="Grid.ColumnSpan" Value="2" />
+                </Style>
+            </Style.Resources>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
                     <Setter Property="IsExpanded"
@@ -76,9 +81,9 @@
         <GroupBox
             Grid.Row="1"
             BorderThickness="0"
-            x:Name="TargetSelectionGroupBox"
+            x:Name="DestinationSelectionGroupBox"
             Header="{Binding ElementName=dialog, Path=SelectDestination}">
-                <TreeView x:Uid="PullTargetTreeView"
+                <TreeView x:Uid="PullDestinationTreeView"
                           x:Name="Destination"
                           MinHeight="120"
                           MinWidth="360"
@@ -91,8 +96,8 @@
                         <HierarchicalDataTemplate
                             ItemsSource="{Binding BaseTypeNodes}"
                             DataType="{x:Type self:BaseTypeTreeNodeViewModel}">
-                            <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                <Image Source="{Binding Glyph}" Margin="0, 0, 3, 0"/>
+                           <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
                                 <TextBlock
                                     Text="{Binding MemberName}"
                                     AutomationProperties.Name="{Binding MemberAutomationText}"
@@ -142,7 +147,9 @@
                                             Margin="4, 0, 4, 0"
                                             Checked="SelectAllAndDeselectedAllCheckBox_Checked"
                                             Unchecked="SelectAllAndDeselectCheckBox_Unchecked"
-                                            IsChecked="{Binding SelectAllAndDeselectAllChecked, UpdateSourceTrigger=PropertyChanged}">
+                                            Indeterminate="SelectAllAndDeselectCheckBox_Indeterminate"
+                                            IsThreeState="True"
+                                            IsChecked="{Binding IsSelectAllChecked, UpdateSourceTrigger=PropertyChanged}">
                                         </CheckBox>
                                         <TextBlock Text="{Binding ElementName=dialog, Path=Members}"/>
                                     </StackPanel>
@@ -170,7 +177,7 @@
                                                     ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveField}"/>
                                                 <Image 
                                                    x:Name="GlyphOfMember"
-                                                   Margin="8,0,2,0"
+                                                   Margin="8,0,5,0"
                                                    Source="{Binding Glyph}"/>
                                                 <TextBlock x:Uid="MemberName"
                                                            Text="{Binding MemberName}"
@@ -182,8 +189,8 @@
                                                 Height="14"
                                                 HorizontalAlignment="Right"
                                                 IsSpinning="True"
-                                                vs:TextToolTipService.ToolTipText="{Binding ElementName=SpinnerToolTip}"
-                                                vs:TextToolTipService.AutoShowToolTipWhenObscured="True"
+                                                ToolTipService.IsEnabled="True"
+                                                ToolTipService.ToolTip="{Binding ElementName=dialog, Path=SpinnerToolTip}"
                                                 Visibility="{Binding SpinnerVisibility, UpdateSourceTrigger=PropertyChanged}"/>
                                         </Grid>
                                     </DataTemplate>
@@ -199,11 +206,12 @@
                                               Style="{StaticResource CenterCheckbox}"
                                               Visibility="{Binding MakeAbstractVisibility}"
                                               IsEnabled="{Binding IsMakeAbstractSelectable, UpdateSourceTrigger=PropertyChanged}"
-                                              IsChecked="{Binding MakeAbstract, UpdateSourceTrigger=PropertyChanged}"
                                               Focusable="True"
                                               ToolTipService.IsEnabled="{Binding IsMakeAbstractSelectable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
                                               ToolTipService.ShowOnDisabled="True"
-                                              ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveAbstractMember}"/>
+                                              IsChecked="{Binding MakeAbstract, UpdateSourceTrigger=PropertyChanged}"
+                                              ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveAbstractMember}">
+                                        </CheckBox>
                                     </DataTemplate>
                                 </GridViewColumn.CellTemplate>
                             </GridViewColumn>

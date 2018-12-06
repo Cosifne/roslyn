@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
         public PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedMember, Document document)
         {
             var baseTypeRootViewModel = BaseTypeTreeNodeViewModel.CreateBaseTypeTree(selectedMember.ContainingType, _glyphService);
-            var membersInType = selectedMember.ContainingType.GetMembers().WhereAsArray(member => FilterNotSupportedMembers(member));
+            var membersInType = selectedMember.ContainingType.GetMembers().WhereAsArray(member => IsMemberSupported(member));
             var memberViewModels = membersInType.SelectAsArray(member => new PullUpMemberSymbolViewModel(member, _glyphService)
                 {
                     // The member user selects will be checked at the begining.
@@ -72,7 +72,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
             }
         }
 
-        private bool FilterNotSupportedMembers(ISymbol member)
+        private bool IsMemberSupported(ISymbol member)
         {
             // Just show field, ordinary method, event and property on dialog.
             switch (member)
@@ -80,7 +80,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                 case IMethodSymbol methodSymbol:
                     return methodSymbol.MethodKind == MethodKind.Ordinary;
                 case IFieldSymbol fieldSymbol:
-                    return fieldSymbol.IsImplicitlyDeclared;
+                    return !fieldSymbol.IsImplicitlyDeclared;
                 default:
                     return member.IsKind(SymbolKind.Property) || member.IsKind(SymbolKind.Event);
             }

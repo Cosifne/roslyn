@@ -47,8 +47,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         public PullMemberUpViewModel ViewModel { get; }
 
-        private bool ProceedToSelectAll { get; set; } = false;
-
         private readonly CancellationTokenSource _cancellationTokenSource;
 
         internal PullMemberUpDialog(PullMemberUpViewModel pullMemberUpViewModel, CancellationTokenSource cts)
@@ -57,6 +55,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             DataContext = ViewModel;
             _cancellationTokenSource = cts;
             InitializeComponent();
+            ViewModel.SelectedDestination = ViewModel.Destinations.FirstOrDefault();
             MemberSelection.SizeChanged += (s, e) =>
             {
                 var memberSelectionView = ((GridView)MemberSelection.View);
@@ -162,22 +161,19 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             foreach (var member in checkedMembers)
             {
                 var dependentsTask = ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token);
-                //if (!dependentsTask.IsCompleted)
-                //{
-                //    // Finding dependents task may be expensive, so if it is not completed,
-                //    // Show a spiner with tooltip saying it is being calculated, disable the button, after it is completed, resume the button.
-                //    member.SpinnerVisibility = Visibility.Visible;
-                //    member.IsCheckable = false;
-                //}
-
-                //var dependents = await dependentsTask;
-                //// Resume the button and hide spinner
-                //member.IsCheckable = true;
-                //member.SpinnerVisibility = Visibility.Hidden;
+                if (!dependentsTask.IsCompleted)
+                {
+                    // Finding dependents task may be expensive, so if it is not completed,
+                    // Show a spiner with tooltip saying it is being calculated, disable the button, after it is completed, resume the button.
+                    member.SpinnerVisibility = Visibility.Visible;
+                    member.IsCheckable = false;
+                }
 
                 var dependents = await dependentsTask;
-                member.SpinnerVisibility = Visibility.Visible;
-                member.IsCheckable = false;
+                // Resume the button and hide spinner
+                member.IsCheckable = true;
+                member.SpinnerVisibility = Visibility.Hidden;
+
                 foreach (var symbol in dependents)
                 {
                     var memberView = ViewModel.SymbolToMemberViewMap[symbol];
@@ -185,17 +181,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                     {
                         memberView.IsChecked = true;
                     }
-                }
-            }
-        }
-
-        private void SelectAllButton_Click()
-        {
-            foreach (var member in ViewModel.Members)
-            {
-                if (member.IsCheckable)
-                {
-                    member.IsChecked = true;
                 }
             }
         }
@@ -211,7 +196,37 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             }
         }
 
-        private void DeselectedAll_Click()
+        private void SelectAllAndDeselectedAllCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            foreach (var member in ViewModel.Members)
+            {
+                if (member.IsCheckable)
+                {
+                    member.IsChecked = true;
+                }
+            }
+
+            ViewModel.IsSelectAllChecked = true;
+        }
+
+        private void SelectAll()
+        {
+            foreach (var member in ViewModel.Members)
+            {
+                if (member.IsCheckable)
+                {
+                    member.IsChecked = true;
+                }
+            }
+        }
+
+        private void SelectAllAndDeselectCheckBox_Indeterminate(object sender, RoutedEventArgs e)
+        {
+            ViewModel.IsSelectAllChecked = true;
+            SelectAll();
+        }
+
+        private void SelectAllAndDeselectCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             foreach (var member in ViewModel.Members)
             {
@@ -220,33 +235,26 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                     member.IsChecked = false;
                 }
             }
-        }
 
-        private void SelectAllAndDeselectedAllCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            if (ProceedToSelectAll)
-            {
-                SelectAllButton_Click();
-            }
-
-            ProceedToSelectAll = true;
-        }
-
-        private void SelectAllAndDeselectCheckBox_Unchecked(object sender, RoutedEventArgs e)
-        {
-            DeselectedAll_Click();
-            ProceedToSelectAll = true;
+            ViewModel.IsSelectAllChecked = false;
         }
 
         private void MemberSelectionCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            ProceedToSelectAll = false;
-            ViewModel.SelectAllAndDeselectAllChecked = true;
             EnableOrDisableOkButton();
         }
 
         private void MemberSelectionCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
+            if (ViewModel.Members.Any(member => member.IsChecked))
+            {
+                ViewModel.IsSelectAllChecked = null;
+            }
+            else
+            {
+                ViewModel.IsSelectAllChecked = false;
+            }
+
             EnableOrDisableOkButton();
         }
 
@@ -257,6 +265,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 SelectAsArray(memberSymbolView => memberSymbolView.MemberSymbol);
             ViewModel.OkButtonEnabled = ViewModel.SelectedDestination != null && selectedMembers.Count() != 0 ? true : false;
         }
+
+
     }
 
     internal class BooleanReverseConverter : IValueConverter

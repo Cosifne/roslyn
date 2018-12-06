@@ -23,6 +23,8 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.PullMemberUp
 
         protected override ImmutableArray<CodeAction> MassageActions(ImmutableArray<CodeAction> actions) => FlattenActions(actions);
 
+        #region quick action
+
         private async Task TestQuickActionNotProvidedAsync(
             string initialMarkup,
             TestParameters parameters = default)
@@ -46,7 +48,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.PullMemberUp
             }
         }
 
-        #region quick action
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestNoRefactoringProvidedWhenPullFieldInInterfaceViaQuickAction()
         {

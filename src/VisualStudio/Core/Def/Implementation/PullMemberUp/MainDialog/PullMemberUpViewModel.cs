@@ -34,15 +34,15 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             }
         }
 
-        private bool _selectAllAndDeselectAllChecked;
+        private bool? _isSelectAllChecked;
 
-        public bool SelectAllAndDeselectAllChecked
+        public bool? IsSelectAllChecked
         {
-            get => _selectAllAndDeselectAllChecked;
+            get => _isSelectAllChecked;
             set
             {
-                _selectAllAndDeselectAllChecked = value;
-                NotifyPropertyChanged(nameof(SelectAllAndDeselectAllChecked));
+                _isSelectAllChecked = value;
+                NotifyPropertyChanged(nameof(IsSelectAllChecked));
             }
         }
 
