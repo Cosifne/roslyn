@@ -41,6 +41,13 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         /// </summary>
         public string Accessibility => MemberSymbol.DeclaredAccessibility.ToString();
 
+        private Visibility _spinnerVisibility = Visibility.Hidden;
+
+        /// <summary>
+        /// Property controls the find dependents spinner.
+        /// </summary>
+        public Visibility SpinnerVisibility { get => _spinnerVisibility; set => SetProperty(ref _spinnerVisibility, value); }
+
         public PullUpMemberSymbolViewModel(ISymbol symbol, IGlyphService glyphService) : base(symbol, glyphService)
         {
         }

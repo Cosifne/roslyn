@@ -43,6 +43,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             
         public string InterfaceCantHaveAbstractMember => ServicesVSResources.Interface_cant_have_abstract_member;
 
+        public string SpinnerToolTip => ServicesVSResources.Calculating_dependents;
+
         public PullMemberUpViewModel ViewModel { get; }
 
         private bool ProceedToSelectAll { get; set; } = false;
@@ -62,11 +64,12 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             };
         }
 
-        private void TargetMembersContainer_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        private void Destination_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
-            if (TargetMembersContainer.SelectedItem is BaseTypeTreeNodeViewModel memberGraphNode)
+            if (Destination.SelectedItem is BaseTypeTreeNodeViewModel memberGraphNode)
             {
                 ViewModel.SelectedDestination = memberGraphNode;
+                EnableOrDisableOkButton();
                 if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&
                     interfaceSymbol.TypeKind == TypeKind.Interface)
                 {
@@ -126,22 +129,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         private void OK_Button_Click(object sender, RoutedEventArgs e)
         {
-            var selectedMembers = ViewModel.Members.
-                Where(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
-                Select(memberSymbolView => memberSymbolView.MemberSymbol);
-            if (ViewModel.SelectedDestination != null && selectedMembers.Count() != 0)
+            var result = ViewModel.CreateAnaysisResult();
+            if (result.PullUpOperationCausesError)
             {
-                var result = ViewModel.CreateAnaysisResult();
-                if (result.PullUpOperationCausesError)
+                DialogResult = true;
+            }
+            else
+            {
+                if (ShowWarningDialog(result))
                 {
                     DialogResult = true;
-                }
-                else
-                {
-                    if (ShowWarningDialog(result))
-                    {
-                        DialogResult = true;
-                    }
                 }
             }
         }
@@ -154,10 +151,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             return warningDialog.ShowModal().GetValueOrDefault();
         }
 
-        private void Cancel_Button_Click(object sender, RoutedEventArgs e)
-        {
-            DialogResult = false;
-        }
+        private void Cancel_Button_Click(object sender, RoutedEventArgs e) => DialogResult = false;
 
         private async void SelecDependentsButton_Click(object sender, RoutedEventArgs e)
         {
@@ -167,11 +161,23 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             
             foreach (var member in checkedMembers)
             {
-                // What to do if this operation is still calculateing?
-                // 1. Change the check box to a spining roll to the current selected member 
-                // (So user still can make selection on UI)
-                // 2. Pop a dialog and block the UI.
-                var dependents = await ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token).ConfigureAwait(false);
+                var dependentsTask = ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token);
+                //if (!dependentsTask.IsCompleted)
+                //{
+                //    // Finding dependents task may be expensive, so if it is not completed,
+                //    // Show a spiner with tooltip saying it is being calculated, disable the button, after it is completed, resume the button.
+                //    member.SpinnerVisibility = Visibility.Visible;
+                //    member.IsCheckable = false;
+                //}
+
+                //var dependents = await dependentsTask;
+                //// Resume the button and hide spinner
+                //member.IsCheckable = true;
+                //member.SpinnerVisibility = Visibility.Hidden;
+
+                var dependents = await dependentsTask;
+                member.SpinnerVisibility = Visibility.Visible;
+                member.IsCheckable = false;
                 foreach (var symbol in dependents)
                 {
                     var memberView = ViewModel.SymbolToMemberViewMap[symbol];
@@ -236,6 +242,20 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         {
             ProceedToSelectAll = false;
             ViewModel.SelectAllAndDeselectAllChecked = true;
+            EnableOrDisableOkButton();
+        }
+
+        private void MemberSelectionCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        {
+            EnableOrDisableOkButton();
+        }
+
+        private void EnableOrDisableOkButton()
+        {
+            var selectedMembers = ViewModel.Members.
+                WhereAsArray(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
+                SelectAsArray(memberSymbolView => memberSymbolView.MemberSymbol);
+            ViewModel.OkButtonEnabled = ViewModel.SelectedDestination != null && selectedMembers.Count() != 0 ? true : false;
         }
     }
 

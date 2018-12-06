@@ -47,11 +47,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
                 currentTreeNode.BaseTypeNodes = currentTypeSymbol.Interfaces.Concat(currentTypeSymbol.BaseType).
                     // Logic here dup in AbstractPullMemberRefactoring
-                    Where(baseType => baseType != null &&
+                    WhereAsArray(baseType => baseType != null &&
                         baseType.DeclaringSyntaxReferences.Length > 0 &&
                         baseType.Locations.Any(location => location.IsInSource)).
-                    Select(baseType => new BaseTypeTreeNodeViewModel(baseType, glyphService) { IsChecked = false, IsExpanded = true }).
-                    ToImmutableArray();
+                    SelectAsArray(baseType => new BaseTypeTreeNodeViewModel(baseType, glyphService) { IsChecked = false, IsExpanded = true });
 
                 foreach (var node in currentTreeNode.BaseTypeNodes)
                 {

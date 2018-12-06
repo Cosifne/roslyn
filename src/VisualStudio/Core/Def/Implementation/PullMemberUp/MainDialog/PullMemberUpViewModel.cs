@@ -23,6 +23,17 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         public ImmutableDictionary<ISymbol, PullUpMemberSymbolViewModel> SymbolToMemberViewMap { get; }
 
+        private bool _okButtonEnabled;
+
+        public bool OkButtonEnabled {
+            get => _okButtonEnabled;
+            set
+            {
+                _okButtonEnabled = value;
+                NotifyPropertyChanged(nameof(OkButtonEnabled));
+            }
+        }
+
         private bool _selectAllAndDeselectAllChecked;
 
         public bool SelectAllAndDeselectAllChecked
@@ -31,7 +42,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             set
             {
                 _selectAllAndDeselectAllChecked = value;
-                NotifyPropertyChanged($"{nameof(SelectAllAndDeselectAllChecked)}");
+                NotifyPropertyChanged(nameof(SelectAllAndDeselectAllChecked));
             }
         }
 

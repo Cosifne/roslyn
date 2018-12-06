@@ -443,6 +443,15 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Calculating dependents.
+        /// </summary>
+        internal static string Calculating_dependents {
+            get {
+                return ResourceManager.GetString("Calculating_dependents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to camel Case Name.
         /// </summary>
         internal static string camel_Case_Name {
@@ -2530,7 +2539,7 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select_Public.
+        ///   Looks up a localized string similar to _Select Public.
         /// </summary>
         internal static string Select_Public {
             get {

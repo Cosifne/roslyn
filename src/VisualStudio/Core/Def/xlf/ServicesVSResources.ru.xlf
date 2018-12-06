@@ -37,6 +37,11 @@
         <target state="new">Back</target>
         <note />
       </trans-unit>
+      <trans-unit id="Calculating_dependents">
+        <source>Calculating dependents</source>
+        <target state="new">Calculating dependents</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Colorize_regular_expressions">
         <source>Colorize regular expressions</source>
         <target state="new">Colorize regular expressions</target>
@@ -183,8 +188,8 @@
         <note />
       </trans-unit>
       <trans-unit id="Select_Public">
-        <source>Select_Public</source>
-        <target state="new">Select_Public</target>
+        <source>_Select Public</source>
+        <target state="new">_Select Public</target>
         <note />
       </trans-unit>
       <trans-unit id="Select_destination_and_members_to_pull_up">
