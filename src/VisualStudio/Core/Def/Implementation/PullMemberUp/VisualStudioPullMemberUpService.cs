@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.PullMemberUp;
-using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog;
 using Roslyn.Utilities;
@@ -29,10 +28,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
         {
             var baseTypeRootViewModel = BaseTypeTreeNodeViewModel.CreateBaseTypeTree(selectedMember.ContainingType, _glyphService);
             var membersInType = selectedMember.ContainingType.GetMembers().
-                WhereAsArray(member => IsMemberSupported(member));
+                WhereAsArray(member => MemberAndDestinationValidator.IsMemeberValid(member));
             var memberViewModels = membersInType.SelectAsArray(member => new PullUpMemberSymbolViewModel(member, _glyphService)
                 {
-                    // The member user selects will be checked at the begining.
+                    // The member user selected will be checked at the begining.
                     IsChecked = member.Equals(selectedMember),
                     MakeAbstract = false,
                     IsMakeAbstractCheckable = member.Kind != SymbolKind.Field && !member.IsAbstract,
@@ -69,20 +68,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                 {
                     return null;
                 }
-            }
-        }
-
-        private bool IsMemberSupported(ISymbol member)
-        {
-            // Just show field, ordinary method, event and property on dialog.
-            switch (member)
-            {
-                case IMethodSymbol methodSymbol:
-                    return methodSymbol.MethodKind == MethodKind.Ordinary;
-                case IFieldSymbol fieldSymbol:
-                    return !fieldSymbol.IsImplicitlyDeclared;
-                default:
-                    return member.IsKind(SymbolKind.Property) || member.IsKind(SymbolKind.Event);
             }
         }
     }

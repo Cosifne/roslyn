@@ -22,22 +22,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
 
         public PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedNodeSymbol, Document document)
         {
-            var members = selectedNodeSymbol.ContainingType.GetMembers().Where(
-                    member =>
-                    {
-                        if (member is IMethodSymbol methodSymbol)
-                        {
-                            return methodSymbol.MethodKind == MethodKind.Ordinary;
-                        }
-                        else if (member is IFieldSymbol fieldSymbol)
-                        {
-                            return !member.IsImplicitlyDeclared;
-                        }
-                        else
-                        {
-                            return member.Kind == SymbolKind.Property || member.Kind == SymbolKind.Event;
-                        }
-                    });
+            var members = selectedNodeSymbol.ContainingType.GetMembers().Where(member => MemberAndDestinationValidator.IsMemeberValid(member));
 
             var selectedMember = SelectedMembers == null
                 ? members.Select(member => (member, false))

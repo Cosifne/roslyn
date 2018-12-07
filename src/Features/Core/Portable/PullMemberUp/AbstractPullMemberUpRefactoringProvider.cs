@@ -4,8 +4,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
+using Microsoft.CodeAnalysis.PullMemberUp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CodeActions.CodeAction;
@@ -46,15 +46,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 return;
             }
 
-            if (!selectedMember.IsKind(SymbolKind.Property) &&
-                !selectedMember.IsKind(SymbolKind.Event) &&
-                !selectedMember.IsKind(SymbolKind.Field) &&
-                !selectedMember.IsKind(SymbolKind.Method))
+            if (!MemberAndDestinationValidator.IsMemeberValid(selectedMember))
             {
-                // Static, abstract and accessiblity are not checked here but in PullMemberUpAnalyzer.cs since there are
-                // two refactoring options provided for pull members up,
-                // 1. Quick Action (Only allow members that don't cause error)
-                // 2. Dialog box (Allow modifers may cause errors and will provide fixing)
                 return;
             }
 
@@ -98,18 +91,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 ? containingType.GetBaseTypes().ToImmutableArray()
                 : containingType.AllInterfaces.Concat(containingType.GetBaseTypes()).ToImmutableArray();
 
-            return allDestinations.WhereAsArray(baseType =>
-                baseType != null &&
-                // It could be ErrorType if there is syntax error on the baseType
-                (baseType.TypeKind == TypeKind.Interface || baseType.TypeKind == TypeKind.Class) &&
-                baseType.DeclaringSyntaxReferences.Length > 0 &&
-                IsLocationValid(baseType, solution, cancellationToken));
-        }
-
-        private bool IsLocationValid(INamedTypeSymbol symbol, Solution solution, CancellationToken cancellationToken)
-        {
-            return symbol.Locations.Any(location => location.IsInSource &&
-                !solution.GetDocument(location.SourceTree).IsGeneratedCode(cancellationToken));
+            return allDestinations.WhereAsArray(destination => MemberAndDestinationValidator.IsDestinationValid(destination, solution, cancellationToken));
         }
     }
 }
