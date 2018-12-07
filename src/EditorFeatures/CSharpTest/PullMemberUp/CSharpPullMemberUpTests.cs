@@ -16,7 +16,7 @@ using Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.PullMemberUp
 {
-    public class CSharpPullMemberUpViaQuickActionTests : AbstractCSharpCodeActionTest
+    public class CSharpPullMemberUpTests : AbstractCSharpCodeActionTest
     {
         protected override CodeRefactoringProvider CreateCodeRefactoringProvider(Workspace workspace, TestParameters parameters)
             => new CSharpPullMemberUpCodeRefactoringProvider(parameters.fixProviderData as IPullMemberUpOptionsService);

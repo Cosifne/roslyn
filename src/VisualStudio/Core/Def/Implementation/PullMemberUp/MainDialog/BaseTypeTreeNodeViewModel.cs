@@ -46,7 +46,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 var currentTypeSymbol = currentTreeNode.MemberSymbol as INamedTypeSymbol;
 
                 currentTreeNode.BaseTypeNodes = currentTypeSymbol.Interfaces.Concat(currentTypeSymbol.BaseType).
-                    // Logic here dup in AbstractPullMemberRefactoring
                     WhereAsArray(baseType => baseType != null &&
                         baseType.DeclaringSyntaxReferences.Length > 0 &&
                         baseType.Locations.Any(location => location.IsInSource)).

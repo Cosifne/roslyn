@@ -84,10 +84,11 @@
             Grid.Row="1"
             BorderThickness="0"
             x:Name="DestinationSelectionGroupBox"
+            MinHeight="130"
             Header="{Binding ElementName=dialog, Path=SelectDestination}">
                 <TreeView x:Uid="PullDestinationTreeView"
                           x:Name="Destination"
-                          MinHeight="120"
+                          MinHeight="100"
                           MinWidth="360"
                           Margin="0, 5, 0, 0"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
@@ -126,7 +127,7 @@
                     Grid.Column="0"
                     x:Uid="MemberSelection"
                     x:Name="MemberSelection"
-                    Margin="2"
+                    Margin="2, 5, 2, 2"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
                     SelectionMode="Extended"
                     HorizontalContentAlignment="Stretch"
@@ -226,6 +227,7 @@
                         Orientation="Vertical"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Center"
+                        Margin="0, 4, 0, 0"
                         Width="Auto"
                         MaxWidth="130">
                         <vs:DialogButton
@@ -233,13 +235,13 @@
                             Padding="{StaticResource ResourceKey=selectDependantsButtonPadding}"
                             Content="{Binding ElementName=dialog, Path=SelectDependents}"
                             Click="SelecDependentsButton_Click"
-                            Margin="2, 2, 0, 7"
+                            Margin="2, 2, 2, 7"
                             Width= "Auto"
                             Height="Auto"/>
                         <vs:DialogButton
                             x:Name="SelectPublicButton"
                             Content="{Binding ElementName=dialog, Path=SelectPublic}"
-                            Margin="2, 0, 0, 0"
+                            Margin="2, 0, 2, 0"
                             Click="SelectPublic_Click"
                             Padding="{StaticResource ResourceKey=selectDependantsButtonPadding}"
                             Width= "Auto"
@@ -267,7 +269,7 @@
                         Click="Cancel_Button_Click"
                         IsCancel="True"
                         Padding="{StaticResource ResourceKey=okAndCancelButtonPadding}"
-                        Margin="7, 0, 3, 0"
+                        Margin="7, 0, 4, 0"
                         Content="{Binding Cancel, ElementName=dialog}"
                         Width= "{StaticResource ResourceKey=ButtonWidth}"
                         Height="{StaticResource ResourceKey=ButtonHeight}"/>

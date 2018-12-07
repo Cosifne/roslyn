@@ -22,9 +22,9 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
 
         public PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedNodeSymbol, Document document)
         {
-            IEnumerable<(ISymbol member, bool makeAbstract)> selectedMember = default;
             var members = selectedNodeSymbol.ContainingType.GetMembers().Where(
-                    member => {
+                    member =>
+                    {
                         if (member is IMethodSymbol methodSymbol)
                         {
                             return methodSymbol.MethodKind == MethodKind.Ordinary;
@@ -38,18 +38,15 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.PullMemberUp
                             return member.Kind == SymbolKind.Property || member.Kind == SymbolKind.Event;
                         }
                     });
-            if (SelectedMembers == null)
-            {
-                selectedMember = members.Select(member => (member, false));
-            }
-            else
-            {
-                selectedMember = SelectedMembers.Select(selection => (members.Single(symbol => symbol.Name == selection.member), selection.makeAbstract));
-            }
+
+            var selectedMember = SelectedMembers == null
+                ? members.Select(member => (member, false))
+                : SelectedMembers.Select(selection => (members.Single(symbol => symbol.Name == selection.member), selection.makeAbstract));
         
-            ISymbol targetSymbol = default;
             var allInterfaces = selectedNodeSymbol.ContainingType.AllInterfaces;
             var baseClass = selectedNodeSymbol.ContainingType.BaseType;
+
+            ISymbol targetSymbol = default;
             if (TargetBaseTypeName == null)
             {
                 targetSymbol = allInterfaces.FirstOrDefault() ?? baseClass;

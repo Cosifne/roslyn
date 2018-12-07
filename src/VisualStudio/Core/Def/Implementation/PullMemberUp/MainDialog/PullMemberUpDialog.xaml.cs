@@ -50,7 +50,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             ViewModel = pullMemberUpViewModel;
             DataContext = ViewModel;
             InitializeComponent();
-            ViewModel.SelectedDestination = ViewModel.Destinations.FirstOrDefault();
         }
 
         private void Destination_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -96,14 +95,14 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             var result = ViewModel.CreateAnaysisResult();
             if (result.PullUpOperationCausesError)
             {
-                DialogResult = true;
-            }
-            else
-            {
                 if (ShowWarningDialog(result))
                 {
                     DialogResult = true;
                 }
+            }
+            else
+            {
+                DialogResult = true;
             }
         }
 
@@ -111,7 +110,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         {
             var warningViewModel = new PullMemberUpWarningViewModel(result);
             var warningDialog = new PullMemberUpWarningDialog(warningViewModel);
-
             return warningDialog.ShowModal().GetValueOrDefault();
         }
 

@@ -13,9 +13,9 @@
              mc:Ignorable="d" 
              SizeToContent="WidthAndHeight"
              WindowStartupLocation="CenterOwner"
-             Height="290"
+             Height="390"
              Width="533"
-             MinHeight="290"
+             MinHeight="390"
              MinWidth="533"
              HasDialogFrame="True"
              ShowInTaskbar="False"
@@ -23,50 +23,57 @@
              HasHelpButton="True"
              Title="{Binding ElementName=dialog, Path=PullMembersUpTitle}">
     <Window.Resources>
-        <Thickness x:Key="okAndCancelButtonPadding">5, 3, 8, 4</Thickness>
+        <Thickness x:Key="okAndCancelButtonPadding">9, 2, 9, 2</Thickness>
         <sys:Double x:Key="ButtonWidth">75</sys:Double>
         <sys:Double x:Key="ButtonHeight">23</sys:Double>
     </Window.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
-            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <StackPanel Grid.Row="0" MinHeight="200" MinWidth="370" Orientation="Vertical">
-            <Label
-                x:Uid="Description"
-                x:Name="Description"
-                Content="{Binding ElementName=dialog, Path=TextTitle}"
-                Margin="0, 0, 0, 24"/>
-            <GroupBox
+        <Label
+            Grid.Row="0"
+            x:Uid="Description"
+            x:Name="Description"
+            Content="{Binding ElementName=dialog, Path=TextTitle}"
+            Margin="0, 0, 0, 12"/>
+        <GroupBox
             x:Name="WarnningMessageGroupBox"
+            Grid.Row="1"
             Header="{Binding ElementName=dialog, Path=FoundProblem}"
-            BorderThickness="0">
-                <u:AutomationDelegatingListView
+            VerticalAlignment="Stretch"
+            BorderThickness="0"
+            MinHeight="249"
+            MinWidth="494">
+            <u:AutomationDelegatingListView
                 x:Name="WarningMessageList"
                 ItemsSource="{Binding WarningMessageContainer}"
                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                MinHeight="165">
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <WrapPanel Orientation="Horizontal">
-                                <TextBlock
+                MinHeight="210"
+                Margin="2, 5, 2, 2"
+                SelectionMode="Single">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <WrapPanel Orientation="Horizontal">
+                            <TextBlock
                                 Text="{Binding Path=.}"
                                 AutomationProperties.Name="{Binding Path=.}"
                                 AutomationProperties.AutomationId="{Binding Path=.}"/>
-                            </WrapPanel>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </u:AutomationDelegatingListView>
-            </GroupBox>
-        </StackPanel>
+                        </WrapPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </u:AutomationDelegatingListView>
+        </GroupBox>
         <StackPanel
-                   Grid.Row="1"
+                   Grid.Row="2"
                    Orientation="Horizontal"
                    HorizontalAlignment="Right"
+                   VerticalAlignment="Top"
                    Margin="0,18,0,0">
             <vs:DialogButton x:Uid="BackButton"
-                        Grid.Column="1"
+                        Grid.Column="2"
                         IsCancel="True"
                         Padding= "{StaticResource ResourceKey=okAndCancelButtonPadding}"
                         Click="BackButton_Click"
@@ -76,7 +83,7 @@
                         Height="{StaticResource ResourceKey=ButtonHeight}"/>
             <vs:DialogButton x:Uid="FinishButton"
                         Click="FinishButton_Click"
-                        Grid.Column="2"
+                        Grid.Column="1"
                         IsDefault="True"
                         Margin="3, 0, 0, 0"
                         Padding= "{StaticResource ResourceKey=okAndCancelButtonPadding}"

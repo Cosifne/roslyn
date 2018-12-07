@@ -67,8 +67,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                 }
                 else
                 {
-                    // Seems like shouldn't use the default value of struct? Or create a field in the struct
-                    return default;
+                    return null;
                 }
             }
         }

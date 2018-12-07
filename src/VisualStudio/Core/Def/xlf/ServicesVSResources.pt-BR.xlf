@@ -58,8 +58,8 @@
         <note />
       </trans-unit>
       <trans-unit id="Found_problems">
-        <source>Found_problems:</source>
-        <target state="new">Found_problems:</target>
+        <source>Found problems:</source>
+        <target state="new">Found problems:</target>
         <note />
       </trans-unit>
       <trans-unit id="Generate_dot_editorconfig_file_from_settings">
