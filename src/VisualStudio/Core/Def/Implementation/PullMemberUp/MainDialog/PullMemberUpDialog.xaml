@@ -24,7 +24,7 @@
              HasHelpButton="True"
              Title="{Binding ElementName=dialog, Path=PullMembersUpTitle}">
     <Window.Resources>
-        <Thickness x:Key="okAndCancelButtonPadding">5, 3, 8, 4</Thickness>
+        <Thickness x:Key="okAndCancelButtonPadding">9, 2, 9, 2</Thickness>
         <Thickness x:Key="selectDependantsButtonPadding">2, 4, 4, 2</Thickness>
         <sys:Double x:Key="ButtonWidth">75</sys:Double>
         <sys:Double x:Key="ButtonHeight">23</sys:Double>
@@ -39,6 +39,7 @@
                 <Style TargetType="{x:Type Border}">
                     <Setter Property="Grid.ColumnSpan" Value="2" />
                 </Style>
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>
             </Style.Resources>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
@@ -51,6 +52,7 @@
         <Style x:Key="GridViewLeftAlignContainerStyle"
                TargetType="{x:Type GridViewColumnHeader}">
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="MinWidth" Value="200" />
         </Style>
         <Style x:Key="GridViewLeftAlignGridStyle"
                TargetType="{x:Type DataGridCell}">
@@ -126,7 +128,7 @@
                     x:Name="MemberSelection"
                     Margin="2"
                     ScrollViewer.VerticalScrollBarVisibility="Auto"
-                    SelectionMode="Single"
+                    SelectionMode="Extended"
                     HorizontalContentAlignment="Stretch"
                     ItemsSource="{Binding Members}">
                     <ListView.ItemContainerStyle>
@@ -161,7 +163,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="14"/>
                                             </Grid.ColumnDefinitions>
-                                            <StackPanel Orientation="Horizontal" Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal" Grid.Column="0" MinWidth="186">
                                                 <CheckBox
                                                     x:Name="MemberSelectionCheckBox"
                                                     AutomationProperties.Name="{Binding MemberName}"
@@ -187,6 +189,8 @@
                                                 Grid.Column="1"
                                                 Width="14"
                                                 Height="14"
+                                                MinWidth="14"
+                                                MinHeight="14"
                                                 HorizontalAlignment="Right"
                                                 IsSpinning="True"
                                                 ToolTipService.IsEnabled="True"

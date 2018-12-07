@@ -1148,7 +1148,7 @@ I agree to all of the foregoing:</value>
     <value>Review problem below. Click Finish to proceed pull up.</value>
   </data>
   <data name="Select_Dependents" xml:space="preserve">
-    <value>Select_Dependents</value>
+    <value>_Select Dependents</value>
   </data>
   <data name="Select_destinations" xml:space="preserve">
     <value>Select destination type:</value>

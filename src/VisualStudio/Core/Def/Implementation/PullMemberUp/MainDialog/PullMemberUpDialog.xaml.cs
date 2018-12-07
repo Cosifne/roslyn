@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.PullMemberUp;
@@ -47,20 +48,16 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         public PullMemberUpViewModel ViewModel { get; }
 
-        private readonly CancellationTokenSource _cancellationTokenSource;
+        private const int MinWidthForMemberSelection = 200;
 
-        internal PullMemberUpDialog(PullMemberUpViewModel pullMemberUpViewModel, CancellationTokenSource cts)
+        private const int MinWidthForMakeAbstract = 100;
+
+        internal PullMemberUpDialog(PullMemberUpViewModel pullMemberUpViewModel)
         {
             ViewModel = pullMemberUpViewModel;
             DataContext = ViewModel;
-            _cancellationTokenSource = cts;
             InitializeComponent();
             ViewModel.SelectedDestination = ViewModel.Destinations.FirstOrDefault();
-            MemberSelection.SizeChanged += (s, e) =>
-            {
-                var memberSelectionView = ((GridView)MemberSelection.View);
-                memberSelectionView.Columns[0].Width = e.NewSize.Width - memberSelectionView.Columns[1].Width - 50;
-            };
         }
 
         private void Destination_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
@@ -72,56 +69,31 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&
                     interfaceSymbol.TypeKind == TypeKind.Interface)
                 {
-                    DisableAllFieldCheckBox();
-                    DisableAllMakeAbstractBox();
+                    // Disable field check box and make abstract check box
+                    foreach (var member in ViewModel.Members)
+                    {
+                        member.IsMakeAbstractCheckable = false;
+                        if (member.MemberSymbol.Kind == SymbolKind.Field)
+                        {
+                            member.IsCheckable = false;
+                        }
+                    }
                 }
                 else
                 {
-                    EnableAllFieldCheckBox();
-                    EnableAllMakeAbstractBox();
-                }
-            }
-        }
+                    // Resume them back
+                    foreach (var member in ViewModel.Members)
+                    {
+                        if (member.MemberSymbol.Kind != SymbolKind.Field && !member.MemberSymbol.IsAbstract)
+                        {
+                            member.IsMakeAbstractCheckable = true;
+                        }
 
-        private void DisableAllMakeAbstractBox()
-        {
-            foreach (var member in ViewModel.Members)
-            {
-                member.IsMakeAbstractCheckable = false;
-            }
-        }
-
-        private void EnableAllMakeAbstractBox()
-        {
-            foreach (var member in ViewModel.Members)
-            {
-                if (member.MemberSymbol.Kind != SymbolKind.Field && !member.MemberSymbol.IsAbstract)
-                {
-                    member.IsMakeAbstractCheckable = true;
-                }
-            }
-        }
-
-        private void DisableAllFieldCheckBox()
-        {
-            // Check box won't be cleared when it is disabled. It is made to prevent user
-            // loses their choice when moves around the target type
-            foreach (var member in ViewModel.Members)
-            {
-                if (member.MemberSymbol.Kind == SymbolKind.Field)
-                {
-                    member.IsCheckable = false;
-                }
-            }
-        }
-
-        private void EnableAllFieldCheckBox()
-        {
-           foreach (var member in ViewModel.Members)
-            {
-                if (member.MemberSymbol.Kind == SymbolKind.Field)
-                {
-                    member.IsCheckable = true;
+                        if (member.MemberSymbol.Kind == SymbolKind.Field)
+                        {
+                            member.IsCheckable = true;
+                        }
+                    }
                 }
             }
         }
@@ -155,12 +127,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         private async void SelecDependentsButton_Click(object sender, RoutedEventArgs e)
         {
             var checkedMembers = ViewModel.Members.
-                Where(member => member.IsChecked &&
-                      member.MemberSymbol.Kind != SymbolKind.Field);
+                WhereAsArray(member => member.IsChecked && member.IsCheckable);
             
             foreach (var member in checkedMembers)
             {
-                var dependentsTask = ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(_cancellationTokenSource.Token);
+                var dependentsTask = ViewModel.DependentsMap[member.MemberSymbol].GetValueAsync(ViewModel.CancellationTokenSource.Token);
                 if (!dependentsTask.IsCompleted)
                 {
                     // Finding dependents task may be expensive, so if it is not completed,
@@ -266,7 +237,21 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             ViewModel.OkButtonEnabled = ViewModel.SelectedDestination != null && selectedMembers.Count() != 0 ? true : false;
         }
 
-
+        private void MembersColumn_DragDelta(object sender, DragDeltaEventArgs e)
+        {
+            Thumb senderAsThumb = e.OriginalSource as Thumb;
+            GridViewColumnHeader header = senderAsThumb.TemplatedParent as
+                                                            GridViewColumnHeader;
+            if (header == null)
+            {
+                return;
+            }
+ 
+            if (header.Column.ActualWidth < 200)
+            {
+                header.Column.Width = 200;
+            }
+        }
     }
 
     internal class BooleanReverseConverter : IValueConverter

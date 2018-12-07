@@ -2503,7 +2503,7 @@ namespace Microsoft.VisualStudio.LanguageServices {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Select_Dependents.
+        ///   Looks up a localized string similar to _Select Dependents.
         /// </summary>
         internal static string Select_Dependents {
             get {

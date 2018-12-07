@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Collections.Immutable;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.PullMemberUp;
@@ -22,6 +23,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         public ImmutableDictionary<ISymbol, AsyncLazy<ImmutableArray<ISymbol>>> DependentsMap;
 
         public ImmutableDictionary<ISymbol, PullUpMemberSymbolViewModel> SymbolToMemberViewMap { get; }
+
+        public CancellationTokenSource CancellationTokenSource { get; }
 
         private bool _okButtonEnabled;
 
@@ -49,12 +52,14 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         internal PullMemberUpViewModel(
             ImmutableArray<BaseTypeTreeNodeViewModel> destinations,
             ImmutableArray<PullUpMemberSymbolViewModel> members,
-            ImmutableDictionary<ISymbol, AsyncLazy<ImmutableArray<ISymbol>>> dependentsMap)
+            ImmutableDictionary<ISymbol, AsyncLazy<ImmutableArray<ISymbol>>> dependentsMap,
+            CancellationTokenSource cts)
         {
             Destinations = destinations;
             DependentsMap = dependentsMap;
             Members = members;
             SymbolToMemberViewMap = members.ToImmutableDictionary(memberViewModel => memberViewModel.MemberSymbol);
+            CancellationTokenSource = cts;
         }
 
         internal PullMembersUpAnalysisResult CreateAnaysisResult()

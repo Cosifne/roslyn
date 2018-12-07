@@ -28,7 +28,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
         public PullMembersUpAnalysisResult GetPullMemberUpAnalysisResultFromDialogBox(ISymbol selectedMember, Document document)
         {
             var baseTypeRootViewModel = BaseTypeTreeNodeViewModel.CreateBaseTypeTree(selectedMember.ContainingType, _glyphService);
-            var membersInType = selectedMember.ContainingType.GetMembers().WhereAsArray(member => IsMemberSupported(member));
+            var membersInType = selectedMember.ContainingType.GetMembers().
+                WhereAsArray(member => IsMemberSupported(member));
             var memberViewModels = membersInType.SelectAsArray(member => new PullUpMemberSymbolViewModel(member, _glyphService)
                 {
                     // The member user selects will be checked at the begining.
@@ -50,8 +51,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                     }
                 });
 
-                var viewModel = new PullMemberUpViewModel(baseTypeRootViewModel.BaseTypeNodes, memberViewModels, dependentsMap);
-                var dialog = new PullMemberUpDialog(viewModel, cts);
+                var viewModel = new PullMemberUpViewModel(baseTypeRootViewModel.BaseTypeNodes, memberViewModels, dependentsMap, cts);
+                var dialog = new PullMemberUpDialog(viewModel);
                 var result = dialog.ShowModal();
 
                 // Dialog UI has finshed its work, if the finding dependents task still not finished, cancel it.

@@ -183,8 +183,8 @@
         <note />
       </trans-unit>
       <trans-unit id="Select_Dependents">
-        <source>Select_Dependents</source>
-        <target state="new">Select_Dependents</target>
+        <source>_Select Dependents</source>
+        <target state="new">_Select Dependents</target>
         <note />
       </trans-unit>
       <trans-unit id="Select_Public">
