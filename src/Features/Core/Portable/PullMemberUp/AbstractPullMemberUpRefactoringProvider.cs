@@ -84,7 +84,7 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
             var nestedCodeAction = new CodeActionWithNestedActions(
                 string.Format(FeaturesResources.Pull_0_up, selectedMember.ToNameDisplayString()),
-                allActions, false);
+                allActions, allActions.Length < 5);
             context.RegisterRefactoring(nestedCodeAction);
         }
 
