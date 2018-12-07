@@ -28,26 +28,15 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         private bool _okButtonEnabled;
 
-        public bool OkButtonEnabled {
-            get => _okButtonEnabled;
-            set
-            {
-                _okButtonEnabled = value;
-                NotifyPropertyChanged(nameof(OkButtonEnabled));
-            }
-        }
+        public bool OkButtonEnabled { get => _okButtonEnabled; set => SetProperty(ref _okButtonEnabled, value, nameof(OkButtonEnabled)); }
 
-        private bool? _isSelectAllChecked;
+        private bool? _selectAllCheckBoxState;
 
-        public bool? IsSelectAllChecked
-        {
-            get => _isSelectAllChecked;
-            set
-            {
-                _isSelectAllChecked = value;
-                NotifyPropertyChanged(nameof(IsSelectAllChecked));
-            }
-        }
+        public bool? SelectAllCheckBoxState { get => _selectAllCheckBoxState; set => SetProperty(ref _selectAllCheckBoxState, value, nameof(SelectAllCheckBoxState)); }
+
+        private bool _threeStateEnable;
+
+        public bool ThreeStateEnable { get => _threeStateEnable; set => SetProperty(ref _threeStateEnable, value, nameof(ThreeStateEnable)); }
 
         internal PullMemberUpViewModel(
             ImmutableArray<BaseTypeTreeNodeViewModel> destinations,

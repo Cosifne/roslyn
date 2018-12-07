@@ -144,15 +144,14 @@
                                 HeaderContainerStyle="{StaticResource GridViewLeftAlignContainerStyle}">
                                 <GridViewColumn.Header>
                                     <StackPanel Orientation="Horizontal">
-                                        <CheckBox
-                                            x:Name="SelectAllAndDeselectCheckBox"
+                                        <self:SelectAllCheckBox
+                                            x:Name="SelectAllCheckBox"
                                             Margin="4, 0, 4, 0"
-                                            Checked="SelectAllAndDeselectedAllCheckBox_Checked"
-                                            Unchecked="SelectAllAndDeselectCheckBox_Unchecked"
-                                            Indeterminate="SelectAllAndDeselectCheckBox_Indeterminate"
-                                            IsThreeState="True"
-                                            IsChecked="{Binding IsSelectAllChecked, UpdateSourceTrigger=PropertyChanged}">
-                                        </CheckBox>
+                                            Checked="SelectAllCheckBox_Checked"
+                                            Unchecked="SelectAllCheckBox_Unchecked"
+                                            IsThreeState="{Binding ThreeStateEnable, UpdateSourceTrigger=PropertyChanged}"
+                                            IsChecked="{Binding SelectAllCheckBoxState, UpdateSourceTrigger=PropertyChanged}">
+                                        </self:SelectAllCheckBox>
                                         <TextBlock Text="{Binding ElementName=dialog, Path=Members}"/>
                                     </StackPanel>
                                 </GridViewColumn.Header>

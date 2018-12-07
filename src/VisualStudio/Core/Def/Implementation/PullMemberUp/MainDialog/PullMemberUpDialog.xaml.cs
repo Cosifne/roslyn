@@ -3,10 +3,7 @@
 using System;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.PullMemberUp;
@@ -47,10 +44,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         public string SpinnerToolTip => ServicesVSResources.Calculating_dependents;
 
         public PullMemberUpViewModel ViewModel { get; }
-
-        private const int MinWidthForMemberSelection = 200;
-
-        private const int MinWidthForMakeAbstract = 100;
 
         internal PullMemberUpDialog(PullMemberUpViewModel pullMemberUpViewModel)
         {
@@ -127,7 +120,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         private async void SelecDependentsButton_Click(object sender, RoutedEventArgs e)
         {
             var checkedMembers = ViewModel.Members.
-                WhereAsArray(member => member.IsChecked && member.IsCheckable);
+                Where(member => member.IsChecked && member.IsCheckable);
             
             foreach (var member in checkedMembers)
             {
@@ -167,20 +160,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             }
         }
 
-        private void SelectAllAndDeselectedAllCheckBox_Checked(object sender, RoutedEventArgs e)
-        {
-            foreach (var member in ViewModel.Members)
-            {
-                if (member.IsCheckable)
-                {
-                    member.IsChecked = true;
-                }
-            }
-
-            ViewModel.IsSelectAllChecked = true;
-        }
-
-        private void SelectAll()
+        private void SelectAllCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             foreach (var member in ViewModel.Members)
             {
@@ -191,13 +171,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             }
         }
 
-        private void SelectAllAndDeselectCheckBox_Indeterminate(object sender, RoutedEventArgs e)
-        {
-            ViewModel.IsSelectAllChecked = true;
-            SelectAll();
-        }
-
-        private void SelectAllAndDeselectCheckBox_Unchecked(object sender, RoutedEventArgs e)
+        private void SelectAllCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             foreach (var member in ViewModel.Members)
             {
@@ -206,27 +180,37 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                     member.IsChecked = false;
                 }
             }
-
-            ViewModel.IsSelectAllChecked = false;
         }
 
         private void MemberSelectionCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             EnableOrDisableOkButton();
+            CheckAndSetStateOfSelectAllCheckBox();
         }
 
         private void MemberSelectionCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
-            if (ViewModel.Members.Any(member => member.IsChecked))
+            EnableOrDisableOkButton();
+            CheckAndSetStateOfSelectAllCheckBox();
+        }
+
+        private void CheckAndSetStateOfSelectAllCheckBox()
+        {
+            if (ViewModel.Members.All(member => member.IsChecked))
             {
-                ViewModel.IsSelectAllChecked = null;
+                ViewModel.SelectAllCheckBoxState = true;
+                ViewModel.ThreeStateEnable = false;
+            }
+            else if (ViewModel.Members.Any(member => member.IsChecked))
+            {
+                ViewModel.ThreeStateEnable = true;
+                ViewModel.SelectAllCheckBoxState = null;
             }
             else
             {
-                ViewModel.IsSelectAllChecked = false;
+                ViewModel.SelectAllCheckBoxState = false;
+                ViewModel.ThreeStateEnable = false;
             }
-
-            EnableOrDisableOkButton();
         }
 
         private void EnableOrDisableOkButton()
@@ -235,22 +219,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 WhereAsArray(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
                 SelectAsArray(memberSymbolView => memberSymbolView.MemberSymbol);
             ViewModel.OkButtonEnabled = ViewModel.SelectedDestination != null && selectedMembers.Count() != 0 ? true : false;
-        }
-
-        private void MembersColumn_DragDelta(object sender, DragDeltaEventArgs e)
-        {
-            Thumb senderAsThumb = e.OriginalSource as Thumb;
-            GridViewColumnHeader header = senderAsThumb.TemplatedParent as
-                                                            GridViewColumnHeader;
-            if (header == null)
-            {
-                return;
-            }
- 
-            if (header.Column.ActualWidth < 200)
-            {
-                header.Column.Width = 200;
-            }
         }
     }
 
