@@ -12,7 +12,6 @@
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:self="clr-namespace:Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog"
              mc:Ignorable="d" 
-             SizeToContent="Width"
              WindowStartupLocation="CenterOwner"
              Height="498"
              Width="500"
@@ -39,7 +38,7 @@
                 <Style TargetType="{x:Type Border}">
                     <Setter Property="Grid.ColumnSpan" Value="2" />
                 </Style>
-                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>
+                <!--<SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="{x:Static SystemColors.HighlightColor}"/>-->
             </Style.Resources>
             <Style.Triggers>
                 <Trigger Property="IsSelected" Value="True">
@@ -48,15 +47,6 @@
                     <Setter Property="FontWeight" Value="Bold" />
                 </Trigger>
             </Style.Triggers>
-        </Style>
-        <Style x:Key="GridViewLeftAlignContainerStyle"
-               TargetType="{x:Type GridViewColumnHeader}">
-            <Setter Property="HorizontalContentAlignment" Value="Left" />
-            <Setter Property="MinWidth" Value="200" />
-        </Style>
-        <Style x:Key="GridViewLeftAlignGridStyle"
-               TargetType="{x:Type DataGridCell}">
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
         </Style>
         <Style x:Key="CenterCheckbox"
             TargetType="CheckBox" BasedOn="{StaticResource {x:Type CheckBox}}">
@@ -120,108 +110,118 @@
             x:Uid="MemberSelectionLabel">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="70*"/>
+                    <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <ListView
+                <DataGrid
                     Grid.Column="0"
                     x:Uid="MemberSelection"
                     x:Name="MemberSelection"
                     Margin="2, 5, 2, 2"
-                    ScrollViewer.VerticalScrollBarVisibility="Auto"
                     SelectionMode="Extended"
+                    AutoGenerateColumns="False"
+                    HeadersVisibility="Column"
                     HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch"
+                    CanUserResizeColumns="False"
+                    CanUserResizeRows="False"
+                    IsReadOnly="True"
+                    CanUserAddRows="False"
+                    CanUserDeleteRows="False"
+                    CanUserSortColumns="False"
+                    GridLinesVisibility="None"
+                    CanUserReorderColumns="False"
+                    MinWidth="334"
+                    Height="Auto"
+                    Background="White"
                     ItemsSource="{Binding Members}">
-                    <ListView.ItemContainerStyle>
-                        <Style TargetType="ListViewItem">
-                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <DataGrid.CellStyle>
+                        <Style TargetType="DataGridCell">
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Focusable" Value="False"/>
+                            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         </Style>
-                    </ListView.ItemContainerStyle>
-                    <ListView.View>
-                        <GridView>
-                            <GridViewColumn
-                                Width="200"
-                                x:Name="membersColumn"
-                                HeaderContainerStyle="{StaticResource GridViewLeftAlignContainerStyle}">
-                                <GridViewColumn.Header>
-                                    <StackPanel Orientation="Horizontal">
-                                        <self:SelectAllCheckBox
+                    </DataGrid.CellStyle>
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Width="*">
+                            <DataGridTemplateColumn.Header>
+                                <StackPanel Orientation="Horizontal" Width="Auto">
+                                    <self:SelectAllCheckBox
                                             x:Name="SelectAllCheckBox"
-                                            Margin="4, 0, 4, 0"
+                                            Margin="0, 0, 4, 0"
                                             Checked="SelectAllCheckBox_Checked"
                                             Unchecked="SelectAllCheckBox_Unchecked"
+                                            Focusable="True"
+                                            DataContext="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext}"
                                             IsThreeState="{Binding ThreeStateEnable, UpdateSourceTrigger=PropertyChanged}"
                                             IsChecked="{Binding SelectAllCheckBoxState, UpdateSourceTrigger=PropertyChanged}">
-                                        </self:SelectAllCheckBox>
-                                        <TextBlock Text="{Binding ElementName=dialog, Path=Members}"/>
+                                    </self:SelectAllCheckBox>
+                                    <TextBlock
+                                        Width="Auto"
+                                        Text="{Binding RelativeSource={RelativeSource AncestorType=vs:DialogWindow}, Path=Members}" />
+                                </StackPanel>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" MinWidth="186" Width="Auto" Margin="5, 2, 0, 2">
+                                        <CheckBox
+                                            x:Name="MemberSelectionCheckBox"
+                                            AutomationProperties.Name="{Binding MemberName}"
+                                            AutomationProperties.AutomationId="{Binding MemberAutomationText}"
+                                            IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
+                                            Checked="MemberSelectionCheckBox_Checked"
+                                            Unchecked="MemberSelectionCheckBox_Unchecked"
+                                            Width="Auto"
+                                            IsEnabled="{Binding IsCheckable, UpdateSourceTrigger=PropertyChanged}"
+                                            Focusable="True"
+                                            ToolTipService.ShowOnDisabled="True"
+                                            ToolTipService.IsEnabled="{Binding IsCheckable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                            ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveField}"/>
+                                        <Image 
+                                           x:Name="GlyphOfMember"
+                                           Margin="8,0,5,0"
+                                           Source="{Binding Glyph}"/>
+                                        <TextBlock x:Uid="MemberName"
+                                                   Text="{Binding MemberName}"
+                                                   Margin="0, 0, 5, 0"
+                                                   ToolTip="{Binding Accessibility}"/>
+                                        <vs_internal:SpinAnimationControl
+                                            Grid.Column="1"
+                                            Width="14"
+                                            Height="14"
+                                            MinWidth="14"
+                                            MinHeight="14"
+                                            HorizontalAlignment="Right"
+                                            IsSpinning="True"
+                                            ToolTipService.IsEnabled="True"
+                                            ToolTipService.ToolTip="{Binding ElementName=dialog, Path=SpinnerToolTip}"
+                                            Visibility="{Binding SpinnerVisibility, UpdateSourceTrigger=PropertyChanged}"/>
                                     </StackPanel>
-                                </GridViewColumn.Header>
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="14"/>
-                                            </Grid.ColumnDefinitions>
-                                            <StackPanel Orientation="Horizontal" Grid.Column="0" MinWidth="186">
-                                                <CheckBox
-                                                    x:Name="MemberSelectionCheckBox"
-                                                    AutomationProperties.Name="{Binding MemberName}"
-                                                    AutomationProperties.AutomationId="{Binding MemberAutomationText}"
-                                                    IsChecked="{Binding IsChecked, UpdateSourceTrigger=PropertyChanged}"
-                                                    Checked="MemberSelectionCheckBox_Checked"
-                                                    Unchecked="MemberSelectionCheckBox_Unchecked"
-                                                    Width="Auto"
-                                                    IsEnabled="{Binding IsCheckable, UpdateSourceTrigger=PropertyChanged}"
-                                                    Focusable="True"
-                                                    ToolTipService.ShowOnDisabled="True"
-                                                    ToolTipService.IsEnabled="{Binding IsCheckable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                                    ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveField}"/>
-                                                <Image 
-                                                   x:Name="GlyphOfMember"
-                                                   Margin="8,0,5,0"
-                                                   Source="{Binding Glyph}"/>
-                                                <TextBlock x:Uid="MemberName"
-                                                           Text="{Binding MemberName}"
-                                                           ToolTip="{Binding Accessibility}"/>
-                                            </StackPanel>
-                                            <vs_internal:SpinAnimationControl
-                                                Grid.Column="1"
-                                                Width="14"
-                                                Height="14"
-                                                MinWidth="14"
-                                                MinHeight="14"
-                                                HorizontalAlignment="Right"
-                                                IsSpinning="True"
-                                                ToolTipService.IsEnabled="True"
-                                                ToolTipService.ToolTip="{Binding ElementName=dialog, Path=SpinnerToolTip}"
-                                                Visibility="{Binding SpinnerVisibility, UpdateSourceTrigger=PropertyChanged}"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                            <GridViewColumn
-                                Header="{Binding ElementName=dialog, Path=MakeAbstract}"
-                                Width="100"
-                                x:Name="makeAbstractColumn">
-                                <GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <CheckBox x:Name="MakeAbstract"
-                                              Style="{StaticResource CenterCheckbox}"
-                                              Visibility="{Binding MakeAbstractVisibility}"
-                                              IsEnabled="{Binding IsMakeAbstractSelectable, UpdateSourceTrigger=PropertyChanged}"
-                                              Focusable="True"
-                                              ToolTipService.IsEnabled="{Binding IsMakeAbstractSelectable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                              ToolTipService.ShowOnDisabled="True"
-                                              IsChecked="{Binding MakeAbstract, UpdateSourceTrigger=PropertyChanged}"
-                                              ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveAbstractMember}">
-                                        </CheckBox>
-                                    </DataTemplate>
-                                </GridViewColumn.CellTemplate>
-                            </GridViewColumn>
-                        </GridView>
-                    </ListView.View>
-                </ListView>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTemplateColumn Width="100" ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <DataGridTemplateColumn.Header>
+                                <TextBlock Text="{Binding RelativeSource={RelativeSource AncestorType=vs:DialogWindow}, Path=MakeAbstract}"/>
+                            </DataGridTemplateColumn.Header>
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <CheckBox x:Name="MakeAbstract"
+                                          Style="{StaticResource CenterCheckbox}"
+                                          Visibility="{Binding MakeAbstractVisibility}"
+                                          IsEnabled="{Binding IsMakeAbstractSelectable, UpdateSourceTrigger=PropertyChanged}"
+                                          Focusable="True"
+                                          Margin="0, 2, 0, 2"
+                                          ToolTipService.IsEnabled="{Binding IsMakeAbstractSelectable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
+                                          ToolTipService.ShowOnDisabled="True"
+                                          IsChecked="{Binding MakeAbstract, UpdateSourceTrigger=PropertyChanged}"
+                                          ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveAbstractMember}">
+                                    </CheckBox>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
                     <StackPanel
                         Grid.Column="1"
                         Orientation="Vertical"
