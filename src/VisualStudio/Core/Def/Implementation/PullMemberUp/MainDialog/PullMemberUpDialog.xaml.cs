@@ -52,44 +52,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             InitializeComponent();
         }
 
-        private void Destination_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
-        {
-            if (Destination.SelectedItem is BaseTypeTreeNodeViewModel memberGraphNode)
-            {
-                ViewModel.SelectedDestination = memberGraphNode;
-                EnableOrDisableOkButton();
-                if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&
-                    interfaceSymbol.TypeKind == TypeKind.Interface)
-                {
-                    // Disable field check box and make abstract check box
-                    foreach (var member in ViewModel.Members)
-                    {
-                        member.IsMakeAbstractCheckable = false;
-                        if (member.MemberSymbol.Kind == SymbolKind.Field)
-                        {
-                            member.IsCheckable = false;
-                        }
-                    }
-                }
-                else
-                {
-                    // Resume them back
-                    foreach (var member in ViewModel.Members)
-                    {
-                        if (member.MemberSymbol.Kind != SymbolKind.Field && !member.MemberSymbol.IsAbstract)
-                        {
-                            member.IsMakeAbstractCheckable = true;
-                        }
-
-                        if (member.MemberSymbol.Kind == SymbolKind.Field)
-                        {
-                            member.IsCheckable = true;
-                        }
-                    }
-                }
-            }
-        }
-
         private void OK_Button_Click(object sender, RoutedEventArgs e)
         {
             var result = ViewModel.CreateAnaysisResult();
@@ -217,6 +179,44 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 WhereAsArray(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
                 SelectAsArray(memberSymbolView => memberSymbolView.MemberSymbol);
             ViewModel.OkButtonEnabled = ViewModel.SelectedDestination != null && selectedMembers.Count() != 0 ? true : false;
+        }
+
+        private void Destination_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            if (Destination.SelectedItem is BaseTypeTreeNodeViewModel memberGraphNode)
+            {
+                ViewModel.SelectedDestination = memberGraphNode;
+                EnableOrDisableOkButton();
+                if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&
+                    interfaceSymbol.TypeKind == TypeKind.Interface)
+                {
+                    // Disable field check box and make abstract check box
+                    foreach (var member in ViewModel.Members)
+                    {
+                        member.IsMakeAbstractCheckable = false;
+                        if (member.MemberSymbol.Kind == SymbolKind.Field)
+                        {
+                            member.IsCheckable = false;
+                        }
+                    }
+                }
+                else
+                {
+                    // Resume them back
+                    foreach (var member in ViewModel.Members)
+                    {
+                        if (member.MemberSymbol.Kind != SymbolKind.Field && !member.MemberSymbol.IsAbstract)
+                        {
+                            member.IsMakeAbstractCheckable = true;
+                        }
+
+                        if (member.MemberSymbol.Kind == SymbolKind.Field)
+                        {
+                            member.IsCheckable = true;
+                        }
+                    }
+                }
+            }
         }
     }
 

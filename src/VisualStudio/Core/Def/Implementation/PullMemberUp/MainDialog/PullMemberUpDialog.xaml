@@ -56,6 +56,22 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <self:BooleanReverseConverter x:Key="BooleanReverseConverter"/>
+        <Style TargetType="{x:Type vs_internal:PivotTreeViewItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type vs_internal:PivotTreeViewItem}">
+                        <DockPanel>
+                            <vs_internal:TreeItemPresenter 
+                                Text="{TemplateBinding Text}"
+                                IsSelected="{TemplateBinding IsSelected}"
+                                Background="White"
+                                BorderBrush="{TemplateBinding BorderBrush}">
+                            </vs_internal:TreeItemPresenter>
+                        </DockPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
     <Grid Margin="12">
         <Grid.RowDefinitions>
@@ -76,30 +92,45 @@
             x:Name="DestinationSelectionGroupBox"
             MinHeight="130"
             Header="{Binding ElementName=dialog, Path=SelectDestination}">
-                <TreeView x:Uid="PullDestinationTreeView"
+            <vs_internal:PivotTreeView  x:Uid="PullDestinationTreeView"
                           x:Name="Destination"
                           MinHeight="100"
                           MinWidth="360"
                           Margin="0, 5, 0, 0"
+                          Background="White"
                           ScrollViewer.VerticalScrollBarVisibility="Auto"
-                          ItemsSource="{Binding Destinations}"
-                          ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}"
-                          SelectedItemChanged="Destination_SelectedItemChanged">
-                    <TreeView.ItemTemplate>
-                        <HierarchicalDataTemplate
+                          RootItemsSource="{Binding Destinations}"
+                          ShowRootExpander="True"
+                          SelectionChanged="Destination_SelectionChanged">
+                    <!--<vs_internal:PivotTreeView.ItemTemplate>
+                    <DataTemplate>
+                       <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
+                            <TextBlock
+                                Text="{Binding MemberName}"
+                                AutomationProperties.Name="{Binding MemberAutomationText}"
+                                AutomationProperties.AutomationId="{Binding MemberName}"
+                                ToolTip="{Binding Namespace}"/>
+                        </DockPanel>
+                    </DataTemplate>
+                </vs_internal:PivotTreeView.ItemTemplate>-->
+                <!--<vs_internal:VirtualizingTreeView.ItemTemplate>
+                    <DataTemplate>
+                       <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
+                            <TextBlock
+                                Text="{Binding MemberName}"
+                                AutomationProperties.Name="{Binding MemberAutomationText}"
+                                AutomationProperties.AutomationId="{Binding MemberName}"
+                                ToolTip="{Binding Namespace}"/>
+                        </DockPanel>
+                    </DataTemplate>
+                </vs_internal:VirtualizingTreeView.ItemTemplate>-->
+                <!--<HierarchicalDataTemplate
                             ItemsSource="{Binding BaseTypeNodes}"
                             DataType="{x:Type self:BaseTypeTreeNodeViewModel}">
-                           <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
-                                <TextBlock
-                                    Text="{Binding MemberName}"
-                                    AutomationProperties.Name="{Binding MemberAutomationText}"
-                                    AutomationProperties.AutomationId="{Binding MemberName}"
-                                    ToolTip="{Binding Namespace}"/>
-                            </DockPanel>
-                        </HierarchicalDataTemplate>
-                    </TreeView.ItemTemplate>
-                </TreeView>
+                        </HierarchicalDataTemplate>-->
+                </vs_internal:PivotTreeView>
         </GroupBox>
         <GroupBox
             Header="{Binding ElementName=dialog, Path=SelectMembers}"
