@@ -2915,6 +2915,15 @@ namespace Microsoft.CodeAnalysis {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Pull {0} up.
+        /// </summary>
+        internal static string Pull_0_up {
+            get {
+                return ResourceManager.GetString("Pull_0_up", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to range variable.
         /// </summary>
         internal static string range_variable {
