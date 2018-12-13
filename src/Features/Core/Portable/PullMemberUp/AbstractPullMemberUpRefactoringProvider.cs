@@ -18,6 +18,8 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
         protected abstract bool IsSelectionValid(TextSpan span, SyntaxNode selectedMemberNode);
 
+        protected abstract SyntaxNode GetMemberSyntaxNode(Document document, TextSpan span);
+
         /// <summary>
         /// Test purpose only
         /// </summary>

@@ -1,6 +1,8 @@
 ﻿// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
 
 using System.Composition;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CodeRefactorings;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp;
 using Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp.Dialog;
@@ -59,6 +61,26 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeRefactorings.PullMemberUp
                     return variableDeclaratorSyntax.Identifier;
                 default:
                     return default;
+            }
+        }
+
+        protected async override Task<SyntaxNode> GetMemberSyntaxNode(
+            Document document,
+            TextSpan span,
+            CancellationToken cancellationToken)
+        {
+            var root = await document.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
+            var token = root.FindToken(span.Start);
+            // Return the method declaration node when the cursor sits on the open parentheses.
+            // e.g. TestMethod[||]() is valid but TestMethod  [||]() is invalid
+            if (span.Length == 0 && token.IsKind(SyntaxKind.OpenParenToken))
+            {
+                var previousToken = token.GetPreviousToken();
+                if (previousToken.IsKind(SyntaxKind.IdentifierToken))
+            }
+            else
+            {
+                return root;
             }
         }
     }
