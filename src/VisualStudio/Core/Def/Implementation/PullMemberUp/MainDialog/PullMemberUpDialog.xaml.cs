@@ -37,9 +37,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
 
         public string MakeAbstract => ServicesVSResources.Make_abstract;
 
-        public string InterfaceCantHaveField => ServicesVSResources.Interface_cant_have_field;
-            
-        public string InterfaceCantHaveAbstractMember => ServicesVSResources.Interface_cant_have_abstract_member;
+        public string InterfaceCannotHaveField => ServicesVSResources.Interface_can_not_have_field;
 
         public string SpinnerToolTip => ServicesVSResources.Calculating_dependents;
 
@@ -129,6 +127,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                     member.IsChecked = true;
                 }
             }
+            CheckAndSetStateOfSelectAllCheckBox();
         }
 
         private void SelectAllCheckBox_Unchecked(object sender, RoutedEventArgs e)
@@ -140,6 +139,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                     member.IsChecked = false;
                 }
             }
+            CheckAndSetStateOfSelectAllCheckBox();
         }
 
         private void MemberSelectionCheckBox_Checked(object sender, RoutedEventArgs e)
@@ -191,10 +191,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 if (memberGraphNode.MemberSymbol is INamedTypeSymbol interfaceSymbol &&
                     interfaceSymbol.TypeKind == TypeKind.Interface)
                 {
-                    // Disable field check box and make abstract check box
+                    // Disable field check box
                     foreach (var member in ViewModel.Members)
                     {
-                        member.IsMakeAbstractCheckable = false;
                         if (member.MemberSymbol.Kind == SymbolKind.Field)
                         {
                             member.IsCheckable = false;
@@ -203,14 +202,9 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 }
                 else
                 {
-                    // Resume them back
+                    // Resume field check box back
                     foreach (var member in ViewModel.Members)
                     {
-                        if (member.MemberSymbol.Kind != SymbolKind.Field && !member.MemberSymbol.IsAbstract)
-                        {
-                            member.IsMakeAbstractCheckable = true;
-                        }
-
                         if (member.MemberSymbol.Kind == SymbolKind.Field)
                         {
                             member.IsCheckable = true;

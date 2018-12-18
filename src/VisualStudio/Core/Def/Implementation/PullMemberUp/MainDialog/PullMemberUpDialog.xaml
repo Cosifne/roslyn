@@ -11,6 +11,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:sys="clr-namespace:System;assembly=mscorlib"
              xmlns:self="clr-namespace:Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.MainDialog"
+             xmlns:u="clr-namespace:Microsoft.VisualStudio.LanguageServices.Implementation.Utilities"
              mc:Ignorable="d" 
              WindowStartupLocation="CenterOwner"
              Height="498"
@@ -29,10 +30,10 @@
         <sys:Double x:Key="ButtonHeight">23</sys:Double>
         <Style x:Key="LibraryTreeViewItemStyle"
                TargetType="{x:Type TreeViewItem}">
-            <Setter Property="IsSelected"
-                        Value="{Binding IsSelected, Mode=TwoWay}" />
-            <Setter Property="FontWeight"
-                        Value="Normal" />
+            <Setter Property="IsSelected" Value="{Binding IsSelected, Mode=TwoWay}" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="AutomationProperties.Name" Value="{Binding MemberAutomationText}" />
+            <Setter Property="AutomationProperties.AutomationId" Value="{Binding MemberName}" />
             <Setter Property="IsExpanded" Value="True"/>
             <Style.Resources>
                 <Style TargetType="{x:Type Border}">
@@ -88,15 +89,13 @@
                         <HierarchicalDataTemplate
                             ItemsSource="{Binding BaseTypeNodes}"
                             DataType="{x:Type self:BaseTypeTreeNodeViewModel}">
-                           <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                                <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
-                                <TextBlock
-                                    Text="{Binding MemberName}"
-                                    AutomationProperties.Name="{Binding MemberName}"
-                                    AutomationProperties.AutomationId="{Binding MemberAutomationText}"
-                                    ToolTip="{Binding Namespace}"/>
-                            </DockPanel>
-                        </HierarchicalDataTemplate>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                            <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
+                            <TextBlock
+                                Text="{Binding MemberName}"
+                                ToolTip="{Binding Namespace}"/>
+                        </StackPanel>
+                    </HierarchicalDataTemplate>
                     </TreeView.ItemTemplate>
                 </TreeView>
         </GroupBox>
@@ -134,7 +133,7 @@
                     MinWidth="334"
                     Height="Auto"
                     Background="White"
-                    ItemsSource="{Binding Members}">
+                    ItemsSource="{Binding Members, UpdateSourceTrigger=PropertyChanged, NotifyOnSourceUpdated=True, Mode=TwoWay}">
                     <DataGrid.CellStyle>
                         <Style TargetType="DataGridCell">
                             <Setter Property="BorderThickness" Value="0"/>
@@ -142,6 +141,11 @@
                             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                         </Style>
                     </DataGrid.CellStyle>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Focusable" Value="False"/>
+                        </Style>
+                    </DataGrid.RowStyle>
                     <DataGrid.Columns>
                         <DataGridTemplateColumn Width="*">
                             <DataGridTemplateColumn.Header>
@@ -176,7 +180,7 @@
                                             Focusable="True"
                                             ToolTipService.ShowOnDisabled="True"
                                             ToolTipService.IsEnabled="{Binding IsCheckable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                            ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveField}"/>
+                                            ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCannotHaveField}"/>
                                         <Image 
                                            x:Name="GlyphOfMember"
                                            Margin="8,0,5,0"
@@ -210,12 +214,10 @@
                                           Style="{StaticResource CenterCheckbox}"
                                           Visibility="{Binding MakeAbstractVisibility}"
                                           IsEnabled="{Binding IsMakeAbstractCheckable, UpdateSourceTrigger=PropertyChanged}"
+                                          AutomationProperties.Name="{Binding MakeMemberAbstractAutomationText}"
                                           Focusable="True"
                                           Margin="0, 2, 0, 2"
-                                          ToolTipService.IsEnabled="{Binding IsMakeAbstractCheckable, Converter={StaticResource BooleanReverseConverter}, UpdateSourceTrigger=PropertyChanged}"
-                                          ToolTipService.ShowOnDisabled="True"
-                                          IsChecked="{Binding MakeAbstract, UpdateSourceTrigger=PropertyChanged}"
-                                          ToolTipService.ToolTip="{Binding ElementName=dialog, Path=InterfaceCantHaveAbstractMember}">
+                                          IsChecked="{Binding MakeAbstract, UpdateSourceTrigger=PropertyChanged}">
                                     </CheckBox>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>

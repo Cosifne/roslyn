@@ -2,6 +2,7 @@
 
 using System.Windows;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.VisualStudio.Language.Intellisense;
 using static Microsoft.VisualStudio.LanguageServices.Implementation.ExtractInterface.ExtractInterfaceDialogViewModel;
 
@@ -14,15 +15,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         /// The check box is hidden for members impossbile to be made to abstract.
         /// </summary>
         public Visibility MakeAbstractVisibility => MemberSymbol.Kind == SymbolKind.Field || MemberSymbol.IsAbstract ? Visibility.Hidden : Visibility.Visible;
-
-        private bool _isMakeAbstractCheckable;
-
-        /// <summary>
-        /// Property indicates the 'Make abstract' check box is selectable or not.
-        /// It is different from the 'MakeAbstractVisibility' property in this way: The Member could be abstract, but it is currently impossible.
-        /// For example, when the destination is an interface, method can't be made to abstract but when destination changes to class it becomes possible.
-        /// </summary>
-        public bool IsMakeAbstractCheckable { get => _isMakeAbstractCheckable; set => SetProperty(ref _isMakeAbstractCheckable, value); }
 
         /// <summary>
         /// Property indicates whether 'Make abstract' check box is checked.

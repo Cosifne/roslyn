@@ -34,7 +34,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp
                     // The member user selected will be checked at the begining.
                     IsChecked = member.Equals(selectedMember),
                     MakeAbstract = false,
-                    IsMakeAbstractCheckable = member.Kind != SymbolKind.Field && !member.IsAbstract,
                     IsCheckable = true
                 });
 

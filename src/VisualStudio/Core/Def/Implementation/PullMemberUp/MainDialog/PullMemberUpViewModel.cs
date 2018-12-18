@@ -57,8 +57,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
                 WhereAsArray(memberSymbolView => memberSymbolView.IsChecked && memberSymbolView.IsCheckable).
                 SelectAsArray(memberSymbolView =>
                     (member: memberSymbolView.MemberSymbol,
-                    makeAbstract: memberSymbolView.MakeAbstract &&
-                    memberSymbolView.IsMakeAbstractCheckable));
+                    makeAbstract: memberSymbolView.MakeAbstract));
 
             var result = PullMembersUpAnalysisBuilder.BuildAnalysisResult(
                 SelectedDestination.MemberSymbol as INamedTypeSymbol,
