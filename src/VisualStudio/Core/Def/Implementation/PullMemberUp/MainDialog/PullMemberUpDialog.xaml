@@ -226,7 +226,7 @@
                     Margin="0, 4, 0, 0"
                     Width="Auto"
                     MaxWidth="130">
-                    <vs:DialogButton
+                    <Button
                         x:Name="SelecDependentsButton"
                         x:Uid="SelecDependentsButton"
                         Padding="{StaticResource ResourceKey=SelectDependantsAndSelectPublicButtonPadding}"
@@ -235,7 +235,7 @@
                         Margin="2, 2, 2, 7"
                         Width="Auto"
                         Height="Auto"/>
-                    <vs:DialogButton
+                    <Button
                         x:Name="SelectPublicButton"
                         x:Uid="SelectPublicButton"
                         Content="{Binding ElementName=dialog, Path=SelectPublic}"
@@ -252,7 +252,7 @@
             Margin="0, 18, 0, 0"
             HorizontalAlignment="Right"
             Orientation="Horizontal">
-            <vs:DialogButton 
+            <Button 
                 x:Name="OKButton"
                 x:Uid="OKButton"
                 Click="OKButton_Click"
@@ -263,7 +263,7 @@
                 Content="{Binding OK, ElementName=dialog}"
                 Width="{StaticResource ResourceKey=ButtonWidth}"
                 Height="{StaticResource ResourceKey=ButtonHeight}"/>
-            <vs:DialogButton
+            <Button
                 x:Name="CancelButton"
                 x:Uid="CancelButton"
                 Click="CancelButton_Click"
