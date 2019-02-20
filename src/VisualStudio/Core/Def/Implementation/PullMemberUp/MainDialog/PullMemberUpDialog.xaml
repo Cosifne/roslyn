@@ -83,7 +83,7 @@
                         <StackPanel
                             Orientation="Horizontal"
                             HorizontalAlignment="Stretch"
-                            Focusable="True"
+                            Focusable="False"
                             VerticalAlignment="Stretch">
                             <Image Source="{Binding Glyph}" Margin="0, 0, 5, 0"/>
                             <TextBlock
@@ -149,6 +149,7 @@
                                 <StackPanel Orientation="Horizontal" Width="Auto">
                                     <self:SelectAllCheckBox
                                         AutomationProperties.Name="{Binding SelectAllCheckBoxAutomationText}"
+                                        AutomationProperties.IsColumnHeader="True"
                                         Margin="0, 0, 4, 0"
                                         Checked="SelectAllCheckBox_Checked"
                                         Unchecked="SelectAllCheckBox_Unchecked"
@@ -156,10 +157,10 @@
                                         DataContext="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext}"
                                         IsThreeState="{Binding ThreeStateEnable, UpdateSourceTrigger=PropertyChanged}"
                                         IsChecked="{Binding SelectAllCheckBoxState, UpdateSourceTrigger=PropertyChanged}">
-                                    </self:SelectAllCheckBox>
-                                    <TextBlock
-                                        Width="Auto"
-                                        Text="{Binding RelativeSource={RelativeSource AncestorType=vs:DialogWindow}, Path=MembersHeader}" />
+                                        <TextBlock
+                                            Width="Auto"
+                                            Text="{Binding RelativeSource={RelativeSource AncestorType=vs:DialogWindow}, Path=MembersHeader}" />
+                                        </self:SelectAllCheckBox>
                                 </StackPanel>
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
@@ -267,7 +268,6 @@
                 x:Name="CancelButton"
                 x:Uid="CancelButton"
                 Click="CancelButton_Click"
-                IsCancel="True"
                 Padding="{StaticResource ResourceKey=ButtonPadding}"
                 Margin="7, 0, 4, 0"
                 Content="{Binding Cancel, ElementName=dialog}"
