@@ -157,10 +157,12 @@
                                         DataContext="{Binding RelativeSource={RelativeSource AncestorType=DataGrid}, Path=DataContext}"
                                         IsThreeState="{Binding ThreeStateEnable, UpdateSourceTrigger=PropertyChanged}"
                                         IsChecked="{Binding SelectAllCheckBoxState, UpdateSourceTrigger=PropertyChanged}">
-                                        <TextBlock
-                                            Width="Auto"
-                                            Text="{Binding RelativeSource={RelativeSource AncestorType=vs:DialogWindow}, Path=MembersHeader}" />
-                                        </self:SelectAllCheckBox>
+                                    </self:SelectAllCheckBox>
+                                    <TextBlock
+                                        Name="MemberSelectionTextBlock"
+                                        Focusable="False"
+                                        Width="Auto"
+                                        Text="{Binding RelativeSource={RelativeSource AncestorType=vs:DialogWindow}, Path=MembersHeader}" />
                                 </StackPanel>
                             </DataGridTemplateColumn.Header>
                             <DataGridTemplateColumn.CellTemplate>
@@ -269,6 +271,7 @@
                 x:Uid="CancelButton"
                 Click="CancelButton_Click"
                 Padding="{StaticResource ResourceKey=ButtonPadding}"
+                IsCancel="True"
                 Margin="7, 0, 4, 0"
                 Content="{Binding Cancel, ElementName=dialog}"
                 Width="{StaticResource ResourceKey=ButtonWidth}"

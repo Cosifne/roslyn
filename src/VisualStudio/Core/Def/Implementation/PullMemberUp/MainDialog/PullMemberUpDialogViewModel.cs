@@ -43,11 +43,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
             Destinations = destinations;
             _symbolToDependentsMap = dependentsMap;
             _symbolToMemberViewMap = members.ToImmutableDictionary(memberViewModel => memberViewModel.Symbol);
-            if (destinations != default && !destinations.IsEmpty)
-            {
-                // Select a destination by default
-                destinations[0].IsChecked = true;
-            }
         }
 
         public BaseTypeTreeNodeViewModel SelectedDestination

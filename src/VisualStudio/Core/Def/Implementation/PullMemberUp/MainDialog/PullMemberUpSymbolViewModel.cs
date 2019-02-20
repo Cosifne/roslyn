@@ -16,6 +16,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.PullMemberUp.Ma
         public string RowSelectionAutomationText => ServicesVSResources.Select_member;
 
         /// <summary>
+        /// Used for automation text.
+        /// </summary>
+        public override string ToString() => base.SymbolAutomationText;
+
+        /// <summary>
         /// Property controls the 'Make abstract' check box's Visibility.
         /// The check box is hidden for members impossbile to be made to abstract.
         /// </summary>
