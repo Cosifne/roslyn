@@ -28,5 +28,8 @@ namespace Microsoft.VisualStudio.Editor.Implementation
         [Export]
         [CommandBinding(Guids.CSharpGroupIdString, ID.CSharpCommands.ContextOrganizeRemoveAndSort, typeof(SortAndRemoveUnnecessaryImportsCommandArgs))]
         internal CommandBindingDefinition contextOrganizeRemoveAndSortCommandBinding;
+
+        [Export] [CommandBinding("4C7763BF-5FAF-4264-A366-B7E1F27BA958", (int)VSConstants.VSStd14CmdID.SmartBreakLine, typeof(SmartBreakLineCommandArgs))]
+        internal CommandBindingDefinition smartBreakLineCommandBinding;
     }
 }
