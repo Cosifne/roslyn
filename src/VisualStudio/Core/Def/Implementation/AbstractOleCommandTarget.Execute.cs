@@ -39,6 +39,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
                 {
                     return ExecuteVisualStudio97(ref pguidCmdGroup, commandId, executeInformation, pvaIn, pvaOut);
                 }
+                else if (pguidCmdGroup == VSConstants.VsStd14)
+                {
+                    return ExecuteVisualStudio14(ref pguidCmdGroup, commandId, executeInformation, pvaIn, pvaOut);
+                }
                 else
                 {
                     return NextCommandTarget.Exec(ref pguidCmdGroup, commandId, executeInformation, pvaIn, pvaOut);
@@ -67,6 +71,11 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
                 default:
                     return NextCommandTarget.Exec(ref pguidCmdGroup, commandId, executeInformation, pvaIn, pvaOut);
             }
+        }
+
+        protected virtual int ExecuteVisualStudio14(ref Guid pguidCmdGroup, uint commandId, uint executeInformation, IntPtr pvaIn, IntPtr pvaOut)
+        {
+            return NextCommandTarget.Exec(ref pguidCmdGroup, commandId, executeInformation, pvaIn, pvaOut);
         }
 
         protected virtual int ExecuteVisualStudio2000(ref Guid pguidCmdGroup, uint commandId, uint executeInformation, IntPtr pvaIn, IntPtr pvaOut)

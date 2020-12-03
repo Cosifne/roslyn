@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using Microsoft.CodeAnalysis.Editor.CommandHandlers;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text.Editor;
 
@@ -12,6 +14,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
     /// </summary>
     internal sealed class StandaloneCommandFilter : AbstractVsTextViewFilter
     {
+        private readonly SmartBreakLineCommandHandler _smartBreakLineCommandHandler;
+
         /// <summary>
         /// Creates a new command handler that is attached to an IVsTextView.
         /// </summary>
@@ -21,6 +25,17 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation
             IComponentModel componentModel)
             : base(wpfTextView, componentModel)
         {
+            _smartBreakLineCommandHandler = ComponentModel.GetService<SmartBreakLineCommandHandler>();
+        }
+
+        protected override int ExecuteVisualStudio14(ref Guid pguidCmdGroup, uint commandId, uint executeInformation, IntPtr pvaIn, IntPtr pvaOut)
+        {
+            if (commandId == (int)VSConstants.VSStd14CmdID.SmartBreakLine)
+            {
+                _smartBreakLineCommandHandler.ExecuteCommand(WpfTextView, GetSubjectBufferContainingCaret());
+            }
+
+            return base.ExecuteVisualStudio14(ref pguidCmdGroup, commandId, executeInformation, pvaIn, pvaOut);
         }
     }
 }
