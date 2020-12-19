@@ -6,7 +6,6 @@
 
 using System;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
@@ -14,6 +13,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editor.Implementation.AutomaticCompletion;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.ExternalAccess.VSTypeScript.Api;
+using Microsoft.CodeAnalysis.ExtractMethod;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
@@ -85,7 +85,8 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
 
             var cancellationToken = executionContext.OperationContext.UserCancellationToken;
             var root = document.GetRequiredSyntaxRootSynchronously(cancellationToken);
-            if (!TryGetSupportedNode(root, currentCaret.Value, out var supportedNode))
+            if (!TryGetInsertPosition(root, currentCaret.Value, out var insertPosition)
+                || !insertPosition.HasValue)
             {
                 nextCommandHandler();
                 return;
@@ -93,18 +94,17 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
 
             using var transaction = args.TextView.CreateEditTransaction(nameof(BraceCompletionCommandHandler), _textUndoHistoryRegistry, _editorOperationsFactoryService);
 
-            // Insert '{}' to the document
-            var insertPosition = supportedNode!.Span.End;
-            var newDocument = document.InsertText(insertPosition, s_bracePair, cancellationToken);
+            // 1. Insert '{}' to the document
+            var newDocument = document.InsertText(insertPosition.Value, s_bracePair, cancellationToken);
 
-            // Place caret between '{$$}'
+            // 2. Place caret between '{$$}'
             args.TextView.TryMoveCaretToAndEnsureVisible(
-                new SnapshotPoint(args.SubjectBuffer.CurrentSnapshot, insertPosition + 1));
+                new SnapshotPoint(args.SubjectBuffer.CurrentSnapshot, insertPosition.Value + 1));
 
-            // Format
-            Format(newDocument, insertPosition, cancellationToken);
+            // 3. Format the inserted brace
+            Format(newDocument, insertPosition.Value, cancellationToken);
 
-            // Hit enter
+            // 4. Press enter
             InsertNewLine(editorOperation);
 
             transaction.Complete();
@@ -124,12 +124,12 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             document.ApplyTextChanges(changes, cancellationToken);
         }
 
-        private static bool TryGetSupportedNode(
+        private static bool TryGetInsertPosition(
             SyntaxNode root,
             int caretPosition,
-            out SyntaxNode? supportedNode)
+            out int? insertPosition)
         {
-            supportedNode = null;
+            insertPosition = null;
             var token = root.FindTokenOnLeftOfPosition(caretPosition);
             if (token.IsKind(SyntaxKind.None))
             {
@@ -140,51 +140,237 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             // For example:
             // void Bar() { void Bar1() { void Bar2$$() }}
             // Here only 'Bar2' is needed.
-            var node = token.GetAncestors(IsSupportedSyntaxNode).FirstOrDefault();
-            if (node != null)
+            foreach (var node in token.GetAncestors<SyntaxNode>())
             {
-                supportedNode = node;
+                if (TryGetInsertPositionForEmbeddedStatementOwner(node, out insertPosition))
+                {
+                    return true;
+                }
+
+                if (TryGetInsertPositionForNamespaceAndTypeDeclarationNode(node, out insertPosition))
+                {
+                    return true;
+                }
+
+                if (TryGetInsertPositionForTypeMemberNode(node, out insertPosition))
+                {
+                    return true;
+                }
+
+                if (TryGetInsertPositionForLocalFunction(node, out insertPosition))
+                {
+                    return true;
+                }
+
+                if (TryGetInsertPositionForObjectCreationExpression(node, out insertPosition))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryGetInsertPositionForNamespaceAndTypeDeclarationNode(SyntaxNode node, out int? insertPoint)
+        {
+            insertPoint = null;
+            // For namespace, class, struct and etc.,
+            // make sure its name identifier is not missing
+
+            if (node is NamespaceDeclarationSyntax {Name: IdentifierNameSyntax name}
+                && !name.Identifier.IsMissing
+                && HasNoBrace(node))
+            {
+                insertPoint = name.Identifier.Span.End;
+                return true;
+            }
+
+            if (node is BaseTypeDeclarationSyntax typeDeclaration
+                && !typeDeclaration.Identifier.IsMissing
+                && HasNoBrace(node))
+            {
+                insertPoint = typeDeclaration.Identifier.Span.End;
                 return true;
             }
 
             return false;
         }
 
-        private static bool IsSupportedSyntaxNode(SyntaxNode node)
+        private static bool TryGetInsertPositionForTypeMemberNode(SyntaxNode node, out int? insertPosition)
         {
-            // 1. For syntax node like ClassDeclarationSyntax, check if the brace pair is missing
-            if (IsSyntaxNodeOnlySupportsBracePair(node))
+            insertPosition = null;
+            // For method, make sure it has open & close parenthesis for the parameter list,
+            // the insertion position is the end of close parenthesis
+            if (node is BaseMethodDeclarationSyntax methodNode
+                && HasNoMissingParenthesis(methodNode)
+                && HasNoBrace(methodNode))
             {
-                var (openBrace, closeBrace) = node.GetBraces();
-                return openBrace.IsMissing && closeBrace.IsMissing;
+                var (_, closeParenthesis) = methodNode.GetParameterList().GetParentheses();
+                insertPosition = closeParenthesis.Span.End;
+                return true;
             }
 
-            // 2. For embedded statement owner, like if statement
-            // check two things, I. Does it have correct parenthesis pair. II. does it have no statement.
-            if (node.IsEmbeddedStatementOwner() && HasNoMissingParenthesis(node))
+            if (node is AccessorDeclarationSyntax accessorNode)
             {
+                // For accessors in Property, event & indexer
+                // Only consider inserting {} when it has no ending semicolon & no expression body
+                // e.g. Before: class Bar
+                // {
+                //      int Foo
+                //      {
+                //          get$$
+                //      }
+                // }
+                // After: class Bar
+                // {
+                //      int Foo
+                //      {
+                //          get{}
+                //      }
+                // }
+                //
+                var semicolonMissing = accessorNode.SemicolonToken.IsKind(SyntaxKind.None) || accessorNode.SemicolonToken.IsMissing;
+                if (semicolonMissing
+                    && accessorNode.ExpressionBody == null
+                    && accessorNode.Body == null)
+                {
+                    insertPosition = accessorNode.Keyword.Span.End;
+                    return true;
+                }
+            }
+
+            if (node is EventFieldDeclarationSyntax eventDeclaration
+                && eventDeclaration.SemicolonToken.IsMissing)
+            {
+                // For event field declaration, insert {} if it is doesn't have semicolon
+                // e.g. before: event EventHandler Bar$$
+                // after: event EventHandler Bar{}
+                // Note: EventFieldDeclaration becomes EventDeclarationSyntax
+                insertPosition = eventDeclaration.Span.End;
+                return true;
+            }
+
+            if (node is IndexerDeclarationSyntax indexerDeclaration
+                && (indexerDeclaration.AccessorList == null || indexerDeclaration.AccessorList.HasDiagnostics()))
+            {
+                // For indexer declaration, insert {} if it doesn't have AccessorList.
+                // Also check the diagnostics, before for this case:
+                // class Bar
+                // {
+                //      int this[int i]$$
+                // }
+                // parser will think the last '}' is a part of the AccessorList, and the '{' is missing.
+                insertPosition = indexerDeclaration.Span.End;
+                return true;
+            }
+
+            // Don't consider adding {} for Property's AccessorList because, for example,
+            // class Bar {
+            //      public int Foo$$
+            // }
+            // we can't tell if is it a field or property.
+
+            return false;
+        }
+
+        private static bool TryGetInsertPositionForEmbeddedStatementOwner(SyntaxNode node, out int? insertPosition)
+        {
+            insertPosition = null;
+            if (node.IsEmbeddedStatementOwner())
+            {
+                // If the statement is not missing,
+                // Don't insert
                 var statement = node.GetEmbeddedStatement();
-                if (statement == null)
+                // CS1023 error.. Is there better way to call binder instead?
+                var isValidStatement = !statement.IsMissing
+                   && !statement.IsKind(SyntaxKind.LocalDeclarationStatement)
+                   && !statement.IsKind(SyntaxKind.LocalFunctionStatement);
+                if (!isValidStatement || !HasNoBrace(statement))
                 {
                     return false;
                 }
 
-                return statement.IsMissing;
-            }
+                // For the node has parenthesis, like If statement and for statement,
+                // Make sure its open & close parenthesis are not missing,
+                // then use the end of close parenthesis as insert position
+                if (ShouldCheckParenthesisForEmbeddedOwner(node)
+                    && HasNoMissingParenthesis(node))
+                {
+                    var (_, closeParenthesis) = node.GetParentheses();
+                    insertPosition = closeParenthesis.Span.End;
+                    return closeParenthesis != default;
+                }
 
-            // 3. For method and local function
-            // check two things, I. Does it have correct parenthesis pair. II. does it have no method body.
-            if (node is MethodDeclarationSyntax methodNode && HasNoMissingParenthesis(methodNode))
-            {
-                return methodNode.Body == null && methodNode.ExpressionBody == null;
-            }
+                // For do statement use the end of do keyword as the insert position
+                if (node is DoStatementSyntax doStatement && HasNoBrace(doStatement))
+                {
+                    insertPosition = doStatement.DoKeyword.Span.End;
+                    return true;
+                }
 
-            if (node is LocalFunctionStatementSyntax localFunctionNode && HasNoMissingParenthesis(localFunctionNode))
-            {
-                return localFunctionNode.Body == null && localFunctionNode.ExpressionBody == null;
+                // For else clause,
+                // 1. If it is an else clause without if, use the end of else keyword as insert position
+                // 2. If it is an else clause with if, find the insert position for that if statement
+                if (node is ElseClauseSyntax elseClauseSyntax)
+                {
+                    if (elseClauseSyntax.Statement is IfStatementSyntax ifStatementSyntax)
+                    {
+                        return TryGetInsertPositionForEmbeddedStatementOwner(ifStatementSyntax, out insertPosition);
+                    }
+
+                    var (_, closeParenthesis) = node.GetParentheses();
+                    insertPosition = closeParenthesis.Span.End;
+                    return closeParenthesis != default;
+                }
             }
 
             return false;
+        }
+
+        private static bool TryGetInsertPositionForLocalFunction(SyntaxNode node, out int? insertPosition)
+        {
+            insertPosition = null;
+            if (node is LocalFunctionStatementSyntax localFunction
+                && HasNoBrace(localFunction)
+                && HasNoMissingParenthesis(localFunction))
+            {
+                insertPosition = localFunction.Span.End;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool TryGetInsertPositionForObjectCreationExpression(SyntaxNode node, out int? insertPosition)
+        {
+            insertPosition = null;
+            // For ObjectCreationExpression, insert {} if it doesn't have initializer
+            if (node is ObjectCreationExpressionSyntax {Initializer: null} objectExpression)
+            {
+                if (objectExpression.ArgumentList == null)
+                {
+                    // If it doesn't have argument list, then the insert point is the end of the type
+                    // e.g. var c = new Bar$$; => var c = new Bar { $$ };
+                    insertPosition = objectExpression.Type.Span.End;
+                }
+                else
+                {
+                    // If it has argument list, then the insert point is after the close parenthesis.
+                    // e.g. var c = new Bar()$$; => var c = new Bar() { $$ };
+                    insertPosition = objectExpression.ArgumentList.CloseParenToken.Span.End;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasNoBrace(SyntaxNode node)
+        {
+            var (openBrace, closeBrace) = node.GetBraces();
+            return (openBrace.IsKind(SyntaxKind.None) && closeBrace.IsKind(SyntaxKind.None))
+                || (openBrace.IsMissing && closeBrace.IsMissing);
         }
 
         private static bool HasNoMissingParenthesis(SyntaxNode node)
@@ -225,12 +411,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
                || node is ForStatementSyntax
                || node is IfStatementSyntax
                || node is LockStatementSyntax
-               || node is UsingStatementSyntax;
-
-        private static bool IsSyntaxNodeOnlySupportsBracePair(SyntaxNode n)
-            => n is NamespaceDeclarationSyntax
-               || n is ClassDeclarationSyntax
-               || n is StructDeclarationSyntax
-               || n is RecordDeclarationSyntax;
+               || node is UsingStatementSyntax
+               || node is WhileStatementSyntax;
     }
 }

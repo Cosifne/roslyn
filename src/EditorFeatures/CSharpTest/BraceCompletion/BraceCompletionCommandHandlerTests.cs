@@ -24,15 +24,156 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.BraceCompletion
         }
 
         [WpfFact]
-        public void TestClass()
+        public void TestEmptyClass()
         {
             Test(@"
-public class Bar$$
+public clas$$s Bar
 ", @"
 public class Bar
 {
     $$
 }");
+        }
+
+        [WpfFact]
+        public void TestMultipleClasses()
+        {
+            Test(@"
+public class B$$ar2
+public class Bar
+{
+}",
+                @"
+public class Bar2
+{
+    $$
+}
+public class Bar
+{
+}");
+        }
+
+        [WpfFact]
+        public void TestNestedClasses()
+        {
+            Test(@"
+public class Bar
+{
+    public class B$$ar2
+}",
+                @"
+public class Bar
+{
+    public class Bar2
+    {
+        $$
+    }
+}");
+        }
+
+        [WpfFact]
+        public void TestEmptyNamespace()
+        {
+            Test(@"
+namespace Bar$$
+", @"
+namespace Bar
+{
+    $$
+}");
+        }
+
+        [WpfFact]
+        public void TestEmptyStruct()
+        {
+            Test(@"
+public stru$$ct Bar
+", @"
+public struct Bar
+{
+    $$
+}");
+        }
+
+        [WpfFact]
+        public void TestEmptyRecord()
+        {
+            Test(@"
+public reco$$rd Bar
+", @"
+public record Bar
+{
+    $$
+}");
+        }
+
+        [WpfFact]
+        public void TestMethod()
+        {
+            Test(@"
+public class Bar
+{
+    void Ma$$in()
+}",
+                @"
+public class Bar
+{
+    void Main()
+    {
+        $$
+    }
+}");
+
+        }
+
+        [WpfFact]
+        public void TestLocalFunction()
+        {
+            Test(@"
+public class Bar
+{
+    void Main()
+    {
+        void Loca$$l()
+    }
+}",
+    @"
+public class Bar
+{
+    void Main()
+    {
+        void Local()
+        {
+            $$
+        }
+    }
+}");
+        }
+
+        [WpfFact]
+        public void TestIfStatement()
+        {
+            Test(@"
+public class Bar
+{
+    public void Main(bool x)
+    {
+        if$$ (x)
+        var x = 1;
+    }
+}", @"
+public class Bar
+{
+    public void Main(bool x)
+    {
+        if (x)
+        {
+            $$
+        }   
+        var x = 1;
+    }
+}");
+
         }
     }
 }
