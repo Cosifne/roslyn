@@ -6,6 +6,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Extensions;
@@ -94,17 +95,29 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
 
             using var transaction = args.TextView.CreateEditTransaction(nameof(BraceCompletionCommandHandler), _textUndoHistoryRegistry, _editorOperationsFactoryService);
 
-            // 1. Insert '{}' to the document
+            // 1. Insert '{\r\n}' to the document
+            // After this operation the text would become like
+            // Bar(int i, int c) {
+            // }
             var newDocument = document.InsertText(insertPosition.Value, s_bracePair, cancellationToken);
 
-            // 2. Place caret between '{$$}'
+            // 2. Place caret between '{$$\r\n}'
             args.TextView.TryMoveCaretToAndEnsureVisible(
                 new SnapshotPoint(args.SubjectBuffer.CurrentSnapshot, insertPosition.Value + 1));
 
             // 3. Format the inserted brace
+            // After this operation the text would become like
+            // Bar(int i, int c)
+            // {$$
+            // }
             Format(newDocument, insertPosition.Value, cancellationToken);
 
             // 4. Press enter
+            // After this operation the text would become like
+            // Bar(int i, int c)
+            // {
+            //     $$
+            // }
             InsertNewLine(editorOperation);
 
             transaction.Complete();
@@ -139,36 +152,19 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             // Find the innermost matching node
             // For example:
             // void Bar() { void Bar1() { void Bar2$$() }}
-            // Here only 'Bar2' is needed.
-            foreach (var node in token.GetAncestors<SyntaxNode>())
+            // Here only 'Bar2' should be considered.
+            var nodeCandidate = token.GetAncestors(SupportedSyntaxNode).FirstOrDefault();
+            if (nodeCandidate == null)
             {
-                if (TryGetInsertPositionForEmbeddedStatementOwner(node, out insertPosition))
-                {
-                    return true;
-                }
-
-                if (TryGetInsertPositionForNamespaceAndTypeDeclarationNode(node, out insertPosition))
-                {
-                    return true;
-                }
-
-                if (TryGetInsertPositionForTypeMemberNode(node, out insertPosition))
-                {
-                    return true;
-                }
-
-                if (TryGetInsertPositionForLocalFunction(node, out insertPosition))
-                {
-                    return true;
-                }
-
-                if (TryGetInsertPositionForObjectCreationExpression(node, out insertPosition))
-                {
-                    return true;
-                }
+                return false;
             }
 
-            return false;
+            // Try to find the insert position for braces for the syntax node
+            return TryGetInsertPositionForEmbeddedStatementOwner(nodeCandidate, out insertPosition)
+               || TryGetInsertPositionForNamespaceAndTypeDeclarationNode(nodeCandidate, out insertPosition)
+               || TryGetInsertPositionForTypeMemberNode(nodeCandidate, out insertPosition)
+               || TryGetInsertPositionForLocalFunction(nodeCandidate, out insertPosition)
+               || TryGetInsertPositionForObjectCreationExpression(nodeCandidate, out insertPosition);
         }
 
         private static bool TryGetInsertPositionForNamespaceAndTypeDeclarationNode(SyntaxNode node, out int? insertPoint)
@@ -285,7 +281,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
                 var isValidStatement = !statement.IsMissing
                    && !statement.IsKind(SyntaxKind.LocalDeclarationStatement)
                    && !statement.IsKind(SyntaxKind.LocalFunctionStatement);
-                if (!isValidStatement || !HasNoBrace(statement))
+                if (isValidStatement || !HasNoBrace(statement))
                 {
                     return false;
                 }
@@ -413,5 +409,19 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
                || node is LockStatementSyntax
                || node is UsingStatementSyntax
                || node is WhileStatementSyntax;
+
+        /// <summary>
+        /// All the syntax nodes that should be checked to see if braces could be inserted
+        /// </summary>
+        private static bool SupportedSyntaxNode(SyntaxNode node)
+            => node is NamespaceDeclarationSyntax
+                   or BaseTypeDeclarationSyntax
+                   or BaseMethodDeclarationSyntax
+                   or AccessorDeclarationSyntax
+                   or EventFieldDeclarationSyntax
+                   or IndexerDeclarationSyntax
+                   or LocalFunctionStatementSyntax
+                   or ObjectCreationExpressionSyntax
+               || node.IsEmbeddedStatementOwner();
     }
 }

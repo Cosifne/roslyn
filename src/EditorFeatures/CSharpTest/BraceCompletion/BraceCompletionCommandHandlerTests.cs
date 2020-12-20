@@ -169,7 +169,7 @@ public class Bar
         if (x)
         {
             $$
-        }   
+        }
         var x = 1;
     }
 }");
