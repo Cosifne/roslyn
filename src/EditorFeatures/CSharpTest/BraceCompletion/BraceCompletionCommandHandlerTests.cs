@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Linq;
 using Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
@@ -149,7 +148,6 @@ public class Bar
     }
 }");
         }
-
 
         [WpfFact]
         public void TestGetAccessorForProperty()
@@ -305,8 +303,7 @@ using System;
 public class Bar
 {
     public event EventHandler Foo$$
-}
-", @"
+}", @"
 using System;
 public class Bar
 {
@@ -318,14 +315,13 @@ public class Bar
         }
 
         [WpfFact]
-        public void TestInderDeclaration()
+        public void TestIndexerDeclaration()
         {
             Test(@"
 public class Bar
 {
     public int thi$$s[int i]
-}
-", @"
+}", @"
 public class Bar
 {
     public int this[int i]
@@ -425,7 +421,6 @@ public class Bar
 }");
         }
 
-
         [WpfFact]
         public void TestDoStatement()
         {
@@ -489,7 +484,7 @@ public class Bar
         if (true)
         {
         }
-        else if (false)
+        e$$lse if (false)
     }
 }", @"
 public class Bar
@@ -517,8 +512,7 @@ public class Bar
     {
         foreach (var x $$in """")
     }
-}
-", @"
+}", @"
 public class Bar
 {
     public void Fo()
@@ -565,7 +559,7 @@ public class Bar
 {
     public void Fo()
     {
-        using (var d = new$$ D())
+        usi$$ng (var d = new D())
     }
 }
 public class D : IDisposable

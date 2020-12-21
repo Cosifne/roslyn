@@ -28,7 +28,7 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.BraceCompletion
             var view = workspace.Documents.Single().GetTextView();
             var buffer = workspace.Documents.Single().GetTextBuffer();
 
-            view.Caret.MoveTo(new SnapshotPoint(buffer.CurrentSnapshot, workspace.Documents.Single(d => d.CursorPosition.HasValue).CursorPosition.Value));
+            view.Caret.MoveTo(new SnapshotPoint(buffer.CurrentSnapshot, workspace.Documents.Single(d => d.CursorPosition.HasValue).CursorPosition!.Value));
             var commandHandler = GetCommandHandler(workspace);
             commandHandler.ExecuteCommand(new AutomaticLineEnderCommandArgs(view, buffer), () => { }, TestCommandExecutionContext.Create());
 

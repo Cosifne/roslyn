@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Editor.Implementation.AutomaticCompletion;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.ExternalAccess.VSTypeScript.Api;
+using Microsoft.CodeAnalysis.ExtractMethod;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Text;
@@ -172,19 +173,15 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             // For namespace, class, struct and etc.,
             // make sure its name identifier is not missing
 
-            if (node is NamespaceDeclarationSyntax {Name: IdentifierNameSyntax name}
-                && !name.Identifier.IsMissing
-                && HasNoBrace(node))
+            if (node is NamespaceDeclarationSyntax && HasNoBrace(node))
             {
-                insertPoint = name.Identifier.Span.End;
+                insertPoint = node.Span.End;
                 return true;
             }
 
-            if (node is BaseTypeDeclarationSyntax typeDeclaration
-                && !typeDeclaration.Identifier.IsMissing
-                && HasNoBrace(node))
+            if (node is BaseTypeDeclarationSyntax && HasNoBrace(node))
             {
-                insertPoint = typeDeclaration.Identifier.Span.End;
+                insertPoint = node.Span.End;
                 return true;
             }
 
@@ -255,7 +252,7 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
                 //      int this[int i]$$
                 // }
                 // parser will think the last '}' is a part of the AccessorList, and the '{' is missing.
-                insertPosition = indexerDeclaration.Span.End;
+                insertPosition = indexerDeclaration.AccessorList.Span.End;
                 return true;
             }
 
@@ -273,49 +270,50 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             insertPosition = null;
             if (node.IsEmbeddedStatementOwner())
             {
-                // If the statement is not missing,
-                // Don't insert
                 var statement = node.GetEmbeddedStatement();
-                // CS1023 error.. Is there better way to call binder instead?
-                var isValidStatement = !statement.IsMissing
-                   && !statement.IsKind(SyntaxKind.LocalDeclarationStatement)
-                   && !statement.IsKind(SyntaxKind.LocalFunctionStatement);
-                if (isValidStatement || !HasNoBrace(statement))
-                {
-                    return false;
-                }
 
-                // For the node has parenthesis, like If statement and for statement,
-                // Make sure its open & close parenthesis are not missing,
-                // then use the end of close parenthesis as insert position
-                if (ShouldCheckParenthesisForEmbeddedOwner(node)
-                    && HasNoMissingParenthesis(node))
-                {
-                    var (_, closeParenthesis) = node.GetParentheses();
-                    insertPosition = closeParenthesis.Span.End;
-                    return closeParenthesis != default;
-                }
+                // TODO: This would cause some expected behavior,
+                // for example,
+                // 'if (tr$$ue) Bar();'
+                // would become 'if (tr$$ue) {} Bar();
+                // Try to consider a better solution
+                var insertBrace = statement == null
+                    || statement.IsMissing
+                    || HasNoBrace(statement);
 
-                // For do statement use the end of do keyword as the insert position
-                if (node is DoStatementSyntax doStatement && HasNoBrace(doStatement))
+                if (insertBrace)
                 {
-                    insertPosition = doStatement.DoKeyword.Span.End;
-                    return true;
-                }
-
-                // For else clause,
-                // 1. If it is an else clause without if, use the end of else keyword as insert position
-                // 2. If it is an else clause with if, find the insert position for that if statement
-                if (node is ElseClauseSyntax elseClauseSyntax)
-                {
-                    if (elseClauseSyntax.Statement is IfStatementSyntax ifStatementSyntax)
+                    // For the node has parenthesis, like If statement and for statement,
+                    // Make sure its open & close parenthesis are not missing,
+                    // then use the end of close parenthesis as insert position
+                    if (ShouldCheckParenthesisForEmbeddedOwner(node)
+                        && HasNoMissingParenthesis(node))
                     {
-                        return TryGetInsertPositionForEmbeddedStatementOwner(ifStatementSyntax, out insertPosition);
+                        var (_, closeParenthesis) = node.GetParentheses();
+                        insertPosition = closeParenthesis.Span.End;
+                        return closeParenthesis != default;
                     }
 
-                    var (_, closeParenthesis) = node.GetParentheses();
-                    insertPosition = closeParenthesis.Span.End;
-                    return closeParenthesis != default;
+                    // For do statement use the end of do keyword as the insert position
+                    if (node is DoStatementSyntax doStatement && HasNoBrace(doStatement))
+                    {
+                        insertPosition = doStatement.DoKeyword.Span.End;
+                        return true;
+                    }
+
+                    // For else clause,
+                    // 1. If it is an else clause without if, use the end of else keyword as insert position
+                    // 2. If it is an else clause with if, find the insert position for that if statement
+                    if (node is ElseClauseSyntax elseClauseSyntax)
+                    {
+                        if (elseClauseSyntax.Statement is IfStatementSyntax ifStatementSyntax)
+                        {
+                            return TryGetInsertPositionForEmbeddedStatementOwner(ifStatementSyntax, out insertPosition);
+                        }
+
+                        insertPosition = elseClauseSyntax.ElseKeyword.Span.End;
+                        return true;
+                    }
                 }
             }
 
