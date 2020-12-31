@@ -40,5 +40,8 @@ namespace Microsoft.CodeAnalysis.Test.Utilities.BraceCompletion
             Assert.Equal(expected, buffer.CurrentSnapshot.GetText());
             Assert.Equal(expectedPosition, virtualPosition.Position.Position + virtualPosition.VirtualSpaces);
         }
+
+        protected void TestCommandNotExecuted(string markup)
+            => Test(markup, markup);
     }
 }

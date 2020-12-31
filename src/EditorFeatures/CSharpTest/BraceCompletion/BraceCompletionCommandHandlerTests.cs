@@ -8,6 +8,7 @@ using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
 using Microsoft.CodeAnalysis.Test.Utilities.BraceCompletion;
 using Microsoft.VisualStudio.Commanding;
 using Roslyn.Test.Utilities;
+using Xunit;
 
 namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.BraceCompletion
 {
@@ -22,88 +23,87 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.UnitTests.BraceCompletion
             return handlers.OfType<BraceCompletionCommandHandler>().Single();
         }
 
-        [WpfFact]
-        public void TestEmptyClass()
+        [WpfTheory]
+        [InlineData("namespace")]
+        [InlineData("class")]
+        [InlineData("struct")]
+        [InlineData("record")]
+        [InlineData("enum")]
+        [InlineData("interface")]
+        public void TestEmptyBaseTypeDeclarationAndNamespace(string typeKeyword)
         {
-            Test(@"
-public clas$$s Bar
-", @"
-public class Bar
-{
+            Test($@"
+public {typeKeyword} $$Bar
+", $@"
+public {typeKeyword} Bar
+{{
     $$
-}");
+}}
+");
         }
 
-        [WpfFact]
-        public void TestMultipleClasses()
+        [WpfTheory]
+        [InlineData("namespace")]
+        [InlineData("class")]
+        [InlineData("struct")]
+        [InlineData("record")]
+        [InlineData("enum")]
+        [InlineData("interface")]
+        public void TestMultipleBaseTypeDeclaration(string typeKeyword)
         {
-            Test(@"
-public class B$$ar2
-public class Bar
-{
-}",
-                @"
-public class Bar2
-{
+            Test($@"
+public {typeKeyword} B$$ar2
+public {typeKeyword} Bar
+{{
+}}",
+                $@"
+public {typeKeyword} Bar2
+{{
     $$
-}
-public class Bar
-{
-}");
+}}
+public {typeKeyword} Bar
+{{
+}}");
         }
 
-        [WpfFact]
-        public void TestNestedClasses()
+        [WpfTheory]
+        [InlineData("namespace")]
+        [InlineData("class")]
+        [InlineData("struct")]
+        [InlineData("record")]
+        [InlineData("enum")]
+        [InlineData("interface")]
+        public void TestBaseTypeDeclarationAndNamespaceWithOpenBrace(string typeKeyword)
         {
-            Test(@"
-public class Bar
-{
-    public class B$$ar2
-}",
-                @"
-public class Bar
-{
-    public class Bar2
-    {
-        $$
-    }
-}");
+            TestCommandNotExecuted($@"
+public {typeKeyword} B$$ar {{
+");
         }
 
-        [WpfFact]
-        public void TestEmptyNamespace()
+        [WpfTheory]
+        [InlineData("namespace")]
+        [InlineData("class")]
+        [InlineData("struct")]
+        [InlineData("record")]
+        [InlineData("enum")]
+        [InlineData("interface")]
+        public void TestValidTypeDeclarationAndNamespace(string typeKeyword)
         {
-            Test(@"
-namespace Bar$$
-", @"
-namespace Bar
-{
-    $$
-}");
+            TestCommandNotExecuted(
+                $@"public {typeKeyword} Ba$$r{{}}");
         }
 
-        [WpfFact]
-        public void TestEmptyStruct()
+        [WpfTheory]
+        [InlineData("namespace")]
+        [InlineData("class")]
+        [InlineData("struct")]
+        [InlineData("record")]
+        [InlineData("enum")]
+        [InlineData("interface")]
+        public void TestMissingIdentifierTypeDeclarationAndNamespace(string typeKeyword)
         {
-            Test(@"
-public stru$$ct Bar
-", @"
-public struct Bar
-{
-    $$
-}");
-        }
-
-        [WpfFact]
-        public void TestEmptyRecord()
-        {
-            Test(@"
-public reco$$rd Bar
-", @"
-public record Bar
-{
-    $$
-}");
+            TestCommandNotExecuted(
+                $@"public {typeKeyword} $${{}}");
         }
 
         [WpfFact]

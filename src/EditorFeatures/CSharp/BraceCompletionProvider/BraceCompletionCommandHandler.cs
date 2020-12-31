@@ -5,6 +5,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Immutable;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
@@ -33,17 +34,12 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
     /// </summary>
     [Export(typeof(ICommandHandler))]
     [ContentType(ContentTypeNames.CSharpContentType)]
-    [Name(PredefinedCommandHandlerNames.AutomaticLineEnder)]
+    [Name(nameof(BraceCompletionCommandHandler))]
     [Order(After = PredefinedCompletionNames.CompletionCommandHandler)]
     internal class BraceCompletionCommandHandler : IChainedCommandHandler<AutomaticLineEnderCommandArgs>
     {
         private readonly IEditorOperationsFactoryService _editorOperationsFactoryService;
         private readonly ITextUndoHistoryRegistry _textUndoHistoryRegistry;
-
-        private static readonly string s_bracePair = string.Concat(
-            SyntaxFacts.GetText(SyntaxKind.OpenBraceToken),
-            Environment.NewLine,
-            SyntaxFacts.GetText(SyntaxKind.CloseBraceToken));
 
         [ImportingConstructor]
         [Obsolete(MefConstruction.ImportingConstructorMessage, error: true)]
@@ -77,17 +73,22 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
                 return;
             }
 
-            var currentCaret = ITextViewExtensions.GetCaretPoint(args.TextView, args.SubjectBuffer);
-            if (!currentCaret.HasValue)
+            var (currentCaretPosition, hasValue) = ITextViewExtensions.GetCaretPoint(args.TextView, args.SubjectBuffer);
+            if (!hasValue)
             {
                 nextCommandHandler();
                 return;
             }
 
             var cancellationToken = executionContext.OperationContext.UserCancellationToken;
-            var root = document.GetRequiredSyntaxRootSynchronously(cancellationToken);
-            if (!TryGetInsertPosition(root, currentCaret.Value, out var insertPosition)
-                || !insertPosition.HasValue)
+            var syntaxTree = document.GetSyntaxTreeSynchronously(cancellationToken);
+            var root = syntaxTree.GetRoot(cancellationToken);
+            var textChanges = GetTextChanges(
+                root,
+                currentCaretPosition,
+                (CSharpParseOptions)syntaxTree.Options);
+
+            if (textChanges.IsEmpty)
             {
                 nextCommandHandler();
                 return;
@@ -99,18 +100,25 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             // After this operation the text would become like
             // Bar(int i, int c) {
             // }
-            var newDocument = document.InsertText(insertPosition.Value, s_bracePair, cancellationToken);
+            var newDocument = document.ApplyTextChanges(textChanges, cancellationToken);
+            var newRoot = newDocument.GetRequiredSyntaxRootSynchronously(cancellationToken);
+            if (!TryGetSelectedSyntaxNode(newRoot, currentCaretPosition, out var selectedNode))
+            {
+                transaction.Cancel();
+            }
+
+            var nextCaretPosition = GetPositionAfterOpenBrace(selectedNode!);
 
             // 2. Place caret between '{$$\r\n}'
             args.TextView.TryMoveCaretToAndEnsureVisible(
-                new SnapshotPoint(args.SubjectBuffer.CurrentSnapshot, insertPosition.Value + 1));
+                new SnapshotPoint(args.SubjectBuffer.CurrentSnapshot, nextCaretPosition + 1));
 
             // 3. Format the inserted brace
             // After this operation the text would become like
             // Bar(int i, int c)
             // {$$
             // }
-            Format(newDocument, insertPosition.Value, cancellationToken);
+            Format(newDocument, selectedNode.Span, cancellationToken);
 
             // 4. Press enter
             // After this operation the text would become like
@@ -126,23 +134,40 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
         private static void InsertNewLine(IEditorOperations editorOperations)
             => editorOperations.InsertNewLine();
 
-        private static void Format(Document document, int insertionPosition, CancellationToken cancellationToken)
+        private static void Format(Document document, TextSpan span, CancellationToken cancellationToken)
         {
             var formatService = document.GetRequiredLanguageService<IEditorFormattingService>();
             var changes = formatService.GetFormattingChangesAsync(
                 document,
-                new TextSpan(start: insertionPosition, length: s_bracePair.Length),
+                span,
                 cancellationToken).WaitAndGetResult(cancellationToken);
 
             document.ApplyTextChanges(changes, cancellationToken);
         }
 
-        private static bool TryGetInsertPosition(
-            SyntaxNode root,
-            int caretPosition,
-            out int? insertPosition)
+        private static ImmutableArray<TextChange> GetTextChanges(SyntaxNode root, int caretPosition, CSharpParseOptions options)
         {
-            insertPosition = null;
+            if (!TryGetSelectedSyntaxNode(root, caretPosition, out var selectedNode))
+            {
+                return TextChange.NoChanges.ToImmutableArray();
+            }
+
+            return selectedNode switch
+            {
+                NamespaceDeclarationSyntax or BaseTypeDeclarationSyntax => GetTextChangeForNamespaceAndBaseTypeDeclaration(selectedNode, options),
+                _ => TextChange.NoChanges.ToImmutableArray()
+            };
+
+            // return TryGetInsertPositionForEmbeddedStatementOwner(nodeCandidate, out insertPosition)
+            //    || TryGetInsertPositionForNamespaceAndTypeDeclarationNode(nodeCandidate, out insertPosition)
+            //    || TryGetInsertPositionForTypeMemberNode(nodeCandidate, out insertPosition)
+            //    || TryGetInsertPositionForLocalFunction(nodeCandidate, out insertPosition)
+            //    || TryGetInsertPositionForObjectCreationExpression(nodeCandidate, out insertPosition);
+        }
+
+        private static bool TryGetSelectedSyntaxNode(SyntaxNode root, int caretPosition, out SyntaxNode? selectedNode)
+        {
+            selectedNode = null;
             var token = root.FindTokenOnLeftOfPosition(caretPosition);
             if (token.IsKind(SyntaxKind.None))
             {
@@ -154,37 +179,59 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             // void Bar() { void Bar1() { void Bar2$$() }}
             // Here only 'Bar2' should be considered.
             var nodeCandidate = token.GetAncestors(SupportedSyntaxNode).FirstOrDefault();
-            if (nodeCandidate == null)
+            if (nodeCandidate != null)
             {
-                return false;
+                selectedNode = nodeCandidate;
+                return true;
             }
 
-            // Try to find the insert position for braces for the syntax node
-            return TryGetInsertPositionForEmbeddedStatementOwner(nodeCandidate, out insertPosition)
-               || TryGetInsertPositionForNamespaceAndTypeDeclarationNode(nodeCandidate, out insertPosition)
-               || TryGetInsertPositionForTypeMemberNode(nodeCandidate, out insertPosition)
-               || TryGetInsertPositionForLocalFunction(nodeCandidate, out insertPosition)
-               || TryGetInsertPositionForObjectCreationExpression(nodeCandidate, out insertPosition);
+            return false;
         }
 
-        private static bool TryGetInsertPositionForNamespaceAndTypeDeclarationNode(SyntaxNode node, out int? insertPoint)
+        private static ImmutableArray<TextChange> GetTextChangeForNamespaceAndBaseTypeDeclaration(
+            SyntaxNode selectedNode,
+            CSharpParseOptions options)
         {
-            insertPoint = null;
-            // For namespace, class, struct and etc.,
-            // make sure its name identifier is not missing
-
-            if (node is NamespaceDeclarationSyntax && HasNoBrace(node))
+            // For namespace or BaseTypeDeclaration (e.g. class, struct, enum, interface and record)
+            // Check if its open & close braces are both missing.
+            // If they are missing, insert an brace pair after the name
+            if (selectedNode is NamespaceDeclarationSyntax namespaceNode && HasNoBrace(selectedNode))
             {
-                insertPoint = node.Span.End;
-                return true;
+                // Insert the brace pair after name for namespace, because
+                // For example:
+                // namespace Bar$$
+                // namespace Bar2 {}
+                // Parser would think Bar2 is an inner namespace of Bar. So insert the brace to the end
+                // of the node would cause it becomes,
+                // namespace Bar
+                // namespace Bar2 {} {}
+                var textChange = CreateInsertBracePairChange(namespaceNode.Name.Span.End);
+                if (ValidateTextChange(options, selectedNode, textChange))
+                {
+                    return textChange;
+                }
             }
 
-            if (node is BaseTypeDeclarationSyntax && HasNoBrace(node))
+            if (selectedNode is BaseTypeDeclarationSyntax baseTypeNode && HasNoBrace(selectedNode))
             {
-                insertPoint = node.Span.End;
-                return true;
+                return CreateInsertBracePairChange(baseTypeNode.Identifier.Span.End);
             }
 
+            return TextChange.NoChanges.ToImmutableArray();
+        }
+
+        private static ImmutableArray<TextChange> CreateInsertBracePairChange(int insertPosition)
+            => ImmutableArray.Create(new TextChange(
+                new TextSpan(insertPosition, 0),
+                string.Concat(
+                    SyntaxFacts.GetText(SyntaxKind.OpenBraceToken),
+                    Environment.NewLine,
+                    SyntaxFacts.GetText(SyntaxKind.CloseBraceToken))));
+
+
+        private static bool TryGetInsertPositionForNamespaceAndTypeDeclarationNode(SyntaxNode node, out ImmutableArray<TextChange> textChanges)
+        {
+            textChanges = ImmutableArray<TextChange>.Empty;
             return false;
         }
 
@@ -200,35 +247,6 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
                 var (_, closeParenthesis) = methodNode.GetParameterList().GetParentheses();
                 insertPosition = closeParenthesis.Span.End;
                 return true;
-            }
-
-            if (node is AccessorDeclarationSyntax accessorNode)
-            {
-                // For accessors in Property, event & indexer
-                // Only consider inserting {} when it has no ending semicolon & no expression body
-                // e.g. Before: class Bar
-                // {
-                //      int Foo
-                //      {
-                //          get$$
-                //      }
-                // }
-                // After: class Bar
-                // {
-                //      int Foo
-                //      {
-                //          get{}
-                //      }
-                // }
-                //
-                var semicolonMissing = accessorNode.SemicolonToken.IsKind(SyntaxKind.None) || accessorNode.SemicolonToken.IsMissing;
-                if (semicolonMissing
-                    && accessorNode.ExpressionBody == null
-                    && accessorNode.Body == null)
-                {
-                    insertPosition = accessorNode.Keyword.Span.End;
-                    return true;
-                }
             }
 
             if (node is EventFieldDeclarationSyntax eventDeclaration
@@ -414,11 +432,49 @@ namespace Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion
             => node is NamespaceDeclarationSyntax
                    or BaseTypeDeclarationSyntax
                    or BaseMethodDeclarationSyntax
-                   or AccessorDeclarationSyntax
                    or EventFieldDeclarationSyntax
                    or IndexerDeclarationSyntax
                    or LocalFunctionStatementSyntax
                    or ObjectCreationExpressionSyntax
                || node.IsEmbeddedStatementOwner();
+
+        private static int GetPositionAfterOpenBrace(SyntaxNode node)
+            => node switch
+            {
+                NamespaceDeclarationSyntax or BaseTypeDeclarationSyntax => node.GetBraces().openBrace.Span.End,
+                _ => throw ExceptionUtilities.Unreachable
+            };
+
+        private static bool ValidateTextChange(CSharpParseOptions parseOptions, SyntaxNode originalNode, ImmutableArray<TextChange> textChanges)
+        {
+            var nodeText = originalNode.GetText().WithChanges(textChanges).ToString();
+            SyntaxNode? newNode = originalNode switch
+            {
+                NamespaceDeclarationSyntax or BaseTypeDeclarationSyntax => SyntaxFactory.ParseCompilationUnit(nodeText, options: parseOptions),
+                BaseMethodDeclarationSyntax or EventFieldDeclarationSyntax or IndexerDeclarationSyntax or LocalFunctionStatementSyntax
+                    => SyntaxFactory.ParseCompilationUnit(WrapInContext(originalNode, nodeText), options: parseOptions),
+                ObjectCreationExpressionSyntax => SyntaxFactory.ParseExpression(nodeText, options: parseOptions),
+                _ when originalNode.IsEmbeddedStatementOwner() => SyntaxFactory.ParseCompilationUnit(WrapInContext(originalNode, nodeText), options: parseOptions),
+                _ => null
+            };
+
+            if (newNode != null && !newNode.HasDiagnostics())
+            {
+                return true;
+            }
+
+            return false;
+
+            static string WrapInContext(SyntaxNode node, string nodeText)
+                => node switch
+                {
+                    BaseMethodDeclarationSyntax or EventFieldDeclarationSyntax or IndexerDeclarationSyntax
+                        => $"class Bar {{ {nodeText} }}",
+                    LocalFunctionStatementSyntax or _ when node.IsEmbeddedStatementOwner()
+                        => $"class Bar {{ void Foo() {{ {nodeText} }}}}",
+                    _ => nodeText
+                };
+        }
+
     }
 }
