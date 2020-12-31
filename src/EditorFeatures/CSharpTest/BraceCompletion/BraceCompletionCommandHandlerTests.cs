@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.Editor.CSharp.BraceCompletion;
 using Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces;
 using Microsoft.CodeAnalysis.Test.Utilities.BraceCompletion;
 using Microsoft.VisualStudio.Commanding;
+using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Roslyn.Test.Utilities;
 using Xunit;
 
@@ -38,8 +39,7 @@ public {typeKeyword} $$Bar
 public {typeKeyword} Bar
 {{
     $$
-}}
-");
+}}");
         }
 
         [WpfTheory]
@@ -122,7 +122,66 @@ public class Bar
         $$
     }
 }");
+        }
 
+        [WpfFact]
+        public void TestValidMethodInClass()
+        {
+            TestCommandNotExecuted(@"
+public class Bar
+{
+    void Mai$$n()
+    {
+    }
+}");
+        }
+
+        [WpfFact]
+        public void TestValidMethodInInterface()
+        {
+            TestCommandNotExecuted(@"
+public interface Bar
+{
+    void Mai$$n();
+}");
+        }
+
+        [WpfFact]
+        public void TestSingleFieldWithoutSemicolon()
+        {
+            Test(@"
+public class Bar
+{
+    public in$$t i
+}",
+@"
+public class Bar
+{
+    public int i
+    {
+        $$
+    }
+}");
+        }
+
+        [WpfFact]
+        public void TestSingleFieldWithSemicolon()
+        {
+            TestCommandNotExecuted(@"
+public class Bar
+{
+    public in$$t i;
+}");
+        }
+
+        [WpfFact]
+        public void TestMultipleFields()
+        {
+            TestCommandNotExecuted(@"
+public class Bar
+{
+    public in$$t i, j, k
+}");
         }
 
         [WpfFact]
@@ -150,167 +209,39 @@ public class Bar
         }
 
         [WpfFact]
-        public void TestGetAccessorForProperty()
-        {
-            Test(@"
-public class Bar
-{
-    public int Foo
-    {
-        get$$
-    }
-}", @"
-public class Bar
-{
-    public int Foo
-    {
-        get
-        {
-            $$
-        }
-    }
-}");
-        }
-
-        [WpfFact]
-        public void TestSetAccessorForProperty()
-        {
-            Test(@"
-public class Bar
-{
-    public int Foo
-    {
-        get$$
-    }
-}", @"
-public class Bar
-{
-    public int Foo
-    {
-        get
-        {
-            $$
-        }
-    }
-}");
-        }
-
-        [WpfFact]
-        public void TestAddAccessorForEvent()
-        {
-            Test(@"
-using System;
-public class Bar
-{
-    public event EventHandler A
-    {
-        add$$
-    }
-}", @"
-using System;
-public class Bar
-{
-    public event EventHandler A
-    {
-        add
-        {
-            $$
-        }
-    }
-}");
-        }
-
-        [WpfFact]
-        public void TestRemoveAccessorForEvent()
-        {
-            Test(@"
-using System;
-public class Bar
-{
-    public event EventHandler A
-    {
-        add {}
-        remove$$
-    }
-}", @"
-using System;
-public class Bar
-{
-    public event EventHandler A
-    {
-        add {}
-        remove
-        {
-            $$
-        }
-    }
-}");
-        }
-
-        [WpfFact]
-        public void TestGetAccessorForIndexer()
-        {
-            Test(@"
-public class Bar
-{
-    public int this[int i]
-    {
-        get$$
-    }
-}", @"
-public class Bar
-{
-    public int this[int i]
-    {
-        get
-        {
-            $$
-        }
-    }
-}");
-        }
-
-        [WpfFact]
-        public void TestSetAccessorForIndexer()
-        {
-            Test(@"
-public class Bar
-{
-    public int this[int i]
-    {
-        get => 1;
-        set$$
-    }
-}", @"
-public class Bar
-{
-    public int this[int i]
-    {
-        get => 1;
-        set
-        {
-            $$
-        }
-    }
-}");
-        }
-
-        [WpfFact]
         public void TestEventDeclaration()
         {
             Test(@"
-using System;
 public class Bar
 {
     public event EventHandler Foo$$
 }", @"
-using System;
 public class Bar
 {
     public event EventHandler Foo
     {
         $$
     }
+}");
+        }
+
+        [WpfFact]
+        public void TestValidEventDeclaration()
+        {
+            TestCommandNotExecuted(@"
+public class Bar
+{
+    public event EventHandler F$$oo  {}
+}");
+        }
+
+        [WpfFact]
+        public void TestValidEventField()
+        {
+            TestCommandNotExecuted(@"
+public class Bar
+{
+    public event EventHandler Fo$$o;
 }");
         }
 
@@ -327,6 +258,37 @@ public class Bar
     public int this[int i]
     {
         $$
+    }
+}");
+        }
+
+        [WpfFact]
+        public void TestIndexerWithNoAccessorList()
+        {
+            Test(@"
+public class Bar
+{
+    public int thi$$s[int i]
+    void Main() {}
+}", @"
+public class Bar
+{
+    public int this[int i]
+    {
+        $$
+    }
+    void Main() {}
+}");
+        }
+
+        [WpfFact]
+        public void TestValidIndexer()
+        {
+            TestCommandNotExecuted(@"
+public class Bar
+{
+    public int thi$$s[int i]
+    {
     }
 }");
         }
