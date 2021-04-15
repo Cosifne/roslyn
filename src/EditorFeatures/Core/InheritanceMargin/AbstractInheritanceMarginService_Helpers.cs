@@ -14,6 +14,24 @@ namespace Microsoft.CodeAnalysis.InheritanceMargin
 {
     internal partial class AbstractInheritanceMarginService
     {
+        private static readonly SymbolDisplayFormat s_displayFormat = new SymbolDisplayFormat(
+                globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
+                typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
+                genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters,
+                memberOptions:
+                    SymbolDisplayMemberOptions.IncludeParameters |
+                    SymbolDisplayMemberOptions.IncludeContainingType |
+                    SymbolDisplayMemberOptions.IncludeExplicitInterface,
+                propertyStyle: SymbolDisplayPropertyStyle.NameOnly,
+                parameterOptions:
+                    SymbolDisplayParameterOptions.IncludeParamsRefOut |
+                    SymbolDisplayParameterOptions.IncludeType,
+                miscellaneousOptions:
+                    SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers |
+                    SymbolDisplayMiscellaneousOptions.UseSpecialTypes |
+                    SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName |
+                    SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+
         private static async Task<InheritanceMarginItem> CreateInheritanceMemberItemAsync(
             Solution solution,
             INamedTypeSymbol memberSymbol,
@@ -56,16 +74,13 @@ namespace Microsoft.CodeAnalysis.InheritanceMargin
                 includeHiddenLocations: false,
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            var containingSymbol = targetSymbol.ContainingSymbol;
-            var containingSymbolName = containingSymbol is INamespaceSymbol { IsGlobalNamespace: true }
-                ? FeaturesResources.Global_Namespace
-                : containingSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+            var displayName = targetSymbol.ToDisplayString(s_displayFormat);
 
             return new InheritanceTargetItem(
                 inheritanceRelationship,
                 definition,
                 targetSymbol.GetGlyph(),
-                containingSymbolName);
+                displayName);
         }
 
         private static async Task<InheritanceMarginItem> CreateInheritanceMemberInfoForMemberAsync(

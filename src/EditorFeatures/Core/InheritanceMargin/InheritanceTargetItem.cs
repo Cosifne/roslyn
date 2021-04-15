@@ -29,18 +29,18 @@ namespace Microsoft.CodeAnalysis.InheritanceMargin
         /// <summary>
         /// The name for containing type of this target. Empty if it is global namespace.
         /// </summary>
-        public readonly string DisplayNameForContainingType;
+        public readonly string DisplayName;
 
         public InheritanceTargetItem(
             InheritanceRelationship relationToMember,
             DefinitionItem definitionItem,
             Glyph glyph,
-            string displayNameForContainingType)
+            string displayName)
         {
             RelationToMember = relationToMember;
             DefinitionItem = definitionItem;
             Glyph = glyph;
-            DisplayNameForContainingType = displayNameForContainingType;
+            DisplayName = displayName;
         }
     }
 }
