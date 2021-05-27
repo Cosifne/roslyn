@@ -134,6 +134,8 @@ namespace Microsoft.CodeAnalysis.CodeGeneration
         /// </summary>
         public bool ReuseSyntax { get; }
 
+        public bool RemoveDirective { get; } = true;
+
         public OptionSet? Options { get; }
 
         public ParseOptions? ParseOptions { get; }

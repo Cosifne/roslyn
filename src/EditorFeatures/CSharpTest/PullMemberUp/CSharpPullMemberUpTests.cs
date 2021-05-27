@@ -1056,6 +1056,45 @@ namespace PushUpTest
             await TestInRegularAndScriptAsync(testText, expected);
         }
 
+        [Theory, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
+        [InlineData("public void Bar() { }")]
+        [InlineData("public int Bar { get; }")]
+        [InlineData("public event EventHandler Bar;")]
+        [InlineData("public int Bar = 10;")]
+        public Task TestPullMemberUpInDirective(string member)
+        {
+            var selectedMember = member.Insert(member.IndexOf("Bar") + 1, "[||]");
+            var test = $@"
+namespace Bar
+{{
+    public class Base
+    {{
+    }}
+    
+    public class TestClass : Base
+    {{
+        #region Foo
+        {selectedMember} 
+        #endregion
+    }}
+}}";
+            var expected = $@"
+namespace Bar
+{{
+    public class Base
+    {{
+        {member} 
+    }}
+
+    public class TestClass : Base
+    {{
+        #region Foo
+        #endregion
+    }}
+}}";
+            return TestInRegularAndScriptAsync(test, expected);
+        }
+
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullMethodUpAcrossProjectViaQuickAction()
         {
@@ -1423,7 +1462,7 @@ public class TestClass : VBInterface
             await TestQuickActionNotProvidedAsync(input);
         }
 
-        #endregion Quick Action
+        #endregion
 
         #region Dialog
 
