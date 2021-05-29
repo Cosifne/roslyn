@@ -187,6 +187,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGeneration
             End If
         End Function
 
+        Protected Overrides Function AddMembersToAppropriateLocationInDestination (Of TDeclarationNode)(destination As TDeclarationNode, members As IEnumerable(Of SyntaxNode), availableIndices As IList(Of Boolean)) As TDeclarationNode
+            Throw New NotImplementedException
+        End Function
+
         Public Overrides Function AddParameters(Of TDeclarationNode As SyntaxNode)(
                 destinationMember As TDeclarationNode,
                 parameters As IEnumerable(Of IParameterSymbol),

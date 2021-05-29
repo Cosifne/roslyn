@@ -272,6 +272,21 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
             }
         }
 
+        protected override TDeclarationNode AddMembersToAppropriateLocationInDestination<TDeclarationNode>(
+            TDeclarationNode destination,
+            IEnumerable<SyntaxNode> members,
+            IList<bool> availableIndices)
+        {
+            var destinationWithMembers = destination;
+            foreach (var member in members)
+            {
+                destinationWithMembers =
+
+            }
+
+            return destinationWithMembers;
+        }
+
         public override TDeclarationNode AddParameters<TDeclarationNode>(
             TDeclarationNode destination,
             IEnumerable<IParameterSymbol> parameters,
