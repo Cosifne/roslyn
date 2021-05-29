@@ -74,12 +74,6 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
             var reusableSyntax = GetReuseableSyntaxNodeForSymbol<MemberDeclarationSyntax>(property, options);
             if (reusableSyntax != null)
             {
-                if (options.RemoveDirective)
-                {
-                    var expectedTrivia = reusableSyntax.GetLeadingTrivia().Where(trivia => !trivia.IsDirective);
-                    return reusableSyntax.WithLeadingTrivia(expectedTrivia);
-                }
-
                 return reusableSyntax;
             }
 

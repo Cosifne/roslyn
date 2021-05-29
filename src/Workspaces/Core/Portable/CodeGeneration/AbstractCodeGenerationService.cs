@@ -67,7 +67,8 @@ namespace Microsoft.CodeAnalysis.CodeGeneration
         protected abstract TDeclarationNode AddProperty<TDeclarationNode>(TDeclarationNode destination, IPropertySymbol property, CodeGenerationOptions? options, IList<bool>? availableIndices) where TDeclarationNode : SyntaxNode;
         protected abstract TDeclarationNode AddNamedType<TDeclarationNode>(TDeclarationNode destination, INamedTypeSymbol namedType, CodeGenerationOptions? options, IList<bool>? availableIndices, CancellationToken cancellationToken) where TDeclarationNode : SyntaxNode;
         protected abstract TDeclarationNode AddNamespace<TDeclarationNode>(TDeclarationNode destination, INamespaceSymbol @namespace, CodeGenerationOptions? options, IList<bool>? availableIndices, CancellationToken cancellationToken) where TDeclarationNode : SyntaxNode;
-        protected abstract TDeclarationNode AddMembers<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members) where TDeclarationNode : SyntaxNode;
+        protected abstract TDeclarationNode AddMembersToEndOfDestination<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members) where TDeclarationNode : SyntaxNode;
+        protected abstract TDeclarationNode AddMembersToAppropriateLocationInDestination<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members, IList<bool>? availableIndices) where TDeclarationNode : SyntaxNode;
 
         public abstract TDeclarationNode AddParameters<TDeclarationNode>(TDeclarationNode destinationMember, IEnumerable<IParameterSymbol> parameters, CodeGenerationOptions? options, CancellationToken cancellationToken) where TDeclarationNode : SyntaxNode;
         public abstract TDeclarationNode AddAttributes<TDeclarationNode>(TDeclarationNode destination, IEnumerable<AttributeData> attributes, SyntaxToken? target, CodeGenerationOptions? options, CancellationToken cancellationToken) where TDeclarationNode : SyntaxNode;
@@ -259,7 +260,7 @@ namespace Microsoft.CodeAnalysis.CodeGeneration
                 newMembers.Sort(GetMemberComparer());
             }
 
-            return this.AddMembers(destination, newMembers);
+            return this.AddMembersToEndOfDestination(destination, newMembers);
         }
 
         private TDeclarationSyntax AddMembersToAppropriateLocationInDestination<TDeclarationSyntax>(
@@ -421,6 +422,18 @@ namespace Microsoft.CodeAnalysis.CodeGeneration
             else
             {
                 return AddNamedTypeAsync(solution, destination, (INamedTypeSymbol)namespaceOrType, options, cancellationToken);
+            }
+        }
+
+        public TDeclarationNode AddMembers<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members, IList<bool>? insertionIndices) where TDeclarationNode : SyntaxNode
+        {
+            if (insertionIndices == null)
+            {
+                return AddMembersToEndOfDestination(destination, members);
+            }
+            else
+            {
+                return AddMembersToAppropriateLocationInDestination(destination, members, insertionIndices);
             }
         }
 

@@ -183,5 +183,7 @@ namespace Microsoft.CodeAnalysis.CodeGeneration
         /// then all the potential location. Return null if no declaration.
         /// </summary>
         Task<SyntaxNode?> FindMostRelevantNameSpaceOrTypeDeclarationAsync(Solution solution, INamespaceOrTypeSymbol namespaceOrType, CodeGenerationOptions options, CancellationToken cancellationToken);
+
+        TDeclarationNode AddMembers<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members, IList<bool>? InsertionIndices) where TDeclarationNode : SyntaxNode;
     }
 }

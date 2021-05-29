@@ -329,7 +329,7 @@ namespace Microsoft.CodeAnalysis.CSharp.CodeGeneration
             };
         }
 
-        protected override TDeclarationNode AddMembers<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members)
+        protected override TDeclarationNode AddMembersToEndOfDestination<TDeclarationNode>(TDeclarationNode destination, IEnumerable<SyntaxNode> members)
         {
             CheckDeclarationNode<EnumDeclarationSyntax, TypeDeclarationSyntax, NamespaceDeclarationSyntax, CompilationUnitSyntax>(destination);
 

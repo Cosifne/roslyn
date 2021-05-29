@@ -215,7 +215,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.CodeGeneration
             Return destinationMember
         End Function
 
-        Protected Overrides Function AddMembers(Of TDeclarationNode As SyntaxNode)(destination As TDeclarationNode, members As IEnumerable(Of SyntaxNode)) As TDeclarationNode
+        Protected Overrides Function AddMembersToEndOfDestination(Of TDeclarationNode As SyntaxNode)(destination As TDeclarationNode, members As IEnumerable(Of SyntaxNode)) As TDeclarationNode
             CheckDeclarationNode(Of EnumBlockSyntax, TypeBlockSyntax, NamespaceBlockSyntax, CompilationUnitSyntax)(destination)
             If TypeOf destination Is EnumBlockSyntax Then
                 Return Cast(Of TDeclarationNode)(Cast(Of EnumBlockSyntax)(destination).AddMembers(members.Cast(Of EnumMemberDeclarationSyntax).ToArray()))

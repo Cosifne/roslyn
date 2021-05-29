@@ -261,7 +261,10 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
                 reuseSyntax: true,
                 generateMethodBodies: false,
                 options: await document.GetOptionsAsync(cancellationToken).ConfigureAwait(false));
-            var newDestination = codeGenerationService.AddMembers(destinationSyntaxNode, pullUpMembersSymbols, options: options, cancellationToken: cancellationToken);
+
+            var pullUpMemberDeclarations = pullUpMembersSymbols.SelectAsArray(member => GetInsertingSyntaxNodeToClass(member, codeGenerationService, options));
+
+            var newDestination = codeGenerationService.AddMembers(destinationSyntaxNode, pullUpMemberDeclarations, null);
 
             // Remove some original members since we are pulling members into class.
             // Note: If the user chooses to make the member abstract, then the original member will be changed to an override,
@@ -269,19 +272,19 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
             // But if the member is abstract itself, it will still be removed.
             foreach (var analysisResult in result.MemberAnalysisResults)
             {
-                foreach (var syntax in symbolToDeclarations[analysisResult.Member])
+                foreach (var declarationNode in symbolToDeclarations[analysisResult.Member])
                 {
                     var originalMemberEditor = await solutionEditor.GetDocumentEditorAsync(
-                        solution.GetDocumentId(syntax.SyntaxTree),
+                        solution.GetDocumentId(declarationNode.SyntaxTree),
                         cancellationToken).ConfigureAwait(false);
 
                     if (!analysisResult.MakeMemberDeclarationAbstract || analysisResult.Member.IsAbstract)
                     {
-                        originalMemberEditor.RemoveNode(originalMemberEditor.Generator.GetDeclaration(syntax));
+                        originalMemberEditor.RemoveNode(originalMemberEditor.Generator.GetDeclaration(declarationNode));
                     }
                     else
                     {
-                        var declarationSyntax = originalMemberEditor.Generator.GetDeclaration(syntax);
+                        var declarationSyntax = originalMemberEditor.Generator.GetDeclaration(declarationNode);
                         originalMemberEditor.ReplaceNode(declarationSyntax, (node, generator) => generator.WithModifiers(node, DeclarationModifiers.Override));
                     }
                 }
@@ -300,6 +303,22 @@ namespace Microsoft.CodeAnalysis.CodeRefactorings.PullMemberUp
 
             destinationEditor.ReplaceNode(destinationSyntaxNode, (syntaxNode, generator) => newDestination);
             return solutionEditor.GetChangedSolution();
+        }
+
+        private static SyntaxNode GetInsertingSyntaxNodeToClass(ISymbol symbol, ICodeGenerationService codeGenerationService, CodeGenerationOptions options)
+        {
+            var declartionNode = symbol switch
+            {
+                IPropertySymbol property => codeGenerationService.CreatePropertyDeclaration(property, CodeGenerationDestination.ClassType, options),
+                IMethodSymbol method => codeGenerationService.CreateMethodDeclaration(method, CodeGenerationDestination.ClassType, options),
+                IEventSymbol @event => codeGenerationService.CreateEventDeclaration(@event, CodeGenerationDestination.ClassType, options),
+                IFieldSymbol field => codeGenerationService.CreateFieldDeclaration(field, CodeGenerationDestination.ClassType, options),
+                _ => throw ExceptionUtilities.UnexpectedValue(symbol),
+            };
+
+            var leadingTriva = declartionNode.GetLeadingTrivia();
+            return declartionNode.WithLeadingTrivia(
+                leadingTriva.Where(triva => !triva.IsDirective).ToImmutableArray());
         }
 
         private static ISymbol MakeAbstractVersion(ISymbol member)
