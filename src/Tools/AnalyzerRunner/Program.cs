@@ -28,109 +28,88 @@ namespace AnalyzerRunner
     {
         public static async Task Main(string[] args)
         {
-            Options options;
-            try
-            {
-                options = Options.Create(args);
-            }
-            catch (InvalidDataException)
-            {
-                PrintHelp();
-                return;
-            }
-
-            var cts = new CancellationTokenSource();
-            Console.CancelKeyPress +=
-                (sender, e) =>
-                {
-                    e.Cancel = true;
-                    cts.Cancel();
-                };
-
-            var cancellationToken = cts.Token;
-
-            if (!string.IsNullOrEmpty(options.ProfileRoot))
-            {
-                Directory.CreateDirectory(options.ProfileRoot);
-                ProfileOptimization.SetProfileRoot(options.ProfileRoot);
-            }
-
             using var workspace = AnalyzerRunnerHelper.CreateWorkspace();
 
-            var incrementalAnalyzerRunner = new IncrementalAnalyzerRunner(workspace, options);
-            var diagnosticAnalyzerRunner = new DiagnosticAnalyzerRunner(workspace, options);
-            var codeRefactoringRunner = new CodeRefactoringRunner(workspace, options);
+            await workspace.OpenSolutionAsync(args[0], progress: null, CancellationToken.None).ConfigureAwait(false);
+#if NET472
+            var inheritanceMarginRunner = new InheritanceMarginRunner(workspace);
+            await inheritanceMarginRunner.RunAsync(CancellationToken.None).ConfigureAwait(false);
+#endif
 
-            if (!incrementalAnalyzerRunner.HasAnalyzers && !diagnosticAnalyzerRunner.HasAnalyzers && !codeRefactoringRunner.HasRefactorings)
-            {
-                WriteLine("No analyzers found", ConsoleColor.Red);
-                PrintHelp();
-                return;
-            }
+            //var incrementalAnalyzerRunner = new IncrementalAnalyzerRunner(workspace, options);
+            //var diagnosticAnalyzerRunner = new DiagnosticAnalyzerRunner(workspace, options);
+            //var codeRefactoringRunner = new CodeRefactoringRunner(workspace, options);
 
-            var stopwatch = PerformanceTracker.StartNew();
+            //if (!incrementalAnalyzerRunner.HasAnalyzers && !diagnosticAnalyzerRunner.HasAnalyzers && !codeRefactoringRunner.HasRefactorings)
+            //{
+            //    WriteLine("No analyzers found", ConsoleColor.Red);
+            //    PrintHelp();
+            //    return;
+            //}
 
-            if (!string.IsNullOrEmpty(options.ProfileRoot))
-            {
-                ProfileOptimization.StartProfile(nameof(MSBuildWorkspace.OpenSolutionAsync));
-            }
+            //var stopwatch = PerformanceTracker.StartNew();
 
-            await workspace.OpenSolutionAsync(options.SolutionPath, progress: null, cancellationToken).ConfigureAwait(false);
+            //if (!string.IsNullOrEmpty(options.ProfileRoot))
+            //{
+            //    ProfileOptimization.StartProfile(nameof(MSBuildWorkspace.OpenSolutionAsync));
+            //}
 
-            foreach (var workspaceDiagnostic in workspace.Diagnostics)
-            {
-                if (workspaceDiagnostic.Kind == WorkspaceDiagnosticKind.Failure)
-                {
-                    Console.WriteLine(workspaceDiagnostic.Message);
-                }
-            }
+            //await workspace.OpenSolutionAsync(options.SolutionPath, progress: null, cancellationToken).ConfigureAwait(false);
 
-            Console.WriteLine($"Loaded solution in {stopwatch.GetSummary(preciseMemory: true)}");
+            //foreach (var workspaceDiagnostic in workspace.Diagnostics)
+            //{
+            //    if (workspaceDiagnostic.Kind == WorkspaceDiagnosticKind.Failure)
+            //    {
+            //        Console.WriteLine(workspaceDiagnostic.Message);
+            //    }
+            //}
 
-            if (options.ShowStats)
-            {
-                stopwatch = PerformanceTracker.StartNew();
-                ShowSolutionStatistics(workspace.CurrentSolution, cancellationToken);
-                Console.WriteLine($"Statistics gathered in {stopwatch.GetSummary(preciseMemory: true)}");
-            }
+            //Console.WriteLine($"Loaded solution in {stopwatch.GetSummary(preciseMemory: true)}");
 
-            if (options.ShowCompilerDiagnostics)
-            {
-                await ShowCompilerDiagnosticsAsync(workspace.CurrentSolution, cancellationToken).ConfigureAwait(false);
-            }
+            //if (options.ShowStats)
+            //{
+            //    stopwatch = PerformanceTracker.StartNew();
+            //    ShowSolutionStatistics(workspace.CurrentSolution, cancellationToken);
+            //    Console.WriteLine($"Statistics gathered in {stopwatch.GetSummary(preciseMemory: true)}");
+            //}
 
-            Console.WriteLine("Pausing 5 seconds before starting analysis...");
-            await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+            //if (options.ShowCompilerDiagnostics)
+            //{
+            //    await ShowCompilerDiagnosticsAsync(workspace.CurrentSolution, cancellationToken).ConfigureAwait(false);
+            //}
 
-            if (incrementalAnalyzerRunner.HasAnalyzers)
-            {
-                if (!string.IsNullOrEmpty(options.ProfileRoot))
-                {
-                    ProfileOptimization.StartProfile(nameof(Microsoft.CodeAnalysis.SolutionCrawler.IIncrementalAnalyzer));
-                }
+            //Console.WriteLine("Pausing 5 seconds before starting analysis...");
+            //await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
 
-                await incrementalAnalyzerRunner.RunAsync(cancellationToken).ConfigureAwait(false);
-            }
+            //if (incrementalAnalyzerRunner.HasAnalyzers)
+            //{
+            //    if (!string.IsNullOrEmpty(options.ProfileRoot))
+            //    {
+            //        ProfileOptimization.StartProfile(nameof(Microsoft.CodeAnalysis.SolutionCrawler.IIncrementalAnalyzer));
+            //    }
 
-            if (diagnosticAnalyzerRunner.HasAnalyzers)
-            {
-                if (!string.IsNullOrEmpty(options.ProfileRoot))
-                {
-                    ProfileOptimization.StartProfile(nameof(DiagnosticAnalyzerRunner));
-                }
+            //    await incrementalAnalyzerRunner.RunAsync(cancellationToken).ConfigureAwait(false);
+            //}
 
-                await diagnosticAnalyzerRunner.RunAllAsync(cancellationToken).ConfigureAwait(false);
-            }
+            //if (diagnosticAnalyzerRunner.HasAnalyzers)
+            //{
+            //    if (!string.IsNullOrEmpty(options.ProfileRoot))
+            //    {
+            //        ProfileOptimization.StartProfile(nameof(DiagnosticAnalyzerRunner));
+            //    }
 
-            if (codeRefactoringRunner.HasRefactorings)
-            {
-                if (!string.IsNullOrEmpty(options.ProfileRoot))
-                {
-                    ProfileOptimization.StartProfile(nameof(CodeRefactoringRunner));
-                }
+            //    await diagnosticAnalyzerRunner.RunAllAsync(cancellationToken).ConfigureAwait(false);
+            //}
 
-                await codeRefactoringRunner.RunAsync(cancellationToken).ConfigureAwait(false);
-            }
+            //if (codeRefactoringRunner.HasRefactorings)
+            //{
+            //    if (!string.IsNullOrEmpty(options.ProfileRoot))
+            //    {
+            //        ProfileOptimization.StartProfile(nameof(CodeRefactoringRunner));
+            //    }
+
+            //    await codeRefactoringRunner.RunAsync(cancellationToken).ConfigureAwait(false);
+            //}
         }
 
         private static async Task ShowCompilerDiagnosticsAsync(Solution solution, CancellationToken cancellationToken)

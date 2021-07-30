@@ -9,7 +9,7 @@ Imports Microsoft.CodeAnalysis.InheritanceMargin
 Imports Microsoft.CodeAnalysis.PooledObjects
 Imports Microsoft.CodeAnalysis.VisualBasic.Syntax
 
-Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.InheritanceMarginService
+Namespace Microsoft.CodeAnalysis.VisualBasic.InheritanceMarginService
 
     <ExportLanguageService(GetType(IInheritanceMarginService), LanguageNames.VisualBasic), [Shared]>
     Friend Class VisualBasicInheritanceMarginService

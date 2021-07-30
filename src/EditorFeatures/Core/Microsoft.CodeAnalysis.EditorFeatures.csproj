@@ -56,6 +56,7 @@
     <InternalsVisibleTo Include="Roslyn.VisualStudio.DiagnosticsWindow" />
     <InternalsVisibleTo Include="Microsoft.CodeAnalysis.Remote.ServiceHub" />
     <InternalsVisibleTo Include="Roslyn.Hosting.Diagnostics" />
+    <InternalsVisibleTo Include="AnalyzerRunner" />
     <!-- BEGIN MONODEVELOP
     These MonoDevelop dependencies don't ship with Visual Studio, so can't break our
     binary insertions and are exempted from the ExternalAccess adapter assembly policies.
@@ -103,5 +104,8 @@
   <ItemGroup>
     <PublicAPI Include="PublicAPI.Shipped.txt" />
     <PublicAPI Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="InheritanceMargin\" />
   </ItemGroup>
 </Project>
