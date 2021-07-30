@@ -12,8 +12,10 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.InheritanceMargin;
 using Microsoft.CodeAnalysis.Host.Mef;
 using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Xml.Schema;
+using Roslyn.Utilities;
 
 namespace AnalyzerRunner
 {
@@ -31,7 +33,7 @@ namespace AnalyzerRunner
             var mefProvider = (IMefHostExportProvider)_workspace.Services.HostServices;
 
             var allProjects = _workspace.CurrentSolution.Projects.ToList();
-            Console.WriteLine($"Project Number: {allProjects.Count}.");
+            Console.WriteLine("Project Number: {allProjects.Count}.");
             var infoBuilder = new Dictionary<Project, ProjectMarginInfo>();
 
             var taskArray = new Task<Dictionary<Document, DocumentMarginInfo>>[allProjects.Count];
@@ -39,7 +41,7 @@ namespace AnalyzerRunner
             for (int i = 0; i < allProjects.Count; i++)
             {
                 var project = allProjects[i];
-                Console.WriteLine($"Start processing project number : {i + 1}, project Name: {project.Name}");
+                Console.WriteLine($@"Start processing project number : {i + 1}, project Name: {project.Name}");
 
                 var t = Task.Run(async () =>
                 {
@@ -66,6 +68,86 @@ namespace AnalyzerRunner
             PrintHelper(infoBuilder);
         }
 
+        internal static string PrintItemHelper(InheritanceRelationship relationship)
+        {
+            var s_relationships_Shown_As_I_Up_Arrow
+                = ImmutableArray<InheritanceRelationship>.Empty
+                .Add(InheritanceRelationship.ImplementedInterface)
+                .Add(InheritanceRelationship.InheritedInterface)
+                .Add(InheritanceRelationship.ImplementedMember);
+
+            var s_relationships_Shown_As_I_Down_Arrow
+                = ImmutableArray<InheritanceRelationship>.Empty
+                .Add(InheritanceRelationship.ImplementingType)
+                .Add(InheritanceRelationship.ImplementingMember);
+
+            var s_relationships_Shown_As_O_Up_Arrow
+                = ImmutableArray<InheritanceRelationship>.Empty
+                .Add(InheritanceRelationship.BaseType)
+                .Add(InheritanceRelationship.OverriddenMember);
+
+            var s_relationships_Shown_As_O_Down_Arrow
+                = ImmutableArray<InheritanceRelationship>.Empty
+                .Add(InheritanceRelationship.DerivedType)
+                .Add(InheritanceRelationship.OverridingMember);
+
+            if (s_relationships_Shown_As_I_Up_Arrow.Any(flag => relationship.HasFlag(flag))
+                && s_relationships_Shown_As_O_Down_Arrow.Any(flag => relationship.HasFlag(flag)))
+            {
+                return "I↑O↓";
+            }
+
+            if (s_relationships_Shown_As_I_Up_Arrow.Any(flag => relationship.HasFlag(flag))
+                && s_relationships_Shown_As_O_Up_Arrow.Any(flag => relationship.HasFlag(flag)))
+            {
+                return "IO↑";
+            }
+
+            if (s_relationships_Shown_As_I_Up_Arrow.Any(flag => relationship.HasFlag(flag)))
+            {
+                return "I↑";
+            }
+
+            if (s_relationships_Shown_As_I_Down_Arrow.Any(flag => relationship.HasFlag(flag)))
+            {
+                return "I↓";
+            }
+
+            if (s_relationships_Shown_As_O_Down_Arrow.Any(flag => relationship.HasFlag(flag)))
+            {
+                return "O↓";
+            }
+
+            if (s_relationships_Shown_As_O_Up_Arrow.Any(flag => relationship.HasFlag(flag)))
+            {
+                return "O↑";
+            }
+
+            throw new ArgumentException(relationship.ToString());
+        }
+
+        internal static void PrintKindHelper(MemberInfo[] memberInfos)
+        {
+            var resultCollector = new SortedDictionary<string, int>();
+            foreach (var memberInfo in memberInfos)
+            {
+                var relationship = memberInfo.TargetInfo.Keys.Aggregate((k1, k2) => k1 | k2);
+                if (resultCollector.TryGetValue(PrintItemHelper(relationship), out var result))
+                {
+                    resultCollector[PrintItemHelper(relationship)] = result + 1;
+                }
+                else
+                {
+                    resultCollector[PrintItemHelper(relationship)] = 1;
+                }
+            }
+
+            foreach (var (relationship, numberCount) in resultCollector)
+            {
+                Console.WriteLine("\t\t\t"+ $"icon: {relationship}, total number: {numberCount}");
+            }
+        }
+
         internal static void PrintHelper(Dictionary<Project, ProjectMarginInfo> solutionInfo)
         {
             var allDocumentInfo = solutionInfo.SelectMany(kvp => kvp.Value.DocumentInfos.Select(kvp2 => kvp2.Value)).ToArray();
@@ -89,39 +171,43 @@ namespace AnalyzerRunner
             var marginsContainsOneMember = allDocumentInfo.SelectMany(docInfo => docInfo.MarginContainsOneMember).ToArray();
             Console.WriteLine($"Margin contains one member: {marginsContainsOneMember.Length}");
             Console.WriteLine(indentation + $"Number of Margin contains one direction target: {marginsContainsOneMember.Select(marginInfo => marginInfo.MembersOnThisLine[0]).Where(memberInfo => memberInfo.TargetInfo.Count == 1).Count()}");
-            Console.WriteLine(indentation + indentation + $"Margin contains one direction and one target: {marginsContainsOneMember.Select(marginInfo => marginInfo.MembersOnThisLine[0]).Where(memberInfo => memberInfo.TargetInfo.Count == 1).Count()}");
 
-            Console.WriteLine(indentation + $"Number of Margin contains two direction targets: {marginsContainsOneMember.Select(marginInfo => marginInfo.MembersOnThisLine[0]).Where(memberInfo => memberInfo.TargetInfo.Count == 2).Count()}");
-            Console.WriteLine(indentation + $"Number of Margin contains three or more direction targets: {marginsContainsOneMember.Select(marginInfo => marginInfo.MembersOnThisLine[0]).Where(memberInfo => memberInfo.TargetInfo.Count > 2).Count()}");
+            var marginContainsOneDirectionAndOneTarget = marginsContainsOneMember
+                .Select(marginInfo => marginInfo.MembersOnThisLine[0])
+                .Where(memberInfo => memberInfo.TargetInfo.Count == 1 && memberInfo.TargetInfo.Single().Value.Length == 1).ToArray();
+            Console.WriteLine(indentation + indentation + $"Margin contains one direction and one target: {marginContainsOneDirectionAndOneTarget.Length}");
+            PrintKindHelper(marginContainsOneDirectionAndOneTarget);
 
-            Console.WriteLine(spiliter);
+            var marginContainsOneDirectionAndTwoTargets = marginsContainsOneMember
+                .Select(marginInfo => marginInfo.MembersOnThisLine[0]).Where(memberInfo =>
+                    memberInfo.TargetInfo.Count == 1 && memberInfo.TargetInfo.Single().Value.Length == 2).ToArray();
+            Console.WriteLine(indentation + indentation + $"Margin contains one direction and two targets: {marginContainsOneDirectionAndTwoTargets.Length}");
+            PrintKindHelper(marginContainsOneDirectionAndTwoTargets);
+
+            var marginContainsThreeOrMoreTargets = marginsContainsOneMember
+                .Select(marginInfo => marginInfo.MembersOnThisLine[0]).Where(memberInfo =>
+                    memberInfo.TargetInfo.Count == 1 && memberInfo.TargetInfo.Single().Value.Length > 2).ToArray();
+            Console.WriteLine(indentation + indentation + $"Margin contains one direction and three or more targets: {marginContainsThreeOrMoreTargets.Length}");
+            PrintKindHelper(marginContainsThreeOrMoreTargets);
+
+            var marginContainsTwoDirectionTargets = marginsContainsOneMember
+                .Select(marginInfo => marginInfo.MembersOnThisLine[0])
+                .Where(memberInfo => memberInfo.TargetInfo.Count == 2).ToArray();
+            Console.WriteLine(indentation + $"Number of Margin contains two direction targets: {marginContainsTwoDirectionTargets.Length}");
+
+            var marginContainsTwoDirectionTargetWithOneOnEachDirection = marginContainsTwoDirectionTargets
+                .Where(member => member.TargetInfo.All(kvp => kvp.Value.Length == 1)).ToArray();
+            Console.WriteLine(indentation + indentation + $"Number of Margin contains two direction targets and each direction has only one targets: {marginContainsTwoDirectionTargetWithOneOnEachDirection.Length}");
+            PrintKindHelper(marginContainsTwoDirectionTargetWithOneOnEachDirection);
+
+            var marginContainsThreeDirectionTargets = marginsContainsOneMember
+                .Select(marginInfo => marginInfo.MembersOnThisLine[0])
+                .Where(memberInfo => memberInfo.TargetInfo.Count == 3).ToArray();
+            Console.WriteLine(indentation + $"Number of Margin contains three or more direction targets: {marginContainsThreeDirectionTargets.Length}");
+            PrintKindHelper(marginContainsThreeDirectionTargets);
+
             Console.WriteLine($"Margin contains two members (example: two events declared on the same line): {allDocumentInfo.Select(docInfo => docInfo.MarginContainsTwoMembers.Length).Sum()}");
-
-            Console.WriteLine(spiliter);
             Console.WriteLine($"Margin contains three or more members: {allDocumentInfo.Select(docInfo => docInfo.MarginContainsThreeOrMoreMembers.Length).Sum()}");
-
-            Console.WriteLine(spiliter);
-            Console.WriteLine($"Margin only has one direction targets: {allMarginInfo.Where(info => info.TargetInfo.Count == 1).Select(info => info.TotalTargetCount).Sum()}");
-            Console.WriteLine(spiliter);
-
-            //Console.WriteLine($"Margin only has one direction targets (1 target): {}");
-            //Console.WriteLine($"Margin only has one direction targets (2 targets): {}");
-            //Console.WriteLine($"Margin only has one direction targets (3-5 targets): {}");
-            //Console.WriteLine($"Margin only has one direction targets (More than 5 targets): {}");
-
-            //Console.WriteLine(spiliter);
-            //Console.WriteLine($"Margin only has two direction targets: {}");
-            //Console.WriteLine($"Margin only has two direction targets: {}");
-            //Console.WriteLine($"Margin only has two direction targets: {}");
-            //Console.WriteLine($"Margin only has two direction targets: {}");
-            //Console.WriteLine($"Margin only has two direction targets: {}");
-
-            //Console.WriteLine($"Margin only has three direction targets: {solutionInfo.Select(info)}");
-            //Console.WriteLine($"Margin only has more targets: {solutionInfo.Select(info)}");
-
-            Console.WriteLine(spiliter);
-            Console.WriteLine($"");
-
             Console.WriteLine(spiliter);
         }
 
@@ -200,27 +286,6 @@ namespace AnalyzerRunner
 
     internal class MemberInfo
     {
-        private static readonly ImmutableArray<InheritanceRelationship> s_relationships_Shown_As_I_Up_Arrow
-            = ImmutableArray<InheritanceRelationship>.Empty
-            .Add(InheritanceRelationship.ImplementedInterface)
-            .Add(InheritanceRelationship.InheritedInterface)
-            .Add(InheritanceRelationship.ImplementedMember);
-
-        private static readonly ImmutableArray<InheritanceRelationship> s_relationships_Shown_As_I_Down_Arrow
-            = ImmutableArray<InheritanceRelationship>.Empty
-            .Add(InheritanceRelationship.ImplementingType)
-            .Add(InheritanceRelationship.ImplementingMember);
-
-        private static readonly ImmutableArray<InheritanceRelationship> s_relationships_Shown_As_O_Up_Arrow
-            = ImmutableArray<InheritanceRelationship>.Empty
-            .Add(InheritanceRelationship.BaseType)
-            .Add(InheritanceRelationship.OverriddenMember);
-
-        private static readonly ImmutableArray<InheritanceRelationship> s_relationships_Shown_As_O_Down_Arrow
-            = ImmutableArray<InheritanceRelationship>.Empty
-            .Add(InheritanceRelationship.DerivedType)
-            .Add(InheritanceRelationship.OverridingMember);
-
         public Glyph MemberKind { get; }
         public Dictionary<InheritanceRelationship, ImmutableArray<TargetInfo>> TargetInfo { get; }
         public int TotalTargetCount => TargetInfo.SelectMany(kvp => kvp.Value).Count();
