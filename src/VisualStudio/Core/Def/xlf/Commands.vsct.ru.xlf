@@ -142,6 +142,21 @@
         <target state="new">Warning</target>
         <note />
       </trans-unit>
+      <trans-unit id="cmdidExpandInheritanceMargin|ButtonText">
+        <source>Expand Inheritance Margin</source>
+        <target state="new">Expand Inheritance Margin</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="cmdidExpandInheritanceMargin|CommandName">
+        <source>Expand Inheritance Margin</source>
+        <target state="new">Expand Inheritance Margin</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="cmdidExpandInheritanceMargin|LocCanonicalName">
+        <source>Expand Inheritance Margin</source>
+        <target state="new">Expand Inheritance Margin</target>
+        <note />
+      </trans-unit>
       <trans-unit id="cmdidProjectContextAddAnalyzer|ButtonText">
         <source>&amp;Analyzer...</source>
         <target state="translated">&amp;Анализатор...</target>

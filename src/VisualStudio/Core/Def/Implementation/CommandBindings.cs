@@ -8,6 +8,7 @@ using System.ComponentModel.Composition;
 using Microsoft.CodeAnalysis.Editor.Commanding.Commands;
 using Microsoft.VisualStudio.Editor.Commanding;
 using Microsoft.VisualStudio.LanguageServices;
+using Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMargin;
 using Microsoft.VisualStudio.LanguageServices.ValueTracking;
 
 namespace Microsoft.VisualStudio.Editor.Implementation
@@ -33,5 +34,9 @@ namespace Microsoft.VisualStudio.Editor.Implementation
         [Export]
         [CommandBinding(Guids.RoslynGroupIdString, ID.RoslynCommands.GoToValueTrackingWindow, typeof(ValueTrackingEditorCommandArgs))]
         internal CommandBindingDefinition gotoDataFlowToolCommandBinding;
+
+        [Export]
+        [CommandBinding(Guids.RoslynGroupIdString, ID.RoslynCommands.ExpandInheritanceMargin, typeof(InheritanceMarginCommandArgs))]
+        internal CommandBindingDefinition expandInheritanceMargin;
     }
 }

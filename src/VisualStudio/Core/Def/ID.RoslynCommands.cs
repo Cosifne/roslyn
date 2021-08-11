@@ -52,6 +52,7 @@ namespace Microsoft.VisualStudio.LanguageServices
             public const int RemoveUnusedReferences = 0x0202;
             public const int GoToValueTrackingWindow = 0x0203;
             public const int SyncNamespaces = 0x0204;
+            public const int ExpandInheritanceMargin = 0x0205;
         }
     }
 }
