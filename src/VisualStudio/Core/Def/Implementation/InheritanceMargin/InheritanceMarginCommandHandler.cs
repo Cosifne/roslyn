@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Host.Mef;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMargin.MarginGlyph;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Formatting;
@@ -75,7 +76,10 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMarg
             var xAxisPosition = marginGrid.ActualWidth / 2 + textView.ViewportLeft;
             var yAxisPosition = textView.ViewportTop + (caretLine.TextTop + caretLine.TextBottom) / 2;
             // TODO: this should be the real context menu
-            var contextMenu = new ContextMenu();
+            var contextMenu = new InheritanceMarginContextMenu();
+            contextMenu.ItemContainerTemplateSelector = new MenuItemContainerTemplateSelector();
+            var vm = new InheritanceMarginContextMenuViewModel(tag);
+            contextMenu.DataContext = vm;
             contextMenu.PlacementTarget = marginGrid;
             contextMenu.Placement = PlacementMode.RelativePoint;
             contextMenu.HorizontalOffset = xAxisPosition;
