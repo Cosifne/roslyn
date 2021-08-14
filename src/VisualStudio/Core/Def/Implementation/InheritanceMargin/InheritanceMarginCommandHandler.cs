@@ -106,6 +106,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMarg
             contextMenu.HorizontalOffset = xAxisPosition;
             contextMenu.VerticalOffset = yAxisPosition;
             contextMenu.IsOpen = true;
+            contextMenu.StaysOpen = true;
         }
 
         private InheritanceMarginTag? GetInheritanceMarginTag(ITextView view, ITextViewLine textViewLine)

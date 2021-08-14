@@ -30,7 +30,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMarg
             _aggregatorFactoryService = viewTagAggregatorFactoryService;
         }
 
-        public override void PreprocessMouseLeftButtonDown(MouseButtonEventArgs e)
+        public override void PreprocessMouseLeftButtonUp(MouseButtonEventArgs e)
         {
             var textView = _textViewHost.TextView;
             var pt = e.GetPosition(textView.VisualElement);
@@ -41,6 +41,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMarg
             if (tag != null)
             {
                 InheritanceMarginCommandHandler.ShowContextMenu(textView, textLine, tag, _textViewMargin.VisualElement);
+                e.Handled = true;
             }
         }
 
