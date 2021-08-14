@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Immutable;
 using System.ComponentModel.Composition;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using Microsoft.CodeAnalysis.Editor;
@@ -91,6 +92,21 @@ namespace Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMarg
 
         public CommandState GetCommandState(InheritanceMarginCommandArgs args)
             => CommandState.Available;
+
+        public static void ShowContextMenu(ITextView textView, ITextViewLine caretLine, InheritanceMarginTag tag, FrameworkElement marginGrid)
+        {
+            var contextMenu = new InheritanceMarginContextMenu();
+            contextMenu.ItemContainerTemplateSelector = new MenuItemContainerTemplateSelector();
+            var vm = new InheritanceMarginContextMenuViewModel(tag);
+            var xAxisPosition = marginGrid.ActualWidth / 2 + textView.ViewportLeft;
+            var yAxisPosition = textView.ViewportTop + (caretLine.TextTop + caretLine.TextBottom) / 2;
+            contextMenu.DataContext = vm;
+            contextMenu.PlacementTarget = marginGrid;
+            contextMenu.Placement = PlacementMode.RelativePoint;
+            contextMenu.HorizontalOffset = xAxisPosition;
+            contextMenu.VerticalOffset = yAxisPosition;
+            contextMenu.IsOpen = true;
+        }
 
         private InheritanceMarginTag? GetInheritanceMarginTag(ITextView view, ITextViewLine textViewLine)
         {
