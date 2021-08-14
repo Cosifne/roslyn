@@ -357,6 +357,11 @@
         <target state="translated">Değerlendiriliyor (kuyrukta {0} görev var)</target>
         <note />
       </trans-unit>
+      <trans-unit id="Expand_inheritance_margin">
+        <source>Expand Inheritance Margin</source>
+        <target state="new">Expand Inheritance Margin</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Extract_Base_Class">
         <source>Extract Base Class</source>
         <target state="translated">Temel Sınıfı Ayıkla</target>
