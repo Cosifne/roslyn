@@ -3456,6 +3456,35 @@ namespace PushUpTest
         }
 
         [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
+        public async Task Test()
+        {
+            var testText = @"
+public class BaseClass
+{
+}
+
+public class Class : BaseClass
+{
+    #region Bar
+    public int F[||]oo = 100;
+    #end region
+}";
+
+            var expected = @"
+public class BaseClass
+{
+    public int F[||]oo = 100;
+}
+
+public class Class : BaseClass
+{
+    #region Bar
+    #end region
+}";
+            await TestInRegularAndScriptAsync(testText, expected);
+        }
+
+        [Fact, Trait(Traits.Feature, Traits.Features.CodeActionsPullMemberUp)]
         public async Task TestPullMethodUpAcrossProjectViaQuickAction()
         {
             var testText = @"
