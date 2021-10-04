@@ -326,7 +326,7 @@ public class Test
             VisualStudio.Editor.Verify.CurrentLineText("object.Equals(null)$$", assertCaretPosition: true);
         }
 
-        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/56394")]
+        [WpfFact]
         public void SmartBreakLineWithTabTabCompletion1()
         {
             SetUpEditor(@"
@@ -365,7 +365,7 @@ $$
 ", assertCaretPosition: true);
         }
 
-        [WpfFact(Skip = "https://github.com/dotnet/roslyn/issues/56394")]
+        [WpfFact]
         public void SmartBreakLineWithTabTabCompletion2()
         {
             SetUpEditor(@"
