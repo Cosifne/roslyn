@@ -77,15 +77,23 @@ namespace Microsoft.CodeAnalysis.InheritanceMargin
             foreach (var (symbolKey, lineNumber) in symbolKeyAndLineNumbers)
             {
                 var symbol = symbolKey.Resolve(compilation, cancellationToken: cancellationToken).Symbol;
-
-                if (symbol is INamedTypeSymbol namedTypeSymbol)
+                if (symbol == null)
                 {
-                    await AddInheritanceMemberItemsForNamedTypeAsync(solution, namedTypeSymbol, lineNumber, builder, cancellationToken).ConfigureAwait(false);
+                    continue;
                 }
 
-                if (symbol is IEventSymbol or IPropertySymbol or IMethodSymbol)
+                var linkedSymbols = await SymbolFinder.FindLinkedSymbolsAsync(symbol, solution, cancellationToken).ConfigureAwait(false);
+                foreach (var linkedSymbol in linkedSymbols)
                 {
-                    await AddInheritanceMemberItemsForMembersAsync(solution, symbol, lineNumber, builder, cancellationToken).ConfigureAwait(false);
+                    if (linkedSymbol is INamedTypeSymbol namedTypeSymbol)
+                    {
+                        await AddInheritanceMemberItemsForNamedTypeAsync(solution, namedTypeSymbol, lineNumber, builder, cancellationToken).ConfigureAwait(false);
+                    }
+
+                    if (linkedSymbol is IEventSymbol or IPropertySymbol or IMethodSymbol)
+                    {
+                        await AddInheritanceMemberItemsForMembersAsync(solution, symbol, lineNumber, builder, cancellationToken).ConfigureAwait(false);
+                    }
                 }
             }
 
