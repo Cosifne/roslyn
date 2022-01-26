@@ -28,8 +28,8 @@ namespace IdeBenchmarks.InheritanceMargin
     [MemoryDiagnoser]
     public class InheritanceMarginGlyphBenchmarks
     {
-        private const int MemberCount = 500;
-        private const int Iterations = 10;
+        private const int MemberCount = 2000;
+        private const int Iterations = 5;
         private const double WidthAndHeightOfGlyph = 18;
 
         // The test sample file would contains a pair of implemented + implmenting members and the tag for containing interface/class
@@ -72,10 +72,9 @@ namespace IdeBenchmarks.InheritanceMargin
         }
 
         [IterationSetup]
-        public Task IterationSetupAsync()
+        public void IterationSetupAsync()
         {
             _useExportProviderAttribute.Before(null);
-            return PrepareGlyphRequiredDataAsync(CancellationToken.None);
         }
 
         [IterationCleanup]
@@ -93,30 +92,31 @@ namespace IdeBenchmarks.InheritanceMargin
         [Benchmark]
         public void BenchmarkGlyphRefresh()
         {
-            RunOnUIThread(() =>
-            {
-                for (var i = 0; i < Iterations; i++)
-                {
-                    // Add & remove glyphs from the Canvas, which simulates the real refreshing scenanrio when user is scrolling up/down.
-                    for (var j = 0; j < _tags.Length; j++)
-                    {
-                        var tag = _tags[j];
-                        var glyph = new InheritanceMarginGlyph(
-                            _threadingContext,
-                            _streamingFindUsagesPresenter,
-                            _classificationTypeMap,
-                            _classificationFormatMap,
-                            _operationExecutor,
-                            tag,
-                            _mockTextView,
-                            _listener);
-                        Canvas.SetTop(glyph, j * WidthAndHeightOfGlyph);
-                        _canvas.Children.Add(glyph);
-                    }
-                    _canvas.Measure(new Size(WidthAndHeightOfGlyph, HeightOfCanvas));
-                    _canvas.Children.Clear();
-                }
-            });
+            PrepareGlyphRequiredDataAsync(CancellationToken.None).Wait();
+            //RunOnUIThread(() =>
+            //{
+            //    for (var i = 0; i < Iterations; i++)
+            //    {
+            //        // Add & remove glyphs from the Canvas, which simulates the real refreshing scenanrio when user is scrolling up/down.
+            //        for (var j = 0; j < _tags.Length; j++)
+            //        {
+            //            var tag = _tags[j];
+            //            var glyph = new InheritanceMarginGlyph(
+            //                _threadingContext,
+            //                _streamingFindUsagesPresenter,
+            //                _classificationTypeMap,
+            //                _classificationFormatMap,
+            //                _operationExecutor,
+            //                tag,
+            //                _mockTextView,
+            //                _listener);
+            //            Canvas.SetTop(glyph, j * WidthAndHeightOfGlyph);
+            //            _canvas.Children.Add(glyph);
+            //        }
+            //        _canvas.Measure(new Size(WidthAndHeightOfGlyph, HeightOfCanvas));
+            //        _canvas.Children.Clear();
+            //    }
+            //});
         }
 
         private async Task PrepareGlyphRequiredDataAsync(CancellationToken cancellationToken)
@@ -192,27 +192,27 @@ namespace IdeBenchmarks.InheritanceMargin
             var builder = new StringBuilder();
             builder.Append(@"using System;");
             builder.Append(Environment.NewLine);
-            builder.Append(@"namespace TestNs
+            builder.Append(@"namespace Microsoft.VisualStudio.LanguageServices.Implementation.InheritanceMargin
 {
 ");
-            builder.Append(@"   public interface IBar
+            builder.Append(@"   public interface IBarService
     {
 ");
             for (var i = 0; i < MemberCount; i++)
             {
-                builder.Append($"       int Method{i}();");
+                builder.Append($"       int GetInheritanceMemberItems{i}(int i, int j, string k, object m, long n);");
                 builder.Append(Environment.NewLine);
             }
 
             builder.Append(@"   }
 ");
 
-            builder.Append(@"       public class Bar : IBar
+            builder.Append(@"       public class Bar : IBarService
     {
 ");
             for (var i = 0; i < MemberCount; i++)
             {
-                builder.Append($"       public int Method{i}() => 1");
+                builder.Append($"       public int GetInheritanceMemberItems{i}(int i, int j, string k, object m, long n) => 1");
                 builder.Append(Environment.NewLine);
             }
 
