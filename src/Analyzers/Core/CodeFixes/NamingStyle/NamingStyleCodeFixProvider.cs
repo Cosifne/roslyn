@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Threading;
@@ -19,7 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
 {
     [ExportCodeFixProvider(LanguageNames.CSharp, LanguageNames.VisualBasic, Name = PredefinedCodeFixProviderNames.ApplyNamingStyle), Shared]
-    internal class NamingStyleCodeFixProvider : CodeFixProvider
+    internal partial class NamingStyleCodeFixProvider : CodeFixProvider
     {
 
         [ImportingConstructor]
@@ -31,42 +30,27 @@ namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
         public override ImmutableArray<string> FixableDiagnosticIds { get; }
             = ImmutableArray.Create(IDEDiagnosticIds.NamingRuleId);
 
-        public override FixAllProvider? GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+        public override FixAllProvider? GetFixAllProvider() => NamingStyleFixAllProvider.Instance;
 
         public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var document = context.Document;
-            var span = context.Span;
             var syntaxFactsService = document.GetRequiredLanguageService<ISyntaxFactsService>();
-            var model = await document.GetRequiredSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
+            var root = await document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+            var semanticModel = await document.GetRequiredSemanticModelAsync(context.CancellationToken).ConfigureAwait(false);
 
             foreach (var diagnostic in context.Diagnostics)
             {
                 var serializedNamingStyle = diagnostic.Properties[nameof(NamingStyle)];
                 var style = NamingStyle.FromXElement(XElement.Parse(serializedNamingStyle));
 
-                var root = await document.GetRequiredSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-                var node = root.FindNode(span);
-
-                // it is usually the right one (such as a variable declarator, designation or a foreach statement)
-                // because there is no other node in between. But there is one case in a VB catch clause where the token
-                // is wrapped in an identifier name. So if what we found is an identifier, take the parent node instead.
-                // Note that this is the correct thing to do because GetDeclaredSymbol never works on identifier names.
-                if (syntaxFactsService.IsIdentifierName(node))
-                    node = node.Parent;
-
-                if (node is null)
-                    continue;
-
-                var symbol = model.GetDeclaredSymbol(node, context.CancellationToken);
-                // TODO: We should always be able to find the symbol that generated this diagnostic,
-                // but this cannot always be done by simply asking for the declared symbol on the node 
-                // from the symbol's declaration location.
-                // See https://github.com/dotnet/roslyn/issues/16588
+                var node = root.FindNode(context.Span);
+                var symbol = GetSymbol(node, semanticModel, syntaxFactsService, context.CancellationToken);
                 if (symbol is null)
                     continue;
 
                 var fixedNames = style.MakeCompliant(symbol.Name);
+
                 foreach (var fixedName in fixedNames)
                 {
                     // NOTE:
@@ -87,6 +71,33 @@ namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
             return await Renamer.RenameSymbolAsync(
                 document.Project.Solution, symbol, new SymbolRenameOptions(), fixedName,
                 cancellationToken).ConfigureAwait(false);
+        }
+
+        private static ISymbol? GetSymbol(
+            SyntaxNode node,
+            SemanticModel semanticModel,
+            ISyntaxFactsService syntaxFactsService,
+            CancellationToken cancellationToken)
+        {
+            // it is usually the right one (such as a variable declarator, designation or a foreach statement)
+            // because there is no other node in between. But there is one case in a VB catch clause where the token
+            // is wrapped in an identifier name. So if what we found is an identifier, take the parent node instead.
+            // Note that this is the correct thing to do because GetDeclaredSymbol never works on identifier names.
+            if (syntaxFactsService.IsIdentifierName(node))
+                node = node.Parent;
+
+            if (node is null)
+                return null;
+
+            var symbol = semanticModel.GetDeclaredSymbol(node, cancellationToken);
+            // TODO: We should always be able to find the symbol that generated this diagnostic,
+            // but this cannot always be done by simply asking for the declared symbol on the node 
+            // from the symbol's declaration location.
+            // See https://github.com/dotnet/roslyn/issues/16588
+            if (symbol is null)
+                return null;
+
+            return symbol;
         }
     }
 }
