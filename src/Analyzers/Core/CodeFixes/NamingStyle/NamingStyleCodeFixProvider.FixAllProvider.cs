@@ -1,8 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.LanguageServices;
+using Microsoft.CodeAnalysis.NamingStyles;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
 {
@@ -12,9 +19,7 @@ namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
         {
             public static readonly NamingStyleFixAllProvider Instance = new();
 
-            private NamingStyleFixAllProvider()
-            {
-            }
+            private NamingStyleFixAllProvider() { }
 
             public override async Task<CodeAction?> GetFixAsync(FixAllContext fixAllContext)
             {
@@ -31,6 +36,51 @@ namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
                 {
                     return null;
                 }
+
+                var solution = fixAllContext.Solution;
+                var documentToDiagnosticMap = GetDocumentToSymbolMapAsync(solution, diagnostics);
+
+                return null;
+            }
+
+            private static ImmutableArray<ISymbol> GetRenamingSymbols(
+                ImmutableDictionary<Document, ImmutableArray<Diagnostic>> documentToDiagnosticMap)
+            {
+            }
+
+
+            private static async Task<ImmutableDictionary<Document, ImmutableHashSet<ISymbol>>> GetDocumentToSymbolMapAsync(
+                Solution solution,
+                ImmutableArray<Diagnostic> diagnostics,
+                CancellationToken cancellationToken)
+            {
+                var groupings = diagnostics
+                    .WhereAsArray(diagnostic => diagnostic.Location is { SourceTree: not null, IsInSource: true })
+                    .GroupBy(diagnostic => diagnostic.Location.SourceTree!);
+                using var _1 = PooledDictionary<Document, ImmutableHashSet<ISymbol>>.GetInstance(out var dictionaryBuilder);
+                foreach (var grouping in groupings)
+                {
+                    var syntaxTree = grouping.Key;
+                    var document = solution.GetRequiredDocument(syntaxTree);
+                    var syntaxFactsService = document.GetRequiredLanguageService<ISyntaxFactsService>();
+                    var semanticModel = await document.GetRequiredSemanticModelAsync(cancellationToken).ConfigureAwait(false);
+                    var syntaxRoot = await syntaxTree.GetRootAsync(cancellationToken).ConfigureAwait(false);
+                    using var _2 = PooledHashSet<ISymbol>.GetInstance(out var setBuilder);
+
+                    foreach (var diagnostic in grouping)
+                    {
+                        var node = syntaxRoot.FindNode(diagnostic.Location.SourceSpan);
+                        var symbol = GetSymbol(node, semanticModel, syntaxFactsService, cancellationToken);
+                        if (symbol is not null)
+                        {
+                            setBuilder.Add(symbol); 
+                        }
+                    }
+
+                    dictionaryBuilder.Add(document, setBuilder.ToImmutableHashSet());
+                }
+
+                return dictionaryBuilder.ToImmutableDictionary();
             }
 
             private static async Task<ImmutableArray<Diagnostic>> GetDiagnosticsInAllProjectsAsync(FixAllContext fixAllContext)
@@ -43,6 +93,17 @@ namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
                 }
 
                 return builder.ToImmutable();
+            }
+
+
+            private static Task<CodeAction> GetFixForProject()
+            {
+
+            }
+
+            private static Task<CodeAction> GetFixForDocument()
+            {
+
             }
         }
     }

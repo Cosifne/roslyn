@@ -74,7 +74,7 @@ namespace Microsoft.CodeAnalysis.CodeFixes.NamingStyles
         }
 
         private static ISymbol? GetSymbol(
-            SyntaxNode node,
+            SyntaxNode? node,
             SemanticModel semanticModel,
             ISyntaxFactsService syntaxFactsService,
             CancellationToken cancellationToken)
