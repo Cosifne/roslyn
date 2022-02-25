@@ -59,6 +59,12 @@ namespace Microsoft.CodeAnalysis.Rename
             return resolution.NewSolution;
         }
 
+        public static Task<Solution> RenameSymbolsAsync(
+            Solution solution, ImmutableDictionary<ISymbol, (string newName, SymbolRenameOptions options)> renamingSymbols, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(solution);
+        }
+
         [Obsolete("Use overload taking RenameOptions")]
         public static Task<RenameDocumentActionSet> RenameDocumentAsync(
             Document document,
