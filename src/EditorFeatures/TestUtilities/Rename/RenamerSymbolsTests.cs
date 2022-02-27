@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -21,7 +22,7 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
     public class RenamerSymbolsTests
     {
         #region AssertHelpers
-        private async Task TestRenameSymbolsInDocumentAsync(
+        private static async Task TestRenameSymbolsInDocumentAsync(
             string source,
             string expected,
             string languageName)
@@ -48,11 +49,11 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
             await VerifyRenameSymbolsAsync(workspace, builder.ToImmutable(), expected, cancellationToken);
         }
 
-        private async Task TestRenameSymbolsInDocumentAsync(
+        private static async Task TestRenameSymbolsInDocumentAsync(
             string source,
             string expected,
             string languageName,
-            ImmutableDictionary<string, (string newName, SymbolRenameOptions options)> tagToNewNameAndOptionsDictionary)
+            IReadOnlyDictionary<string, (string newName, SymbolRenameOptions options)> tagToNewNameAndOptionsDictionary)
         {
             using var workspace = CreateTestWorkspace(source, languageName);
             var cancellationToken = CancellationToken.None;
@@ -78,10 +79,10 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
             await VerifyRenameSymbolsAsync(workspace, builder.ToImmutable(), expected, cancellationToken);
         }
 
-        private async Task TestRenameSymbolsInWorkspaceAsync(
+        private static async Task TestRenameSymbolsInWorkspaceAsync(
             string source,
             string expected,
-            ImmutableDictionary<string, (string newName, SymbolRenameOptions options)> tagToNewNameAndOptionsDictionary)
+            IReadOnlyDictionary<string, (string newName, SymbolRenameOptions options)> tagToNewNameAndOptionsDictionary)
         {
             using var workspace = TestWorkspace.Create(source);
             var cancellationToken = CancellationToken.None;
@@ -115,10 +116,10 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
                 cancellationToken).ConfigureAwait(false);
 
             var expectedWorkspace = TestWorkspace.Create(expected);
-            await VerifyTwoSolution(expectedWorkspace.CurrentSolution, newSolution);
+            await VerifyTwoSolutionAsync(expectedWorkspace.CurrentSolution, newSolution);
         }
 
-        private async Task VerifyTwoSolution(Solution expected, Solution actual)
+        private static async Task VerifyTwoSolutionAsync(Solution expected, Solution actual)
         {
             var expectedProjects = expected.Projects.OrderBy(p => p.Name).ToImmutableArray();
             var actualProjects = actual.Projects.OrderBy(p => p.Name).ToImmutableArray();
@@ -126,11 +127,11 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
             Assert.Equal(expectedProjects.Length, actualProjects.Length);
             for (var i = 0; i < expectedProjects.Length; i++)
             {
-                await VerifyTwoProjects(expectedProjects[i], actualProjects[i]);
+                await VerifyTwoProjectsAsync(expectedProjects[i], actualProjects[i]);
             }
         }
 
-        private async Task VerifyTwoProjects(Project expected, Project actual)
+        private static async Task VerifyTwoProjectsAsync(Project expected, Project actual)
         {
             var expectedDocuments = expected.Documents
                 .OrderBy(d => d.Name)
@@ -146,7 +147,7 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
             }
         }
 
-        private async Task VerifyTwoDocumentsAsync(Document expected, Document actual)
+        private static async Task VerifyTwoDocumentsAsync(Document expected, Document actual)
         {
             Assert.Equal(expected.Name, actual.Name);
             var expectedText = await expected.GetTextAsync().ConfigureAwait(false);
@@ -194,5 +195,183 @@ namespace Microsoft.CodeAnalysis.UnitTests.Renamer
             return TestWorkspace.Create(workspaceFile);
         }
         #endregion
+
+        [Fact]
+        public async Task TestRenameNonConflictMultipleSymbolsInDocument()
+        {
+            await TestRenameSymbolsInDocumentAsync(
+                @"
+namespace Goo
+{
+    public class {|Koo:Hoo|}
+    {
+        public void {|Noo:Soo|}()
+        {
+            Zoo();
+        }
+        public void {|Moo:Zoo|}()
+        {
+            Soo();
+        }
+    }
+}",
+                @"
+namespace Goo
+{
+    public class Koo
+    {
+        public void Noo()
+        {
+            Moo();
+        }
+        public void Moo()
+        {
+            Noo();
+        }
+    }
+}",
+                languageName: LanguageNames.CSharp);
+        }
+
+        [Fact]
+        public async Task TestRenameDocuments()
+        {
+            await TestRenameSymbolsInDocumentAsync(
+                @"
+namespace Goo
+{
+    public class {|1:Hoo|}
+    {
+        public void {|2:Soo|}()
+        {
+            Zoo();
+        }
+        public void {|3:Zoo|}()
+        {
+            Soo();
+        }
+    }
+}",
+                @"
+namespace Goo
+{
+    public class Koo
+    {
+        public void Noo()
+        {
+            Moo();
+        }
+        public void Moo()
+        {
+            Noo();
+        }
+    }
+}",
+            languageName: LanguageNames.CSharp,
+            tagToNewNameAndOptionsDictionary: new Dictionary<string, (string newName, SymbolRenameOptions options)>()
+            {
+                {"1", ("Koo", new SymbolRenameOptions() { RenameFile = true}) },
+                {"2", ("Noo", new SymbolRenameOptions()) },
+                {"3", ("Moo", new SymbolRenameOptions()) },
+            });
+        }
+
+        [Fact]
+        public async Task TestRenameSymbolsInMulitipleDocuments()
+        {
+            var document1 = @"
+namespace Goo
+{
+    public class {|1:Hoo|}
+    {
+        public void {|2:Soo|}()
+        {
+            Zoo();
+        }
+        public void {|3:Zoo|}()
+        {
+            Soo();
+        }
+    }
+}";
+            var document2 = @"
+namespace Goo
+{
+    public class {|4:Bar|}
+    {
+        public void OOO()
+        {
+            var x = new Hoo();
+            x.Soo();
+            x.Zoo();
+        }
+    }
+}";
+
+            var expectedDocument1 = @"
+namespace Goo
+{
+    public class {|1:Hoo|}
+    {
+        public void {|2:Soo|}()
+        {
+            Zoo();
+        }
+        public void {|3:Zoo|}()
+        {
+            Soo();
+        }
+    }
+}";
+            var expectedDocument2 = @"
+namespace Goo
+{
+    public class {|4:Bar|}
+    {
+        public void OOO()
+        {
+            var x = new Hoo();
+            x.Soo();
+            x.Zoo();
+        }
+    }
+}";
+            await TestRenameSymbolsInWorkspaceAsync(
+                $@"
+<Workspace>
+    <Project Language=""{LanguageNames.CSharp}"" AssemblyName=""Assembly1"" CommonReferences=""true"">
+        <ProjectReference>Assembly2</ProjectReference>
+        <Document>
+            <![CDATA[
+                {document1}]]>
+        </Document>
+        <Document>
+            <![CDATA[
+                {document2}]]>
+        </Document>
+    </Project>
+</Workspace>",
+                $@"
+<Workspace>
+    <Project Language=""{LanguageNames.CSharp}"" AssemblyName=""Assembly1"" CommonReferences=""true"">
+        <ProjectReference>Assembly2</ProjectReference>
+        <Document>
+            <![CDATA[
+                {expectedDocument1}]]>
+        </Document>
+        <Document>
+            <![CDATA[
+                {expectedDocument2}]]>
+        </Document>
+    </Project>
+</Workspace>",
+            tagToNewNameAndOptionsDictionary: new Dictionary<string, (string newName, SymbolRenameOptions options)>()
+            {
+                {"1", ("Koo", new SymbolRenameOptions() { RenameFile = true}) },
+                {"2", ("Noo", new SymbolRenameOptions()) },
+                {"3", ("Moo", new SymbolRenameOptions()) },
+                {"4", ("Bar1", new SymbolRenameOptions()) },
+            });
+        }
     }
 }
