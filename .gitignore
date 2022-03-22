@@ -193,3 +193,8 @@ $RECYCLE.BIN/
 
 # WPF temp projects
 *wpftmp.*
+
+#Live Unit Testing config
+.lutignore
+Roslyn.lutconfig
+Compilers.lutconfig
