@@ -96,9 +96,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 return Task.FromResult(new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renameLocationSet.Symbol.Name)));
             }
 
-            var session = new Session(
+            var session = Session.Create(
                 renameLocationSet, renameSymbolDeclarationLocation,
-                replacementText, nonConflictSymbols, cancellationToken);
+                replacementText, nonConflictSymbols,, cancellationToken);
             return session.ResolveConflictsAsync();
         }
 
