@@ -26,6 +26,7 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Simplification;
 using Microsoft.CodeAnalysis.Text;
 using Roslyn.Utilities;
+using static x = System.Threading.Tasks.Task;
 
 namespace Microsoft.CodeAnalysis.CSharp.Rename
 {
@@ -47,24 +48,59 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
         private class RenameRewriter : CSharpSyntaxRewriter
         {
+            private readonly struct ReplacementTextInfo
+            {
+                public readonly string ReplacementText;
+                public readonly string OriginalText;
+
+                public readonly bool IsVerbatim;
+                public readonly bool ReplacementTextValid;
+
+                public readonly ISymbol RenamedSymbol;
+                public readonly IAliasSymbol? AliasSymbol;
+                public readonly Location? RenamableDeclarationLocation;
+
+                /// <summary>
+                /// Flag indicating if we should perform a rename inside string literals.
+                /// </summary>
+                public readonly bool IsRenamingInStrings;
+
+                /// <summary>
+                /// Flag indicating if we should perform a rename inside comment trivia.
+                /// </summary>
+                public readonly bool IsRenamingInComments;
+
+                /// <summary>
+                /// A map from spans of tokens needing rename within strings or comments to an optional
+                /// set of specific sub-spans within the token span that
+                /// have <see cref="_originalText"/> matches and should be renamed.
+                /// If this sorted set is null, it indicates that sub-spans to rename within the token span
+                /// are not available, and a regex match should be performed to rename
+                /// all <see cref="_originalText"/> matches within the span.
+                /// </summary>
+                public readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> _stringAndCommentTextSpans;
+            }
+
+            private readonly Dictionary<TextSpan, ReplacementTextInfo> _symbolReplacementInfo;
+
             private readonly DocumentId _documentId;
             private readonly RenameAnnotation _renameRenamableSymbolDeclaration;
             private readonly Solution _solution;
-            private readonly string _replacementText;
-            private readonly string _originalText;
+            //private readonly string _replacementText;
+            //private readonly string _originalText;
             private readonly ICollection<string> _possibleNameConflicts;
             private readonly Dictionary<TextSpan, RenameLocation> _renameLocations;
             private readonly ISet<TextSpan> _conflictLocations;
             private readonly SemanticModel _semanticModel;
             private readonly CancellationToken _cancellationToken;
 
-            private readonly ISymbol _renamedSymbol;
-            private readonly IAliasSymbol? _aliasSymbol;
-            private readonly Location? _renamableDeclarationLocation;
+            //private readonly ISymbol _renamedSymbol;
+            //private readonly IAliasSymbol? _aliasSymbol;
+            //private readonly Location? _renamableDeclarationLocation;
 
             private readonly RenamedSpansTracker _renameSpansTracker;
-            private readonly bool _isVerbatim;
-            private readonly bool _replacementTextValid;
+            //private readonly bool _isVerbatim;
+            //private readonly bool _replacementTextValid;
             private readonly ISimplificationService _simplificationService;
             private readonly ISemanticFactsService _semanticFactsService;
             private readonly HashSet<SyntaxToken> _annotatedIdentifierTokens = new();
@@ -75,12 +111,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             /// <summary>
             /// Flag indicating if we should perform a rename inside string literals.
             /// </summary>
-            private readonly bool _isRenamingInStrings;
+            /// private readonly bool _isRenamingInStrings;
 
             /// <summary>
             /// Flag indicating if we should perform a rename inside comment trivia.
             /// </summary>
-            private readonly bool _isRenamingInComments;
+            /// private readonly bool _isRenamingInComments;
 
             /// <summary>
             /// A map from spans of tokens needing rename within strings or comments to an optional
@@ -90,7 +126,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             /// are not available, and a regex match should be performed to rename
             /// all <see cref="_originalText"/> matches within the span.
             /// </summary>
-            private readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> _stringAndCommentTextSpans;
+            //private readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> _stringAndCommentTextSpans;
 
             public bool AnnotateForComplexification
             {
@@ -301,11 +337,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 var expandParameter = originalNode.GetAncestorsOrThis(n => n is SimpleLambdaExpressionSyntax or ParenthesizedLambdaExpressionSyntax).Count() == 0;
 
                 newNode = _simplificationService.Expand(newNode,
-                                                                    _speculativeModel,
-                                                                    annotationForReplacedAliasIdentifier: null,
-                                                                    expandInsideNode: null,
-                                                                    expandParameter: expandParameter,
-                                                                    cancellationToken: _cancellationToken);
+                    _speculativeModel,
+                    annotationForReplacedAliasIdentifier: null,
+                    expandInsideNode: null,
+                    expandParameter: expandParameter,
+                    cancellationToken: _cancellationToken);
                 speculativeTree = originalNode.SyntaxTree.GetRoot(_cancellationToken).ReplaceNode(originalNode, newNode);
                 newNode = speculativeTree.GetAnnotatedNodes<SyntaxNode>(annotation).First();
 
