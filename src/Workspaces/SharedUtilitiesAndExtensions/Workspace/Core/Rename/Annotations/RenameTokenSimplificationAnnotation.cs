@@ -10,6 +10,10 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 {
     internal class RenameTokenSimplificationAnnotation : RenameAnnotation
     {
+        public RenameTokenSimplificationAnnotation(ISymbol renamedSymbol) : base(renamedSymbol)
+        {
+        }
+
         public TextSpan OriginalTextSpan { get; set; }
     }
 }

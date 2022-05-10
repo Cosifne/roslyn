@@ -4,13 +4,13 @@
 
 #nullable disable
 
+using System.Runtime.CompilerServices;
+
 namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 {
     internal class RenameInvalidIdentifierAnnotation : RenameAnnotation
     {
-        public static RenameInvalidIdentifierAnnotation Instance = new();
-
-        private RenameInvalidIdentifierAnnotation()
+        public RenameInvalidIdentifierAnnotation(ISymbol symbol) : base(symbol)
         {
         }
     }

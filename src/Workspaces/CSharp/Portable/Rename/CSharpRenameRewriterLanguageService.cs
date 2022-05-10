@@ -315,7 +315,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 var newSpan = newNode.Span;
 
                 newNode = newNode.WithoutAnnotations(annotation);
-                newNode = _renameAnnotations.WithAdditionalAnnotations(newNode, new RenameNodeSimplificationAnnotation() { OriginalTextSpan = oldSpan });
+                newNode = _renameAnnotations.WithAdditionalAnnotations(newNode, new RenameNodeSimplificationAnnotation(_renamedSymbol) { OriginalTextSpan = oldSpan });
 
                 _renameSpansTracker.AddComplexifiedSpan(_documentId, oldSpan, new TextSpan(oldSpan.Start, newSpan.Length), _modifiedSubSpans);
                 _modifiedSubSpans = null;
@@ -408,6 +408,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
                     var renameAnnotation =
                             new RenameActionAnnotation(
+                                _renamedSymbol,
                                 token.Span,
                                 isRenameLocation,
                                 prefix,
@@ -418,7 +419,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                                 isInvocationExpression: false,
                                 isMemberGroupReference: isMemberGroupReference);
 
-                    newToken = _renameAnnotations.WithAdditionalAnnotations(newToken, renameAnnotation, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = token.Span });
+                    newToken = _renameAnnotations.WithAdditionalAnnotations(newToken, renameAnnotation, new RenameTokenSimplificationAnnotation(_renamedSymbol) { OriginalTextSpan = token.Span });
 
                     _annotatedIdentifierTokens.Add(token);
                     if (_renameRenamableSymbolDeclaration != null && _renamableDeclarationLocation == token.GetLocation())
@@ -489,6 +490,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                                                                                         .WaitAndGetResult_CanCallOnBackground(_cancellationToken);
 
                     var renameAnnotation = new RenameActionAnnotation(
+                                                _renamedSymbol,
                                                 identifierToken.Span,
                                                 isRenameLocation: false,
                                                 prefix: null,
@@ -647,7 +649,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     var oldSpan = oldToken.Span;
                     newToken = createNewStringLiteral(newToken.LeadingTrivia, replacedString, replacedString, newToken.TrailingTrivia);
                     AddModifiedSpan(oldSpan, newToken.Span);
-                    return newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newToken, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = oldSpan }));
+                    return newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newToken, new RenameTokenSimplificationAnnotation(_renamedSymbol) { OriginalTextSpan = oldSpan }));
                 }
 
                 return newToken;
@@ -675,7 +677,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     var oldSpan = trivia.Span;
                     var newTrivia = SyntaxFactory.Comment(replacedString);
                     AddModifiedSpan(oldSpan, newTrivia.Span);
-                    return trivia.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newTrivia, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = oldSpan }));
+                    return trivia.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newTrivia, new RenameTokenSimplificationAnnotation(_renamedSymbol) { OriginalTextSpan = oldSpan }));
                 }
 
                 return trivia;
@@ -713,7 +715,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     else if (newToken.IsKind(SyntaxKind.IdentifierToken) && newToken.Parent.IsKind(SyntaxKind.XmlName) && newToken.ValueText == _originalText)
                     {
                         var newIdentifierToken = SyntaxFactory.Identifier(newToken.LeadingTrivia, _replacementText, newToken.TrailingTrivia);
-                        newToken = newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = oldToken.Span }));
+                        newToken = newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, new RenameTokenSimplificationAnnotation(_renamedSymbol) { OriginalTextSpan = oldToken.Span }));
                         AddModifiedSpan(oldToken.Span, newToken.Span);
                     }
 

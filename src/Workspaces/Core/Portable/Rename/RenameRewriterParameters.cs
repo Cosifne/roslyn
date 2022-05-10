@@ -22,6 +22,7 @@ namespace Microsoft.CodeAnalysis.Rename
         internal readonly string OriginalText;
         internal readonly ICollection<string> PossibleNameConflicts;
         internal readonly RenameAnnotation RenamedSymbolDeclarationAnnotation;
+        internal readonly RenameInvalidIdentifierAnnotation RenameInvalidIdentifierAnnotation;
         internal readonly Dictionary<TextSpan, RenameLocation> RenameLocations;
         internal readonly RenamedSpansTracker RenameSpansTracker;
         internal readonly ISymbol RenameSymbol;
@@ -35,6 +36,7 @@ namespace Microsoft.CodeAnalysis.Rename
 
         public RenameRewriterParameters(
             RenameAnnotation renamedSymbolDeclarationAnnotation,
+            RenameInvalidIdentifierAnnotation renameInvalidIdentifierAnnotation,
             Document document,
             SemanticModel semanticModel,
             SyntaxNode syntaxRoot,
@@ -54,6 +56,7 @@ namespace Microsoft.CodeAnalysis.Rename
             CancellationToken cancellationToken)
         {
             RenamedSymbolDeclarationAnnotation = renamedSymbolDeclarationAnnotation;
+            RenameInvalidIdentifierAnnotation = renameInvalidIdentifierAnnotation;
             Document = document;
             SemanticModel = semanticModel;
             SyntaxRoot = syntaxRoot;

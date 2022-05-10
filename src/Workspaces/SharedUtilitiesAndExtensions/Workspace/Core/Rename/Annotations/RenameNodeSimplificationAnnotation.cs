@@ -11,5 +11,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
     internal class RenameNodeSimplificationAnnotation : RenameAnnotation
     {
         public TextSpan OriginalTextSpan { get; set; }
+
+        public RenameNodeSimplificationAnnotation(ISymbol renamedSymbol) : base(renamedSymbol)
+        {
+        }
     }
 }

@@ -64,6 +64,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         public readonly bool IsInvocationExpression;
 
         public RenameActionAnnotation(
+            ISymbol renamedSymbol,
             TextSpan originalSpan,
             bool isRenameLocation,
             string prefix,
@@ -72,7 +73,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             RenameDeclarationLocationReference[] renameDeclarationLocations,
             bool isNamespaceDeclarationReference,
             bool isInvocationExpression,
-            bool isMemberGroupReference)
+            bool isMemberGroupReference) : base(renamedSymbol)
         {
             this.OriginalSpan = originalSpan;
             this.IsRenameLocation = isRenameLocation;

@@ -9,5 +9,11 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
     internal class RenameAnnotation
     {
         public const string Kind = "Rename";
+        public readonly ISymbol RenamedSymbol;
+
+        public RenameAnnotation(ISymbol renamedSymbol)
+        {
+            RenamedSymbol = renamedSymbol;
+        }
     }
 }

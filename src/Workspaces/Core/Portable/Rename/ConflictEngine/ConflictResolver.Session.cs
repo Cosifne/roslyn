@@ -46,6 +46,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             private readonly List<string> _possibleNameConflicts;
             private readonly HashSet<DocumentId> _documentsIdsToBeCheckedForConflict;
             private readonly AnnotationTable<RenameAnnotation> _renameAnnotations;
+            private readonly RenameInvalidIdentifierAnnotation _renameInvalidIdentifierAnnotation;
 
             private ISet<ConflictLocationInfo> _conflictLocations;
             private bool _replacementTextValid;
@@ -66,7 +67,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 _nonConflictSymbols = nonConflictSymbols;
                 _cancellationToken = cancellationToken;
 
-                _renamedSymbolDeclarationAnnotation = new RenameAnnotation();
+                _renamedSymbolDeclarationAnnotation = new RenameAnnotation(_renameLocationSet.Symbol);
+                _renameInvalidIdentifierAnnotation = new RenameInvalidIdentifierAnnotation(_renameLocationSet.Symbol);
 
                 _conflictLocations = SpecializedCollections.EmptySet<ConflictLocationInfo>();
                 _replacementTextValid = true;
@@ -370,7 +372,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             var originalLocation = conflictAnnotation.OriginalSpan;
                             ImmutableArray<ISymbol> newReferencedSymbols = default;
 
-                            var hasConflict = _renameAnnotations.HasAnnotation(tokenOrNode, RenameInvalidIdentifierAnnotation.Instance);
+                            var hasConflict = _renameAnnotations.HasAnnotation(tokenOrNode, _renameInvalidIdentifierAnnotation);
                             if (!hasConflict)
                             {
                                 newDocumentSemanticModel ??= await newDocument.GetRequiredSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
@@ -800,6 +802,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         // Also annotate nodes that should get complexified (nodes for rename locations + conflict locations)
                         var parameters = new RenameRewriterParameters(
                             _renamedSymbolDeclarationAnnotation,
+                            _renameInvalidIdentifierAnnotation
                             document,
                             semanticModel,
                             originalSyntaxRoot,
