@@ -45,32 +45,74 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             return renameAnnotationRewriter.Visit(parameters.SyntaxRoot)!;
         }
 
-        private class RenameRewriter : CSharpSyntaxRewriter
+        private abstract class AbstractRenameRewriter : CSharpSyntaxRewriter
         {
-            private readonly DocumentId _documentId;
+            protected readonly DocumentId _documentId;
+            protected readonly Solution _solution;
+            protected readonly SemanticModel _semanticModel;
+            protected readonly CancellationToken _cancellationToken;
+            protected readonly RenamedSpansTracker _renameSpansTracker;
+
+            protected readonly ISimplificationService _simplificationService;
+            protected readonly ISemanticFactsService _semanticFactsService;
+
+            protected readonly HashSet<SyntaxToken> _annotatedIdentifierTokens = new();
+            protected readonly HashSet<InvocationExpressionSyntax> _invocationExpressionsNeedingConflictChecks = new();
+            protected readonly AnnotationTable<RenameAnnotation> _renameAnnotations;
+            protected readonly ISet<TextSpan> _conflictLocations;
+
+            protected int _skipRenameForComplexification;
+            protected bool _isProcessingComplexifiedSpans;
+            protected List<(TextSpan oldSpan, TextSpan newSpan)>? _modifiedSubSpans;
+            protected SemanticModel? _speculativeModel;
+            protected int _isProcessingTrivia;
+
+            protected bool AnnotateForComplexification => _skipRenameForComplexification > 0 && !_isProcessingComplexifiedSpans;
+
+            protected AbstractRenameRewriter(RenameRewriterParameters parameters) : base(visitIntoStructuredTrivia: true)
+            {
+                _documentId = parameters.Document.Id;
+                _solution = parameters.OriginalSolution;
+                _cancellationToken = parameters.CancellationToken;
+                _conflictLocations = parameters.ConflictLocationSpans;
+                _semanticModel = parameters.SemanticModel;
+                _renameSpansTracker = parameters.RenameSpansTracker;
+                _renameAnnotations = parameters.RenameAnnotations;
+
+                _simplificationService = parameters.Document.Project.LanguageServices.GetRequiredService<ISimplificationService>();
+                _semanticFactsService = parameters.Document.Project.LanguageServices.GetRequiredService<ISemanticFactsService>();
+            }
+
+            protected void AddModifiedSpan(TextSpan oldSpan, TextSpan newSpan)
+            {
+                newSpan = new TextSpan(oldSpan.Start, newSpan.Length);
+
+                if (!_isProcessingComplexifiedSpans)
+                {
+                    _renameSpansTracker.AddModifiedSpan(_documentId, oldSpan, newSpan);
+                }
+                else
+                {
+                    RoslynDebug.Assert(_modifiedSubSpans != null);
+                    _modifiedSubSpans.Add((oldSpan, newSpan));
+                }
+            }
+        }
+
+        private class RenameRewriter : AbstractRenameRewriter
+        {
             private readonly RenameAnnotation _renameRenamableSymbolDeclaration;
-            private readonly Solution _solution;
             private readonly string _replacementText;
             private readonly string _originalText;
             private readonly ICollection<string> _possibleNameConflicts;
             private readonly Dictionary<TextSpan, RenameLocation> _renameLocations;
-            private readonly ISet<TextSpan> _conflictLocations;
-            private readonly SemanticModel _semanticModel;
-            private readonly CancellationToken _cancellationToken;
 
             private readonly ISymbol _renamedSymbol;
             private readonly IAliasSymbol? _aliasSymbol;
             private readonly Location? _renamableDeclarationLocation;
 
-            private readonly RenamedSpansTracker _renameSpansTracker;
             private readonly bool _isVerbatim;
             private readonly bool _replacementTextValid;
-            private readonly ISimplificationService _simplificationService;
-            private readonly ISemanticFactsService _semanticFactsService;
-            private readonly HashSet<SyntaxToken> _annotatedIdentifierTokens = new();
-            private readonly HashSet<InvocationExpressionSyntax> _invocationExpressionsNeedingConflictChecks = new();
-
-            private readonly AnnotationTable<RenameAnnotation> _renameAnnotations;
 
             /// <summary>
             /// Flag indicating if we should perform a rename inside string literals.
@@ -92,62 +134,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             /// </summary>
             private readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> _stringAndCommentTextSpans;
 
-            public bool AnnotateForComplexification
-            {
-                get
-                {
-                    return _skipRenameForComplexification > 0 && !_isProcessingComplexifiedSpans;
-                }
-            }
-
-            private int _skipRenameForComplexification;
-            private bool _isProcessingComplexifiedSpans;
-            private List<(TextSpan oldSpan, TextSpan newSpan)>? _modifiedSubSpans;
-            private SemanticModel? _speculativeModel;
-            private int _isProcessingTrivia;
-
-            private void AddModifiedSpan(TextSpan oldSpan, TextSpan newSpan)
-            {
-                newSpan = new TextSpan(oldSpan.Start, newSpan.Length);
-
-                if (!_isProcessingComplexifiedSpans)
-                {
-                    _renameSpansTracker.AddModifiedSpan(_documentId, oldSpan, newSpan);
-                }
-                else
-                {
-                    RoslynDebug.Assert(_modifiedSubSpans != null);
-                    _modifiedSubSpans.Add((oldSpan, newSpan));
-                }
-            }
-
             public RenameRewriter(RenameRewriterParameters parameters)
-                : base(visitIntoStructuredTrivia: true)
+                : base(parameters)
             {
-                _documentId = parameters.Document.Id;
                 _renameRenamableSymbolDeclaration = parameters.RenamedSymbolDeclarationAnnotation;
-                _solution = parameters.OriginalSolution;
                 _replacementText = parameters.ReplacementText;
                 _originalText = parameters.OriginalText;
                 _possibleNameConflicts = parameters.PossibleNameConflicts;
                 _renameLocations = parameters.RenameLocations;
-                _conflictLocations = parameters.ConflictLocationSpans;
-                _cancellationToken = parameters.CancellationToken;
-                _semanticModel = parameters.SemanticModel;
                 _renamedSymbol = parameters.RenameSymbol;
                 _replacementTextValid = parameters.ReplacementTextValid;
-                _renameSpansTracker = parameters.RenameSpansTracker;
                 _isRenamingInStrings = parameters.IsRenamingInStrings;
                 _isRenamingInComments = parameters.IsRenamingInComments;
                 _stringAndCommentTextSpans = parameters.StringAndCommentTextSpans;
-                _renameAnnotations = parameters.RenameAnnotations;
 
                 _aliasSymbol = _renamedSymbol as IAliasSymbol;
                 _renamableDeclarationLocation = _renamedSymbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == _semanticModel.SyntaxTree);
                 _isVerbatim = _replacementText.StartsWith("@", StringComparison.Ordinal);
-
-                _simplificationService = parameters.Document.Project.LanguageServices.GetRequiredService<ISimplificationService>();
-                _semanticFactsService = parameters.Document.Project.LanguageServices.GetRequiredService<ISemanticFactsService>();
             }
 
             public override SyntaxNode? Visit(SyntaxNode? node)

@@ -802,7 +802,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         // Also annotate nodes that should get complexified (nodes for rename locations + conflict locations)
                         var parameters = new RenameRewriterParameters(
                             _renamedSymbolDeclarationAnnotation,
-                            _renameInvalidIdentifierAnnotation
+                            _renameInvalidIdentifierAnnotation,
                             document,
                             semanticModel,
                             originalSyntaxRoot,
