@@ -99,8 +99,12 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             }
 
             var session = await Session.CreateAsync(
-                renameLocationSet, renameSymbolDeclarationLocation,
-                replacementText, nonConflictSymbols, cancellationToken).ConfigureAwait(false);
+                renameLocationSet.Solution,
+                renameLocationSet,
+                renameSymbolDeclarationLocation,
+                replacementText,
+                nonConflictSymbols,
+                cancellationToken).ConfigureAwait(false);
             return await session.ResolveConflictsAsync().ConfigureAwait(false);
         }
 
@@ -111,6 +115,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         {
             var symbolInfo = semanticModel.GetSymbolInfo(invocationExpression, cancellationToken);
             return symbolInfo.Symbol == null
+
                 ? default
                 : ImmutableArray.Create(symbolInfo.Symbol);
         }

@@ -13,6 +13,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Roslyn.Utilities;
 using System.Threading;
+using System.ComponentModel;
 
 #if DEBUG
 using System.Diagnostics;
@@ -309,6 +310,17 @@ namespace Roslyn.Utilities
             builder.AddRange(source.Select(selector));
 
             return builder.ToImmutableAndFree();
+        }
+
+        public static ImmutableArray<TResult> SelectManyAsArray<TSource, TResult>(this IEnumerable<TSource> source, Func<TSource, IEnumerable<TResult>> selector)
+        {
+            using var _ = ArrayBuilder<TResult>.GetInstance(out var builder);
+            foreach (var item in source)
+            {
+                builder.AddRange(selector(item));
+            }
+
+            return builder.ToImmutable();
         }
 
         /// <summary>

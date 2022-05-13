@@ -102,57 +102,40 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         /// </summary>
         private class Session
         {
+            private readonly ImmutableHashSet<RenameSymbolContext> _renameSymbolContexts;
+            private readonly Solution _solution;
             private readonly RenameSymbolContext _symbolContext;
             private readonly CancellationToken _cancellationToken;
             private readonly ImmutableArray<ProjectId> _topologicallySortedProjects;
             private readonly AnnotationTable<RenameAnnotation> _renameAnnotations;
             private ISet<ConflictLocationInfo> _conflictLocations;
+            private readonly ImmutableDictionary<DocumentId, HashSet<RenameSymbolContext>> _documentIdsToReanmeSymbolContexts;
 
             private Session(
-                RenameLocations renameLocationSet,
-                Location renameSymbolDeclarationLocation,
-                DocumentId documentIdOfRenameSymbolDeclaration,
-                string originalText,
-                string replacementText,
-                ImmutableHashSet<ISymbol>? nonConflictSymbols,
+                Solution solution,
+                ImmutableHashSet<RenameSymbolContext> renameSymbolContexts,
                 ImmutableArray<ProjectId> topologicallySortedProjects,
-                RenameAnnotation renamedSymbolDeclarationAnnotation,
-                List<string> possibleNameConflicts,
-                ImmutableHashSet<DocumentId> documentsIdsToBeCheckedForConflict,
                 AnnotationTable<RenameAnnotation> renameAnnotations,
-                RenameInvalidIdentifierAnnotation renameInvalidIdentifierAnnotation,
-                ISet<ConflictLocationInfo> conflictLocations,
-                bool replacementTextValid,
-                bool documentOfRenameSymbolHasBeenRenamed,
+                ImmutableDictionary<DocumentId, HashSet<RenameSymbolContext>> documentIdsToReanmeSymbolContexts,
                 CancellationToken cancellationToken)
             {
-                _symbolContext = new RenameSymbolContext(
-                    renameLocationSet,
-                    renameSymbolDeclarationLocation,
-                    documentIdOfRenameSymbolDeclaration,
-                    originalText,
-                    replacementText,
-                    nonConflictSymbols,
-                    possibleNameConflicts,
-                    documentsIdsToBeCheckedForConflict,
-                    renamedSymbolDeclarationAnnotation,
-                    renameInvalidIdentifierAnnotation,
-                    replacementTextValid,
-                    documentOfRenameSymbolHasBeenRenamed);
-                _cancellationToken = cancellationToken;
+                _solution = solution;
+                _renameSymbolContexts = renameSymbolContexts;
                 _topologicallySortedProjects = topologicallySortedProjects;
                 _renameAnnotations = renameAnnotations;
-                _conflictLocations = conflictLocations;
+                _conflictLocations = SpecializedCollections.EmptySet<ConflictLocationInfo>();
+                _documentIdsToReanmeSymbolContexts = documentIdsToReanmeSymbolContexts;
+                _cancellationToken = cancellationToken;
             }
 
             public static async Task<Session> CreateAsync(
+                Solution solution,
                 RenameLocations renameLocationSet,
                 Location renameSymbolDeclarationLocation,
                 string replacementText,
                 ImmutableHashSet<ISymbol>? nonConflictSymbols,
                 CancellationToken cancellationToken)
             {
-                var solution = renameLocationSet.Solution;
                 var symbol = renameLocationSet.Symbol;
                 var dependencyGraph = solution.GetProjectDependencyGraph();
                 var topologicallySortedProjects = dependencyGraph.GetTopologicallySortedProjects(cancellationToken).ToImmutableArray();
@@ -174,23 +157,48 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 var renameInvalidIdentifierAnnotation = new RenameInvalidIdentifierAnnotation(symbol);
                 var replacementTextValid = IsIdentifierValid_Worker(solution, replacementText, documentsIdsToBeCheckedForConflict.Select(d => d.ProjectId));
 
-                return new Session(
+                var symbolContext = new RenameSymbolContext(
                     renameLocationSet,
                     renameSymbolDeclarationLocation,
                     documentIdOfRenameSymbolDeclaration,
                     originalText,
                     replacementText,
                     nonConflictSymbols,
-                    topologicallySortedProjects,
-                    renamedSymbolDeclarationAnnotation,
                     possibleNameConflicts,
                     documentsIdsToBeCheckedForConflict,
-                    new AnnotationTable<RenameAnnotation>(RenameAnnotation.Kind),
+                    renamedSymbolDeclarationAnnotation,
                     renameInvalidIdentifierAnnotation,
-                    SpecializedCollections.EmptySet<ConflictLocationInfo>(),
                     replacementTextValid,
-                    documentOfRenameSymbolHasBeenRenamed: false,
+                    documentOfRenameSymbolHasBeenRenamed: false);
+                var documentIdsToReanmeSymbolContexts = GroupRenameContextByDocumentId(ImmutableHashSet.Create(symbolContext));
+                return new Session(
+                    solution,
+                    ImmutableHashSet.Create(symbolContext),
+                    topologicallySortedProjects,
+                    new AnnotationTable<RenameAnnotation>(RenameAnnotation.Kind),
+                    documentIdsToReanmeSymbolContexts,
                     cancellationToken: cancellationToken);
+            }
+
+            private static ImmutableDictionary<DocumentId, HashSet<RenameSymbolContext>> GroupRenameContextByDocumentId(ImmutableHashSet<RenameSymbolContext> renameSymbolContexts)
+            {
+                using var _ = PooledDictionary<DocumentId, HashSet<RenameSymbolContext>>.GetInstance(out var builder);
+                foreach (var context in renameSymbolContexts)
+                {
+                    foreach (var documentId in context.DocumentsIdsToBeCheckedForConflict)
+                    {
+                        if (builder.TryGetValue(documentId, out var symbolContextSet))
+                        {
+                            symbolContextSet.Add(context);
+                        }
+                        else
+                        {
+                            builder[documentId] = new HashSet<RenameSymbolContext>() { context };
+                        }
+                    }
+                }
+
+                return builder.ToImmutableDictionary();
             }
 
             // The method which performs rename, resolves the conflict locations and returns the result of the rename operation
@@ -198,9 +206,13 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             {
                 try
                 {
-                    var baseSolution = _symbolContext.RenameLocationSet.Solution;
+                    var baseSolution = _solution;
+
+                    // ProjectId -> Documents -> SymbolContext
+                    var allDocumentsToBeCheckedForConflict = _renameSymbolContexts.SelectManyAsArray(context => context.DocumentsIdsToBeCheckedForConflict);
+
                     // Process rename one project at a time to improve caching and reduce syntax tree serialization.
-                    var documentsGroupedByTopologicallySortedProjectId = _symbolContext.DocumentsIdsToBeCheckedForConflict
+                    var documentsGroupedByTopologicallySortedProjectId = allDocumentsToBeCheckedForConflict
                         .GroupBy(d => d.ProjectId)
                         .OrderBy(g => _topologicallySortedProjects.IndexOf(g.Key));
 
@@ -765,7 +777,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     // get the renamed symbol in complexified new solution
                     var start = _symbolContext.DocumentOfRenameSymbolHasBeenRenamed
                         ? conflictResolution.GetAdjustedTokenStartingPosition(_symbolContext.RenameSymbolDeclarationLocation.SourceSpan.Start, _symbolContext.DocumentIdOfRenameSymbolDeclaration)
-                        :  _symbolContext.RenameSymbolDeclarationLocation.SourceSpan.Start;
+                        : _symbolContext.RenameSymbolDeclarationLocation.SourceSpan.Start;
 
                     var document = conflictResolution.CurrentSolution.GetRequiredDocument(_symbolContext.DocumentIdOfRenameSymbolDeclaration);
                     var newSymbol = await SymbolFinder.FindSymbolAtPositionAsync(document, start, cancellationToken: _cancellationToken).ConfigureAwait(false);
@@ -882,6 +894,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         var document = originalSolution.GetRequiredDocument(documentId);
                         var semanticModel = await document.GetRequiredSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
                         var originalSyntaxRoot = await semanticModel.SyntaxTree.GetRootAsync(_cancellationToken).ConfigureAwait(false);
+                        var reanemSymbolContexts = _documentIdsToReanmeSymbolContexts[documentId];
 
                         // Get all rename locations for the current document.
                         var allTextSpansInSingleSourceTree = renameLocations
@@ -903,7 +916,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         // Annotate all nodes with a RenameLocation annotations to record old locations & old referenced symbols.
                         // Also annotate nodes that should get complexified (nodes for rename locations + conflict locations)
                         var parameters = new RenameRewriterParameters(
-                            _renamedSymbolDeclarationAnnotation,
+                            _symbolContext.RenamedSymbolDeclarationAnnotation,
                             _symbolContext.RenameInvalidIdentifierAnnotation,
                             document,
                             semanticModel,
