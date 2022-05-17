@@ -219,18 +219,23 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 try
                 {
                     // Process rename one project at a time to improve caching and reduce syntax tree serialization.
-                    var documentsGroupedByTopologicallySortedProjectId = _subsessions.SelectManyAsArrayAsync _documentsIdsToBeCheckedForConflict
+                    var documentsGroupedByTopologicallySortedProjectId = _subsessions.SelectManyAsArray(session => session.DocumentsIdsToBeCheckedForConflict)
                         .GroupBy(d => d.ProjectId)
                         .OrderBy(g => _topologicallySortedProjects.IndexOf(g.Key));
 
                     var renamedSpansTracker = new RenamedSpansTracker();
-                    var conflictResolution = new MutableConflictResolution(baseSolution, renamedSpansTracker, _replacementText, _replacementTextValid);
+                    var conflictResolution = new MutableConflictResolution(
+                        _baseSolution,
+                        renamedSpansTracker,
+                        symbolToIsReplacementTextValid: _subsessions.ToImmutableDictionary(
+                            keySelector: session => session.RenameLocationSet.Symbol,
+                            elementSelector: session => session.ReplacementTextValid));
 
                     var intermediateSolution = conflictResolution.OldSolution;
                     foreach (var documentsByProject in documentsGroupedByTopologicallySortedProjectId)
                     {
                         var documentIdsThatGetsAnnotatedAndRenamed = new HashSet<DocumentId>(documentsByProject);
-                        using (baseSolution.Services.CacheService?.EnableCaching(documentsByProject.Key))
+                        using (_baseSolution.Services.CacheService?.EnableCaching(documentsByProject.Key))
                         {
                             // Rename is going to be in 5 phases.
                             // 1st phase - Does a simple token replacement
@@ -250,7 +255,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                                 //    If the node happens to contain a token that needs to be renamed then we annotate it and rename it after expansion else just expand and proceed
                                 // 3. Through the whole process we maintain a map of the oldspan to newspan. In case of expansion & rename, we map the expanded node and the renamed token
                                 conflictResolution.UpdateCurrentSolution(await AnnotateAndRename_WorkerAsync(
-                                    baseSolution,
+                                    _baseSolution,
                                     conflictResolution.CurrentSolution,
                                     documentIdsThatGetsAnnotatedAndRenamed,
                                     _renameLocationSet.Locations,
@@ -346,17 +351,22 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 #endif
 
                     // Step 5: Rename declaration files
-                    if (RenameOptions.RenameFile)
+                    foreach (var subsession in _subsessions)
                     {
-                        var definitionLocations = _renameLocationSet.Symbol.Locations;
-                        var definitionDocuments = definitionLocations
-                            .Select(l => conflictResolution.OldSolution.GetDocument(l.SourceTree))
-                            .Distinct();
-
-                        if (definitionDocuments.Count() == 1 && _replacementTextValid)
+                        if (subsession.RenameOptions.RenameFile)
                         {
-                            // At the moment, only single document renaming is allowed
-                            conflictResolution.RenameDocumentToMatchNewSymbol(definitionDocuments.Single());
+                            var definitionLocations = subsession.RenameLocationSet.Symbol.Locations;
+                            var definitionDocuments = definitionLocations
+                                .Select(l => conflictResolution.OldSolution.GetDocument(l.SourceTree))
+                                .Distinct();
+
+                            if (definitionDocuments.Count() == 1 && subsession.ReplacementTextValid)
+                            {
+                                // At the moment, only single document renaming is allowed
+                                conflictResolution.RenameDocumentToMatchNewSymbol(
+                                    subsession.ReplacementText,
+                                    definitionDocuments.Single());
+                            }
                         }
                     }
 

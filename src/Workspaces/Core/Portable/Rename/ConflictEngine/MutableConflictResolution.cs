@@ -36,22 +36,17 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         public readonly Solution OldSolution;
 
         /// <summary>
-        /// Whether the text that was resolved with was even valid. This may be false if the
-        /// identifier was not valid in some language that was involved in the rename.
+        /// A dictionary which key is the symbol renamed during the conflict resolution, and the value is whether the replacementText is valid.
+        /// The value may be false if the identifier was not valid in some language that was involved in the rename.
         /// </summary>
-        public readonly bool ReplacementTextValid;
-
-        /// <summary>
-        /// The original text that is the rename replacement.
-        /// </summary>
-        public readonly string ReplacementText;
+        public readonly ImmutableDictionary<ISymbol, bool> SymbolToIsReplacementTextValid;
 
         /// <summary>
         /// The solution snapshot as it is being updated with specific rename steps.
         /// </summary>
         public Solution CurrentSolution { get; private set; }
 
-        private (DocumentId documentId, string newName) _renamedDocument;
+        private readonly Dictionary<DocumentId, string> _renamedDocumentToNewName = new();
 
         public MutableConflictResolution(string errorMessage)
             => ErrorMessage = errorMessage;
@@ -59,15 +54,13 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         public MutableConflictResolution(
             Solution oldSolution,
             RenamedSpansTracker renamedSpansTracker,
-            string replacementText,
-            bool replacementTextValid)
+            ImmutableDictionary<ISymbol, bool> symbolToIsReplacementTextValid)
         {
             OldSolution = oldSolution;
             CurrentSolution = oldSolution;
             _renamedSpansTracker = renamedSpansTracker;
-            ReplacementText = replacementText;
-            ReplacementTextValid = replacementTextValid;
             RelatedLocations = new List<RelatedLocation>();
+            SymbolToIsReplacementTextValid = symbolToIsReplacementTextValid;
         }
 
         internal void ClearDocuments(IEnumerable<DocumentId> conflictLocationDocumentIds)
@@ -109,10 +102,10 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             return intermediateSolution;
         }
 
-        internal void RenameDocumentToMatchNewSymbol(Document document)
+        internal void RenameDocumentToMatchNewSymbol(string replacementText, Document document)
         {
             var extension = Path.GetExtension(document.Name);
-            var newName = Path.ChangeExtension(ReplacementText, extension);
+            var newName = Path.ChangeExtension(replacementText, extension);
 
             // If possible, check that the new file name is unique to on disk files as well 
             // as solution items.
@@ -134,14 +127,14 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             return;
                         }
 
-                        var nameWithoutExtension = ReplacementText + $"_{versionNumber++}";
+                        var nameWithoutExtension = replacementText + $"_{versionNumber++}";
                         newName = Path.ChangeExtension(nameWithoutExtension, extension);
                         newDocumentFilePath = Path.Combine(directory, newName);
                     }
                 }
             });
 
-            _renamedDocument = (document.Id, newName);
+            _renamedDocumentToNewName[document.Id] = newName;
         }
 
         public int GetAdjustedTokenStartingPosition(int startingPosition, DocumentId documentId)
@@ -177,8 +170,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             return new ConflictResolution(
                 OldSolution,
                 CurrentSolution,
-                ReplacementTextValid,
-                _renamedDocument,
+                SymbolToIsReplacementTextValid,
+                _renamedDocumentToNewName.ToImmutableDictionary(),
                 documentIds,
                 relatedLocations,
                 documentToModifiedSpansMap,

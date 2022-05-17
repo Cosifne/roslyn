@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Rename.ConflictEngine;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -15,7 +16,7 @@ namespace Microsoft.CodeAnalysis.Rename
         public readonly string? ErrorMessage;
 
         private readonly Solution _newSolutionWithoutRenamedDocument;
-        private readonly (DocumentId documentId, string newName) _renamedDocument;
+        private readonly ImmutableDictionary<DocumentId, string> _renamedDocumentToNewName;
 
         public readonly Solution OldSolution;
 
@@ -24,7 +25,7 @@ namespace Microsoft.CodeAnalysis.Rename
         /// </summary>
         public readonly Solution NewSolution;
 
-        public readonly bool ReplacementTextValid;
+        public readonly ImmutableDictionary<ISymbol, bool> RenameSymbolToReplacementTextValid;
 
         /// <summary>
         /// The list of all document ids of documents that have been touched for this rename operation.
@@ -45,8 +46,8 @@ namespace Microsoft.CodeAnalysis.Rename
         public ConflictResolution(
             Solution oldSolution,
             Solution newSolutionWithoutRenamedDocument,
-            bool replacementTextValid,
-            (DocumentId documentId, string newName) renamedDocument,
+            ImmutableDictionary<ISymbol, bool> renameSymbolToReplacementTextValid,
+            ImmutableDictionary<DocumentId, string> renamedDocumentToNewName,
             ImmutableArray<DocumentId> documentIds, ImmutableArray<RelatedLocation> relatedLocations,
             ImmutableDictionary<DocumentId, ImmutableArray<(TextSpan oldSpan, TextSpan newSpan)>> documentToModifiedSpansMap,
             ImmutableDictionary<DocumentId, ImmutableArray<ComplexifiedSpan>> documentToComplexifiedSpansMap,
@@ -55,17 +56,22 @@ namespace Microsoft.CodeAnalysis.Rename
             ErrorMessage = null;
             OldSolution = oldSolution;
             _newSolutionWithoutRenamedDocument = newSolutionWithoutRenamedDocument;
-            ReplacementTextValid = replacementTextValid;
-            _renamedDocument = renamedDocument;
+            RenameSymbolToReplacementTextValid = renameSymbolToReplacementTextValid;
+            _renamedDocumentToNewName = renamedDocumentToNewName;
             DocumentIds = documentIds;
             RelatedLocations = relatedLocations;
             _documentToModifiedSpansMap = documentToModifiedSpansMap;
             _documentToComplexifiedSpansMap = documentToComplexifiedSpansMap;
             _documentToRelatedLocationsMap = documentToRelatedLocationsMap;
 
-            NewSolution = _renamedDocument.documentId == null
-                ? _newSolutionWithoutRenamedDocument
-                : _newSolutionWithoutRenamedDocument.WithDocumentName(_renamedDocument.documentId, _renamedDocument.newName);
+            NewSolution = _newSolutionWithoutRenamedDocument;
+            if (!_renamedDocumentToNewName.IsEmpty)
+            {
+                foreach (var (renamedDocumentId, newName) in _renamedDocumentToNewName)
+                {
+                    NewSolution = NewSolution.WithDocumentName(renamedDocumentId, newName);
+                }
+            }
         }
 
         public ImmutableArray<(TextSpan oldSpan, TextSpan newSpan)> GetComplexifiedSpans(DocumentId documentId)
