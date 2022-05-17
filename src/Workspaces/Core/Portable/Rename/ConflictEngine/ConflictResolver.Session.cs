@@ -33,7 +33,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         private class Session
         {
             private readonly Solution _baseSolution;
-            private readonly ImmutableArray<SymbolSubsession> _subsessions;
+            private readonly ImmutableArray<SymbolSession> _symbolSessions;
+            private readonly ImmutableDictionary<DocumentId, HashSet<SymbolSession>> _documentIdToAffectSymbolSessions;
 
             // Set of All Locations that will be renamed (does not include non-reference locations that need to be checked for conflicts)
             //private readonly RenameLocations _renameLocationSet;
@@ -61,14 +62,16 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
             private Session(
                 Solution solution,
-                ImmutableArray<SymbolSubsession> subsessions,
                 ImmutableArray<ProjectId> topologicallySortedProjects,
+                ImmutableArray<SymbolSession> symbolSessions,
+                ImmutableDictionary<DocumentId, HashSet<SymbolSession>> documentIdToAffectSymbolSessions,
                 CodeCleanupOptionsProvider fallbackOptions,
                 CancellationToken cancellationToken)
             {
                 _baseSolution = solution;
-                _subsessions = subsessions;
                 _topologicallySortedProjects = topologicallySortedProjects;
+                _symbolSessions = symbolSessions;
+                _documentIdToAffectSymbolSessions = documentIdToAffectSymbolSessions;
                 _fallbackOptions = fallbackOptions;
                 _conflictLocations = SpecializedCollections.EmptySet<ConflictLocationInfo>();
                 _renameAnnotations = new AnnotationTable<RenameAnnotation>(RenameAnnotation.Kind);
@@ -77,14 +80,33 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
             public static async Task<Session> CreateAsync(
                 Solution solution,
-                ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+                ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
                 CodeCleanupOptionsProvider fallbackOptions,
                 CancellationToken cancellationToken)
             {
                 var dependencyGraph = solution.GetProjectDependencyGraph();
                 var topologicallySortedProjects = dependencyGraph.GetTopologicallySortedProjects(cancellationToken).ToImmutableArray();
-                using var _ = ArrayBuilder<SymbolSubsession>.GetInstance(out var subsessionBuilder);
-                foreach (var symbolInfo in renameSymbolsInfo)
+                var symbolSessions = await CreateSymbolSessionsAsync(solution, renameSymbolsInfo, cancellationToken).ConfigureAwait(false);
+
+                // Create a map from each documentId in documentsIdNeedsToBeCheckForConflict to the affect symbol sessions.
+                // So later when rename & check conflict for a document, we know the symbols need to be renamed within this document.
+                var documentIdToAffectSymbolSessions = GroupSymbolSessionsByDocumentsId(symbolSessions);
+                return new Session(
+                    solution,
+                    topologicallySortedProjects,
+                    symbolSessions,
+                    documentIdToAffectSymbolSessions,
+                    fallbackOptions,
+                    cancellationToken);
+            }
+
+            private static async Task<ImmutableArray<SymbolSession>> CreateSymbolSessionsAsync(
+                Solution solution,
+                ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
+                CancellationToken cancellationToken)
+            {
+                using var _ = ArrayBuilder<SymbolSession>.GetInstance(out var symbolSesssionBuilder);
+                foreach (var (_, symbolInfo) in renameSymbolsInfo)
                 {
                     var renameLocationSet = symbolInfo.RenameLocations;
                     var renameSymbolDeclarationLocation = symbolInfo.RenameLocations.Symbol.Locations.Where(loc => loc.IsInSource).FirstOrDefault();
@@ -105,7 +127,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         cancellationToken).ConfigureAwait(false);
                     var replacementTextValid = IsIdentifierValid_Worker(solution, replacementText, documentsIdsToBeCheckedForConflictBuilder.Select(doc => doc.ProjectId));
 
-                    subsessionBuilder.Add(new SymbolSubsession(
+                    symbolSesssionBuilder.Add(new SymbolSession(
                         renameLocationSet,
                         renameSymbolDeclarationLocation,
                         documentIdOfRenameSymbolDeclaration,
@@ -115,11 +137,31 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         new(),
                         possibleNameConflicts.ToImmutableArray(),
                         documentsIdsToBeCheckedForConflict: documentsIdsToBeCheckedForConflictBuilder.ToImmutableHashSet(),
-                        replacementTextValid,
-                        documentOfRenameSymbolHasBeenRenamed: false));
+                        replacementTextValid));
                 }
 
-                return new Session(solution, subsessionBuilder.ToImmutableArray(), topologicallySortedProjects, fallbackOptions, cancellationToken);
+                return symbolSesssionBuilder.ToImmutableArray();
+            }
+
+            private static ImmutableDictionary<DocumentId, HashSet<SymbolSession>> GroupSymbolSessionsByDocumentsId(ImmutableArray<SymbolSession> symbolSessions)
+            {
+                using var _ = PooledDictionary<DocumentId, HashSet<SymbolSession>>.GetInstance(out var builder);
+                foreach (var session in symbolSessions)
+                {
+                    foreach (var documentId in session.DocumentsIdsToBeCheckedForConflict)
+                    {
+                        if (builder.TryGetValue(documentId, out var sessionSet))
+                        {
+                            sessionSet.Add(session);
+                        }
+                        else
+                        {
+                            builder[documentId] = new HashSet<SymbolSession>() { session };
+                        }
+                    }
+                }
+
+                return builder.ToImmutableDictionary();
             }
 
             //public Session(
@@ -163,7 +205,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 }
             }
 
-            private class SymbolSubsession
+            private class SymbolSession
             {
                 // Set of All Locations that will be renamed (does not include non-reference locations that need to be checked for conflicts)
                 public readonly RenameLocations RenameLocationSet;
@@ -182,11 +224,11 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 public readonly ImmutableHashSet<DocumentId> DocumentsIdsToBeCheckedForConflict;
 
                 public readonly bool ReplacementTextValid;
-                public bool DocumentOfRenameSymbolHasBeenRenamed { get; set; }
+                public bool DocumentOfRenameSymbolHasBeenRenamed { get; set; } = false;
 
                 public SymbolRenameOptions RenameOptions => RenameLocationSet.Options;
 
-                public SymbolSubsession(
+                public SymbolSession(
                     RenameLocations renameLocationSet,
                     Location renameSymbolDeclarationLocation,
                     DocumentId documentIdOfRenameSymbolDeclaration,
@@ -196,8 +238,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     RenameAnnotation renamedSymbolDeclarationAnnotation,
                     ImmutableArray<string> possibleNameConflicts,
                     ImmutableHashSet<DocumentId> documentsIdsToBeCheckedForConflict,
-                    bool replacementTextValid,
-                    bool documentOfRenameSymbolHasBeenRenamed)
+                    bool replacementTextValid)
                 {
                     RenameLocationSet = renameLocationSet;
                     RenameSymbolDeclarationLocation = renameSymbolDeclarationLocation;
@@ -209,7 +250,6 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     PossibleNameConflicts = possibleNameConflicts;
                     DocumentsIdsToBeCheckedForConflict = documentsIdsToBeCheckedForConflict;
                     ReplacementTextValid = replacementTextValid;
-                    DocumentOfRenameSymbolHasBeenRenamed = documentOfRenameSymbolHasBeenRenamed;
                 }
             }
 
@@ -219,7 +259,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 try
                 {
                     // Process rename one project at a time to improve caching and reduce syntax tree serialization.
-                    var documentsGroupedByTopologicallySortedProjectId = _subsessions.SelectManyAsArray(session => session.DocumentsIdsToBeCheckedForConflict)
+                    var documentsGroupedByTopologicallySortedProjectId = _symbolSessions.SelectManyAsArray(session => session.DocumentsIdsToBeCheckedForConflict)
                         .GroupBy(d => d.ProjectId)
                         .OrderBy(g => _topologicallySortedProjects.IndexOf(g.Key));
 
@@ -227,7 +267,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     var conflictResolution = new MutableConflictResolution(
                         _baseSolution,
                         renamedSpansTracker,
-                        symbolToIsReplacementTextValid: _subsessions.ToImmutableDictionary(
+                        symbolToIsReplacementTextValid: _symbolSessions.ToImmutableDictionary(
                             keySelector: session => session.RenameLocationSet.Symbol,
                             elementSelector: session => session.ReplacementTextValid));
 
@@ -351,7 +391,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 #endif
 
                     // Step 5: Rename declaration files
-                    foreach (var subsession in _subsessions)
+                    foreach (var subsession in _symbolSessions)
                     {
                         if (subsession.RenameOptions.RenameFile)
                         {

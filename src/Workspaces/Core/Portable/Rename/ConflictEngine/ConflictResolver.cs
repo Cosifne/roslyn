@@ -16,6 +16,7 @@ using Microsoft.CodeAnalysis.ErrorReporting;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Internal.Log;
 using Microsoft.CodeAnalysis.LanguageServices;
+using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.Remote;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Roslyn.Utilities;
@@ -83,7 +84,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         private static async Task<ConflictResolution> ResolveConflictsInCurrentProcressAsync(
             Solution solution,
-            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+            ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
         {
             var resolution = await ResolveMutableConflictsAsync(
@@ -104,11 +105,11 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         private static async Task<MutableConflictResolution> ResolveMutableConflictsAsync(
             Solution solution,
-            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+            ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var renamedSymbolNotInSource = renameSymbolsInfo.FirstOrDefault(info => info.RenameLocations.Symbol.Locations.Any(l => !l.IsInSource));
+            var renamedSymbolNotInSource = renameSymbolsInfo.Values.FirstOrDefault(info => info.RenameLocations.Symbol.Locations.Any(l => !l.IsInSource));
             if (renamedSymbolNotInSource != null)
             {
                 // Symbol "{0}" is not from source.
@@ -120,7 +121,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 throw ExceptionUtilities.UnexpectedValue(renameSymbolsInfo);
             }
 
-            var fallbackOptions = renameSymbolsInfo.First().RenameLocations.FallbackOptions;
+            var fallbackOptions = renameSymbolsInfo.First().Value.RenameLocations.FallbackOptions;
             var session = await Session.CreateAsync(solution, renameSymbolsInfo, fallbackOptions, cancellationToken).ConfigureAwait(false);
             return await session.ResolveConflictsAsync().ConfigureAwait(false);
         }
@@ -141,9 +142,10 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 return new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renameLocationSet.Symbol.Name));
             }
 
+            var RenameSymbolInfo = new RenameSymbolInfo(replacementText, nonConflictSymbols, renameLocationSet);
             var session = await Session.CreateAsync(
                 renameLocationSet.Solution,
-                ImmutableArray.Create(new RenameSymbolInfo(replacementText, nonConflictSymbols, renameLocationSet)),
+                ImmutableDictionary<ISymbol, RenameSymbolInfo>.Empty.Add(renameLocationSet.Symbol, RenameSymbolInfo),
                 renameLocationSet.FallbackOptions,
                  cancellationToken).ConfigureAwait(false);
             return await session.ResolveConflictsAsync().ConfigureAwait(false);
@@ -197,7 +199,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             return conflictResolution.ReplacementTextValid && renamedSymbol != null && renamedSymbol.Locations.Any(static loc => loc.IsInSource);
         }
 
-        private async Task AddImplicitConflictsAsync(
+        private static async Task AddImplicitConflictsAsync(
             ISymbol renamedSymbol,
             ISymbol originalSymbol,
             IEnumerable<ReferenceLocation> implicitReferenceLocations,
