@@ -38,6 +38,16 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         private const string s_metadataNameSeparators = " .,:<`>()\r\n";
 
         internal static async Task<ConflictResolution> ResolveConflictsAsync(
+            Solution solution,
+            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var resolution = await ResolveMutableConflictsAsync(solution, renameSymbolsInfo, cancellationToken).ConfigureAwait(false);
+            return resolution.ToConflictResolution();
+        }
+
+        internal static async Task<ConflictResolution> ResolveConflictsAsync(
             RenameLocations renameLocationSet,
             string replacementText,
             ImmutableHashSet<ISymbol>? nonConflictSymbols,
@@ -71,6 +81,16 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 renameLocationSet, replacementText, nonConflictSymbols, cancellationToken).ConfigureAwait(false);
         }
 
+        private static async Task<ConflictResolution> ResolveConflictsInCurrentProcressAsync(
+            Solution solution,
+            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+            CancellationToken cancellationToken)
+        {
+            var resolution = await ResolveMutableConflictsAsync(
+                solution, renameSymbolsInfo, cancellationToken).ConfigureAwait(false);
+            return resolution.ToConflictResolution();
+        }
+
         private static async Task<ConflictResolution> ResolveConflictsInCurrentProcessAsync(
             RenameLocations renameLocationSet,
             string replacementText,
@@ -80,6 +100,23 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             var resolution = await ResolveMutableConflictsAsync(
                 renameLocationSet, replacementText, nonConflictSymbols, cancellationToken).ConfigureAwait(false);
             return resolution.ToConflictResolution();
+        }
+
+        private static Task<MutableConflictResolution> ResolveMutableConflictsAsync(
+            Solution solution,
+            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var renamedSymbolNotInSource = renameSymbolsInfo.FirstOrDefault(info => info.RenameLocations.Symbol.Locations.Any(l => !l.IsInSource));
+            if (renamedSymbolNotInSource != null)
+            {
+                // Symbol "{0}" is not from source.
+                return Task.FromResult(new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renamedSymbolNotInSource.RenameLocations.Symbol.Name)));
+            }
+
+            var session = new Session();
+            return session.ResolveConflictsAsync();
         }
 
         private static Task<MutableConflictResolution> ResolveMutableConflictsAsync(
