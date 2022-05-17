@@ -236,7 +236,7 @@ namespace Microsoft.CodeAnalysis.Rename
             {
                 // Consider using the new FAR API to get all the rename locations in one batched call. 
                 var renamelocations = await FindRenameLocationsAsync(solution, symbol, renameOptions, fallbackOptions, cancellationToken).ConfigureAwait(false);
-                builder.Add(new RenameSymbolInfo(newName, renameOptions, nonConflictSymbols, renamelocations));
+                builder.Add(new RenameSymbolInfo(newName, nonConflictSymbols, renamelocations));
             }
 
             return await RenameLocations.ResolveConflictsAsync(solution, builder.ToImmutable(), cancellationToken).ConfigureAwait(false);

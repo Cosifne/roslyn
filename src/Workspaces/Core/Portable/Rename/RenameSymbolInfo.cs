@@ -13,16 +13,13 @@ namespace Microsoft.CodeAnalysis.Rename
     {
         public string ReplacementText { get; }
 
-        public SymbolRenameOptions Options { get; }
-
         public ImmutableHashSet<ISymbol>? NonConflictSymbols { get; }
 
         public RenameLocations RenameLocations { get; }
 
-        public RenameSymbolInfo(string replacementText, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols, RenameLocations renameLocations)
+        public RenameSymbolInfo(string replacementText, ImmutableHashSet<ISymbol>? nonConflictSymbols, RenameLocations renameLocations)
         {
             ReplacementText = replacementText;
-            Options = options;
             NonConflictSymbols = nonConflictSymbols;
             RenameLocations = renameLocations;
         }

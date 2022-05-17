@@ -102,7 +102,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             return resolution.ToConflictResolution();
         }
 
-        private static Task<MutableConflictResolution> ResolveMutableConflictsAsync(
+        private static async Task<MutableConflictResolution> ResolveMutableConflictsAsync(
             Solution solution,
             ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
@@ -112,14 +112,20 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             if (renamedSymbolNotInSource != null)
             {
                 // Symbol "{0}" is not from source.
-                return Task.FromResult(new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renamedSymbolNotInSource.RenameLocations.Symbol.Name)));
+                return new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renamedSymbolNotInSource.RenameLocations.Symbol.Name));
             }
 
-            var session = new Session();
-            return session.ResolveConflictsAsync();
+            if (renameSymbolsInfo.IsEmpty)
+            {
+                throw ExceptionUtilities.UnexpectedValue(renameSymbolsInfo);
+            }
+
+            var fallbackOptions = renameSymbolsInfo.First().RenameLocations.FallbackOptions;
+            var session = await Session.CreateAsync(solution, renameSymbolsInfo, fallbackOptions, cancellationToken).ConfigureAwait(false);
+            return await session.ResolveConflictsAsync().ConfigureAwait(false);
         }
 
-        private static Task<MutableConflictResolution> ResolveMutableConflictsAsync(
+        private static async Task<MutableConflictResolution> ResolveMutableConflictsAsync(
             RenameLocations renameLocationSet,
             string replacementText,
             ImmutableHashSet<ISymbol>? nonConflictSymbols,
@@ -132,13 +138,15 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             if (renameSymbolDeclarationLocation == null)
             {
                 // Symbol "{0}" is not from source.
-                return Task.FromResult(new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renameLocationSet.Symbol.Name)));
+                return new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renameLocationSet.Symbol.Name));
             }
 
-            var session = new Session(
-                renameLocationSet, renameSymbolDeclarationLocation,
-                replacementText, nonConflictSymbols, cancellationToken);
-            return session.ResolveConflictsAsync();
+            var session = await Session.CreateAsync(
+                renameLocationSet.Solution,
+                ImmutableArray.Create(new RenameSymbolInfo(replacementText, nonConflictSymbols, renameLocationSet)),
+                renameLocationSet.FallbackOptions,
+                 cancellationToken).ConfigureAwait(false);
+            return await session.ResolveConflictsAsync().ConfigureAwait(false);
         }
 
         /// <summary>
