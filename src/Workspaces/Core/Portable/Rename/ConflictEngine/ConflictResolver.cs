@@ -197,7 +197,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             return conflictResolution.ReplacementTextValid && renamedSymbol != null && renamedSymbol.Locations.Any(static loc => loc.IsInSource);
         }
 
-        private static async Task AddImplicitConflictsAsync(
+        private async Task AddImplicitConflictsAsync(
             ISymbol renamedSymbol,
             ISymbol originalSymbol,
             IEnumerable<ReferenceLocation> implicitReferenceLocations,
