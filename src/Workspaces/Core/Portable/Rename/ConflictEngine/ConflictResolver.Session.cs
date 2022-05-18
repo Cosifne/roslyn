@@ -327,9 +327,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                                     _baseSolution,
                                     conflictResolution.CurrentSolution,
                                     documentIdsThatGetsAnnotatedAndRenamed,
-                                    _renameLocationSet.Locations,
-                                    renamedSpansTracker,
-                                    _replacementTextValid).ConfigureAwait(false));
+                                    renamedSpansTracker).ConfigureAwait(false));
 
                                 // Step 2: Check for conflicts in the renamed solution
                                 var foundResolvableConflicts = await IdentifyConflictsAsync(
