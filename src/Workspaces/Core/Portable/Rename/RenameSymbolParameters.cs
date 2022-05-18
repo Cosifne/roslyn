@@ -11,7 +11,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Rename
 {
-    internal class RenameSymbolParameters
+    internal class RenameRewriterSymbolParameters
     {
         internal readonly bool IsRenamingInStrings;
         internal readonly bool IsRenamingInComments;
@@ -23,5 +23,29 @@ namespace Microsoft.CodeAnalysis.Rename
         internal readonly string ReplacementText;
         internal readonly bool ReplacementTextValid;
         internal readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans;
+
+        public RenameRewriterSymbolParameters(
+            bool isRenamingInStrings,
+            bool isRenamingInComments,
+            string originalText,
+            ICollection<string> possibleNameConflicts,
+            RenameAnnotation renamedSymbolDeclarationAnnotation,
+            Dictionary<TextSpan, RenameLocation> renameLocations,
+            ISymbol renameSymbol,
+            string replacementText,
+            bool replacementTextValid,
+            ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> stringAndCommentTextSpans)
+        {
+            IsRenamingInStrings = isRenamingInStrings;
+            IsRenamingInComments = isRenamingInComments;
+            OriginalText = originalText;
+            PossibleNameConflicts = possibleNameConflicts;
+            RenamedSymbolDeclarationAnnotation = renamedSymbolDeclarationAnnotation;
+            RenameLocations = renameLocations;
+            RenameSymbol = renameSymbol;
+            ReplacementText = replacementText;
+            ReplacementTextValid = replacementTextValid;
+            StringAndCommentTextSpans = stringAndCommentTextSpans;
+        }
     }
 }

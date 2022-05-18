@@ -15,63 +15,87 @@ namespace Microsoft.CodeAnalysis.Rename
     {
         internal readonly CancellationToken CancellationToken;
         internal readonly ISet<TextSpan> ConflictLocationSpans;
-        internal readonly bool IsRenamingInStrings;
-        internal readonly bool IsRenamingInComments;
+        //internal readonly bool IsRenamingInStrings;
+        //internal readonly bool IsRenamingInComments;
         internal readonly Solution OriginalSolution;
         internal readonly SyntaxTree OriginalSyntaxTree;
-        internal readonly string OriginalText;
-        internal readonly ICollection<string> PossibleNameConflicts;
-        internal readonly RenameAnnotation RenamedSymbolDeclarationAnnotation;
-        internal readonly Dictionary<TextSpan, RenameLocation> RenameLocations;
+        //internal readonly string OriginalText;
+        //internal readonly ICollection<string> PossibleNameConflicts;
+        //internal readonly RenameAnnotation RenamedSymbolDeclarationAnnotation;
+        //internal readonly Dictionary<TextSpan, RenameLocation> RenameLocations;
         internal readonly RenamedSpansTracker RenameSpansTracker;
-        internal readonly ISymbol RenameSymbol;
-        internal readonly string ReplacementText;
-        internal readonly bool ReplacementTextValid;
-        internal readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans;
+        //internal readonly ISymbol RenameSymbol;
+        //internal readonly string ReplacementText;
+        //internal readonly bool ReplacementTextValid;
+        //internal readonly ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans;
         internal readonly SyntaxNode SyntaxRoot;
         internal readonly Document Document;
         internal readonly SemanticModel SemanticModel;
         internal readonly AnnotationTable<RenameAnnotation> RenameAnnotations;
+        internal readonly ImmutableHashSet<RenameRewriterSymbolParameters> SymbolParameters;
 
         public RenameRewriterParameters(
-            RenameAnnotation renamedSymbolDeclarationAnnotation,
+            Solution originalSolution,
+            RenamedSpansTracker renameSpansTracker,
             Document document,
             SemanticModel semanticModel,
             SyntaxNode syntaxRoot,
-            string replacementText,
-            string originalText,
-            ICollection<string> possibleNameConflicts,
-            Dictionary<TextSpan, RenameLocation> renameLocations,
-            ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> stringAndCommentTextSpans,
+            ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
             ISet<TextSpan> conflictLocationSpans,
-            Solution originalSolution,
-            ISymbol renameSymbol,
-            bool replacementTextValid,
-            RenamedSpansTracker renameSpansTracker,
-            bool isRenamingInStrings,
-            bool isRenamingInComments,
             AnnotationTable<RenameAnnotation> renameAnnotations,
             CancellationToken cancellationToken)
         {
-            RenamedSymbolDeclarationAnnotation = renamedSymbolDeclarationAnnotation;
-            Document = document;
-            SemanticModel = semanticModel;
-            SyntaxRoot = syntaxRoot;
-            OriginalSyntaxTree = semanticModel.SyntaxTree;
-            ReplacementText = replacementText;
-            OriginalText = originalText;
-            PossibleNameConflicts = possibleNameConflicts;
-            RenameLocations = renameLocations;
-            StringAndCommentTextSpans = stringAndCommentTextSpans;
+            CancellationToken = cancellationToken;
             ConflictLocationSpans = conflictLocationSpans;
             OriginalSolution = originalSolution;
-            RenameSymbol = renameSymbol;
-            ReplacementTextValid = replacementTextValid;
-            CancellationToken = cancellationToken;
             RenameSpansTracker = renameSpansTracker;
-            IsRenamingInStrings = isRenamingInStrings;
-            IsRenamingInComments = isRenamingInComments;
+            SyntaxRoot = syntaxRoot;
+            Document = document;
+            SemanticModel = semanticModel;
             RenameAnnotations = renameAnnotations;
+            SymbolParameters = symbolParameters;
+            OriginalSyntaxTree = semanticModel.SyntaxTree;
         }
+
+        //public RenameRewriterParameters(
+        //    RenameAnnotation renamedSymbolDeclarationAnnotation,
+        //    Document document,
+        //    SemanticModel semanticModel,
+        //    SyntaxNode syntaxRoot,
+        //    string replacementText,
+        //    string originalText,
+        //    ICollection<string> possibleNameConflicts,
+        //    Dictionary<TextSpan, RenameLocation> renameLocations,
+        //    ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> stringAndCommentTextSpans,
+        //    ISet<TextSpan> conflictLocationSpans,
+        //    Solution originalSolution,
+        //    ISymbol renameSymbol,
+        //    bool replacementTextValid,
+        //    RenamedSpansTracker renameSpansTracker,
+        //    bool isRenamingInStrings,
+        //    bool isRenamingInComments,
+        //    AnnotationTable<RenameAnnotation> renameAnnotations,
+        //    CancellationToken cancellationToken)
+        //{
+        //    RenamedSymbolDeclarationAnnotation = renamedSymbolDeclarationAnnotation;
+        //    Document = document;
+        //    SemanticModel = semanticModel;
+        //    SyntaxRoot = syntaxRoot;
+        //    OriginalSyntaxTree = semanticModel.SyntaxTree;
+        //    ReplacementText = replacementText;
+        //    OriginalText = originalText;
+        //    PossibleNameConflicts = possibleNameConflicts;
+        //    RenameLocations = renameLocations;
+        //    StringAndCommentTextSpans = stringAndCommentTextSpans;
+        //    ConflictLocationSpans = conflictLocationSpans;
+        //    OriginalSolution = originalSolution;
+        //    RenameSymbol = renameSymbol;
+        //    ReplacementTextValid = replacementTextValid;
+        //    CancellationToken = cancellationToken;
+        //    RenameSpansTracker = renameSpansTracker;
+        //    IsRenamingInStrings = isRenamingInStrings;
+        //    IsRenamingInComments = isRenamingInComments;
+        //    RenameAnnotations = renameAnnotations;
+        //}
     }
 }

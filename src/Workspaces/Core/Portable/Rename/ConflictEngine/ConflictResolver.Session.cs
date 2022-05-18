@@ -251,6 +251,35 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     DocumentsIdsToBeCheckedForConflict = documentsIdsToBeCheckedForConflict;
                     ReplacementTextValid = replacementTextValid;
                 }
+
+                public RenameRewriterSymbolParameters ToRenameRewriterParametersForDocument(DocumentId documentId)
+                {
+                    //Get all rename locations for the current document.
+                    var renameLocations = RenameLocationSet.Locations;
+                    var allTextSpansInSingleSourceTree = renameLocations
+                        .Where(l => l.DocumentId == documentId && ShouldIncludeLocation(renameLocations, l))
+                        .ToDictionary(l => l.Location.SourceSpan);
+
+                    // All textspan in the document documentId, that requires rename in String or Comment
+                    var stringAndCommentTextSpansInSingleSourceTree = renameLocations
+                        .Where(l => l.DocumentId == documentId && l.IsRenameInStringOrComment)
+                        .GroupBy(l => l.ContainingLocationForStringOrComment)
+                        .ToImmutableDictionary(
+                            g => g.Key,
+                            g => GetSubSpansToRenameInStringAndCommentTextSpans(g.Key, g));
+
+                    return new RenameRewriterSymbolParameters(
+                        isRenamingInStrings: RenameOptions.RenameInStrings,
+                        isRenamingInComments: RenameOptions.RenameInComments,
+                        OriginalText,
+                        PossibleNameConflicts,
+                        RenamedSymbolDeclarationAnnotation,
+                        allTextSpansInSingleSourceTree,
+                        RenameLocationSet.Symbol,
+                        ReplacementText,
+                        ReplacementTextValid,
+                        stringAndCommentTextSpansInSingleSourceTree);
+                }
             }
 
             // The method which performs rename, resolves the conflict locations and returns the result of the rename operation
@@ -941,9 +970,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 Solution originalSolution,
                 Solution partiallyRenamedSolution,
                 HashSet<DocumentId> documentIdsToRename,
-                ISet<RenameLocation> renameLocations,
-                RenamedSpansTracker renameSpansTracker,
-                bool replacementTextValid)
+                RenamedSpansTracker renameSpansTracker)
             {
                 try
                 {
@@ -955,18 +982,10 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         var semanticModel = await document.GetRequiredSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
                         var originalSyntaxRoot = await semanticModel.SyntaxTree.GetRootAsync(_cancellationToken).ConfigureAwait(false);
 
-                        // Get all rename locations for the current document.
-                        var allTextSpansInSingleSourceTree = renameLocations
-                            .Where(l => l.DocumentId == documentId && ShouldIncludeLocation(renameLocations, l))
-                            .ToDictionary(l => l.Location.SourceSpan);
-
-                        // All textspan in the document documentId, that requires rename in String or Comment
-                        var stringAndCommentTextSpansInSingleSourceTree = renameLocations
-                            .Where(l => l.DocumentId == documentId && l.IsRenameInStringOrComment)
-                            .GroupBy(l => l.ContainingLocationForStringOrComment)
-                            .ToImmutableDictionary(
-                                g => g.Key,
-                                g => GetSubSpansToRenameInStringAndCommentTextSpans(g.Key, g));
+                        // Get all the symbols need to rename in this document.
+                        var symbolsRenameParameters = GetRenameRewriterSymbolParametersForDocument(
+                            _documentIdToAffectSymbolSessions[documentId],
+                            documentId);
 
                         var conflictLocationSpans = _conflictLocations
                                                     .Where(t => t.DocumentId == documentId)
@@ -975,22 +994,13 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         // Annotate all nodes with a RenameLocation annotations to record old locations & old referenced symbols.
                         // Also annotate nodes that should get complexified (nodes for rename locations + conflict locations)
                         var parameters = new RenameRewriterParameters(
-                            _renamedSymbolDeclarationAnnotation,
+                            originalSolution,
+                            renameSpansTracker,
                             document,
                             semanticModel,
                             originalSyntaxRoot,
-                            _replacementText,
-                            _originalText,
-                            _possibleNameConflicts,
-                            allTextSpansInSingleSourceTree,
-                            stringAndCommentTextSpansInSingleSourceTree,
+                            symbolsRenameParameters,
                             conflictLocationSpans,
-                            originalSolution,
-                            _renameLocationSet.Symbol,
-                            replacementTextValid,
-                            renameSpansTracker,
-                            RenameOptions.RenameInStrings,
-                            RenameOptions.RenameInComments,
                             _renameAnnotations,
                             _cancellationToken);
 
@@ -1068,6 +1078,19 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 }
 
                 return builder.ToImmutable();
+            }
+
+            private static ImmutableHashSet<RenameRewriterSymbolParameters> GetRenameRewriterSymbolParametersForDocument(
+                HashSet<SymbolSession> symbolSessions,
+                DocumentId documentId)
+            {
+                using var _ = PooledHashSet<RenameRewriterSymbolParameters>.GetInstance(out var builder);
+                foreach (var session in symbolSessions)
+                {
+                    builder.Add(session.ToRenameRewriterParametersForDocument(documentId));
+                }
+
+                return builder.ToImmutableHashSet();
             }
         }
     }
