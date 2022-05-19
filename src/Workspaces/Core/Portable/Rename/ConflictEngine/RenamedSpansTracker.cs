@@ -25,6 +25,10 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
     {
         private readonly Dictionary<DocumentId, List<(TextSpan oldSpan, TextSpan newSpan)>> _documentToModifiedSpansMap = new();
         private readonly Dictionary<DocumentId, List<MutableComplexifiedSpan>> _documentToComplexifiedSpansMap = new();
+        private readonly ImmutableDictionary<DocumentId, bool> _documentToIsAllReplacementTextValid;
+
+        public RenamedSpansTracker(ImmutableDictionary<DocumentId, bool> documentToIsAllReplacementTextValid)
+            => _documentToIsAllReplacementTextValid = documentToIsAllReplacementTextValid;
 
         internal bool IsDocumentChanged(DocumentId documentId)
             => _documentToModifiedSpansMap.ContainsKey(documentId) || _documentToComplexifiedSpansMap.ContainsKey(documentId);
@@ -143,7 +147,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             }
         }
 
-        internal async Task<Solution> SimplifyAsync(Solution solution, IEnumerable<DocumentId> documentIds, bool replacementTextValid, AnnotationTable<RenameAnnotation> renameAnnotations, CodeCleanupOptionsProvider fallbackOptions, CancellationToken cancellationToken)
+        internal async Task<Solution> SimplifyAsync(Solution solution, IEnumerable<DocumentId> documentIds, AnnotationTable<RenameAnnotation> renameAnnotations, CodeCleanupOptionsProvider fallbackOptions, CancellationToken cancellationToken)
         {
             foreach (var documentId in documentIds)
             {
@@ -151,7 +155,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 {
                     var document = solution.GetDocument(documentId);
 
-                    if (replacementTextValid)
+                    if (_documentToIsAllReplacementTextValid[documentId])
                     {
                         var cleanupOptions = await document.GetCodeCleanupOptionsAsync(fallbackOptions, cancellationToken).ConfigureAwait(false);
 

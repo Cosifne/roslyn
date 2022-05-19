@@ -192,11 +192,11 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             return true;
         }
 
-        private static bool IsRenameValid(MutableConflictResolution conflictResolution, ISymbol renamedSymbol)
+        private static bool IsRenameValid(bool replacementTextValid, ISymbol renamedSymbol)
         {
             // if we rename an identifier and it now binds to a symbol from metadata this should be treated as
             // an invalid rename.
-            return conflictResolution.ReplacementTextValid && renamedSymbol != null && renamedSymbol.Locations.Any(static loc => loc.IsInSource);
+            return replacementTextValid && renamedSymbol != null && renamedSymbol.Locations.Any(static loc => loc.IsInSource);
         }
 
         private static async Task AddImplicitConflictsAsync(
@@ -256,6 +256,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         private static async Task AddDeclarationConflictsAsync(
             ISymbol renamedSymbol,
             ISymbol renameSymbol,
+            string replacementText,
             IEnumerable<ISymbol> referencedSymbols,
             MutableConflictResolution conflictResolution,
             IDictionary<Location, Location> reverseMappedLocations,
@@ -322,7 +323,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     // There also might be language specific rules we need to include
                     var languageRenameService = projectOpt.LanguageServices.GetRequiredService<IRenameRewriterLanguageService>();
                     var languageConflicts = await languageRenameService.ComputeDeclarationConflictsAsync(
-                        conflictResolution.ReplacementText,
+                        replacementText,
                         renamedSymbol,
                         renameSymbol,
                         referencedSymbols,
