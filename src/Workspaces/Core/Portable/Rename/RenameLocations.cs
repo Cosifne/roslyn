@@ -233,8 +233,8 @@ namespace Microsoft.CodeAnalysis.Rename
         public Task<ConflictResolution> ResolveConflictsAsync(string replacementText, ImmutableHashSet<ISymbol>? nonConflictSymbols = null, CancellationToken cancellationToken = default)
             => ConflictResolver.ResolveConflictsAsync(this, replacementText, nonConflictSymbols, cancellationToken);
 
-        public static Task<ConflictResolution> ResolveConflictsAsync(Solution solution, ImmutableArray<RenameSymbolInfo> renameSymbolInfo, CancellationToken cancellationToken)
-            => ConflictResolver.ResolveConflictsAsync(solution, renameSymbolInfo, cancellationToken);
+        public static Task<ConflictResolution> ResolveConflictsAsync(Solution solution, ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo, CancellationToken cancellationToken)
+            => ConflictResolver.ResolveConflictsAsync(solution, renameSymbolsInfo, cancellationToken);
 
         public RenameLocations Filter(Func<Location, bool> filter)
             => Create(

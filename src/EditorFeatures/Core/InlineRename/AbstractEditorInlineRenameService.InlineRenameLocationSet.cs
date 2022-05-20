@@ -44,7 +44,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
                 Contract.ThrowIfTrue(conflicts.ErrorMessage != null);
 
-                return new InlineRenameReplacementInfo(conflicts);
+                return new InlineRenameReplacementInfo(conflicts, _renameInfo.RenameSymbol);
             }
         }
     }

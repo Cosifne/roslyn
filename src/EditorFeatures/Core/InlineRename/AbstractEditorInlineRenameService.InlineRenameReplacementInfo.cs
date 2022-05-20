@@ -14,15 +14,19 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         private class InlineRenameReplacementInfo : IInlineRenameReplacementInfo
         {
             private readonly ConflictResolution _conflicts;
+            private readonly ISymbol _renameSymbol;
 
-            public InlineRenameReplacementInfo(ConflictResolution conflicts)
-                => _conflicts = conflicts;
+            public InlineRenameReplacementInfo(ConflictResolution conflicts, ISymbol renameSymbol)
+            {
+                _conflicts = conflicts;
+                _renameSymbol = renameSymbol;
+            }
 
             public IEnumerable<DocumentId> DocumentIds => _conflicts.DocumentIds;
 
             public Solution NewSolution => _conflicts.NewSolution;
 
-            public bool ReplacementTextValid => _conflicts.ReplacementTextValid;
+            public bool ReplacementTextValid => _conflicts.RenameSymbolToReplacementTextValid[_renameSymbol];
 
             public IEnumerable<InlineRenameReplacement> GetReplacements(DocumentId documentId)
             {
@@ -38,8 +42,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 var locationsForDocument = _conflicts.GetRelatedLocationsForDocument(documentId);
 
                 // The RenamedSpansTracker doesn't currently track unresolved conflicts for
-                // unmodified locations.  If the document wasn't modified, we can just use the 
-                // original span as the new span, but otherwise we need to filter out 
+                // unmodified locations.  If the document wasn't modified, we can just use the // original span as the new span, but otherwise we need to filter out 
                 // locations that aren't in modifiedSpans. 
                 if (modifiedSpans.Any())
                 {

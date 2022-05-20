@@ -40,7 +40,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         internal static async Task<ConflictResolution> ResolveConflictsAsync(
             Solution solution,
-            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
+            ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();

@@ -9,19 +9,5 @@ using System.Text;
 
 namespace Microsoft.CodeAnalysis.Rename
 {
-    internal class RenameSymbolInfo
-    {
-        public string ReplacementText { get; }
-
-        public ImmutableHashSet<ISymbol>? NonConflictSymbols { get; }
-
-        public RenameLocations RenameLocations { get; }
-
-        public RenameSymbolInfo(string replacementText, ImmutableHashSet<ISymbol>? nonConflictSymbols, RenameLocations renameLocations)
-        {
-            ReplacementText = replacementText;
-            NonConflictSymbols = nonConflictSymbols;
-            RenameLocations = renameLocations;
-        }
-    }
+    internal record RenameSymbolInfo(string ReplacementText, ImmutableHashSet<ISymbol>? NonConflictSymbols, RenameLocations RenameLocations);
 }

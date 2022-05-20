@@ -146,13 +146,13 @@ namespace Microsoft.CodeAnalysis.Rename
 
         internal static async Task<ConflictResolution> ReanmeSymbolsAsync(
             Solution solution,
-            ImmutableDictionary<ISymbol, (string reName, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols)> renameSymbolsInfo,
+            ImmutableDictionary<ISymbol, (string newName, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols)> renameSymbolsToRenameParameters,
             CodeCleanupOptionsProvider fallbackOptions,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             // TODO: Move this all to OOP.
-            return await RenameSymbolsInCurrentProcessAsync(solution, renameSymbolsInfo, fallbackOptions, cancellationToken).ConfigureAwait(false);
+            return await RenameSymbolsInCurrentProcessAsync(solution, renameSymbolsToRenameParameters, fallbackOptions, cancellationToken).ConfigureAwait(false);
         }
 
         internal static async Task<ConflictResolution> RenameSymbolAsync(
@@ -231,15 +231,15 @@ namespace Microsoft.CodeAnalysis.Rename
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            using var _ = ArrayBuilder<RenameSymbolInfo>.GetInstance(out var builder);
+            using var _ = PooledDictionary<ISymbol, RenameSymbolInfo>.GetInstance(out var builder);
             foreach (var (symbol, (newName, renameOptions, nonConflictSymbols)) in renameSymbolsInfo)
             {
                 // Consider using the new FAR API to get all the rename locations in one batched call. 
                 var renamelocations = await FindRenameLocationsAsync(solution, symbol, renameOptions, fallbackOptions, cancellationToken).ConfigureAwait(false);
-                builder.Add(new RenameSymbolInfo(newName, nonConflictSymbols, renamelocations));
+                builder[symbol] = new RenameSymbolInfo(newName, nonConflictSymbols, renamelocations);
             }
 
-            return await RenameLocations.ResolveConflictsAsync(solution, builder.ToImmutable(), cancellationToken).ConfigureAwait(false);
+            return await RenameLocations.ResolveConflictsAsync(solution, builder.ToImmutableDictionary(), cancellationToken).ConfigureAwait(false);
         }
     }
 }

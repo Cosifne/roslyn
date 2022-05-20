@@ -241,14 +241,21 @@ namespace Microsoft.CodeAnalysis
 
         public static ImmutableArray<TResult> SelectManyAsArray<TItem, TResult>(this ImmutableArray<TItem> source, Func<TItem, IEnumerable<TResult>> selector)
         {
-            using var _ = ArrayBuilder<TResult>.GetInstance(out var builder);
-            foreach (var item in source)
+            var builder = ArrayBuilder<TResult>.GetInstance();
+            try
             {
-                var result = selector(item);
-                builder.AddRange(result);
-            }
+                foreach (var item in source)
+                {
+                    var result = selector(item);
+                    builder.AddRange(result);
+                }
 
-            return builder.ToImmutable();
+                return builder.ToImmutable();
+            }
+            finally
+            {
+                builder.Free();
+            }
         }
 
         public static ValueTask<ImmutableArray<TResult>> SelectManyAsArrayAsync<TItem, TArg, TResult>(this ImmutableArray<TItem> source, Func<TItem, TArg, CancellationToken, ValueTask<ImmutableArray<TResult>>> selector, TArg arg, CancellationToken cancellationToken)
