@@ -172,7 +172,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                         IsVerbatim: symbolParameter.ReplacementText.StartsWith("@", StringComparison.Ordinal),
                         ReplacementTextValid: symbolParameter.ReplacementTextValid,
                         IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
-                        IsRenameingInComments: symbolParameter.IsRenamingInComments,
+                        IsRenamingInComments: symbolParameter.IsRenamingInComments,
                         StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans);
                     foreach (var relatedSpan in symbolParameter.RelatedTextSpans)
                     {
@@ -253,16 +253,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
             public override SyntaxToken VisitToken(SyntaxToken token)
             {
-                var shouldCheckTrivia = _stringAndCommentTextSpans.ContainsKey(token.Span);
+                if (!_renameContexts.TryGetValue(token.Span, out var renameSymbolContext))
+                {
+                    return token;
+                }
+
+                var shouldCheckTrivia = renameSymbolContext.StringAndCommentTextSpans.ContainsKey(token.Span);
                 _isProcessingTrivia += shouldCheckTrivia ? 1 : 0;
                 var newToken = base.VisitToken(token);
                 _isProcessingTrivia -= shouldCheckTrivia ? 1 : 0;
 
                 // Handle Alias annotations
-                newToken = UpdateAliasAnnotation(newToken);
+                newToken = UpdateAliasAnnotation(newToken, renameSymbolContext);
 
                 // Rename matches in strings and comments
-                newToken = RenameWithinToken(token, newToken);
+                newToken = RenameWithinToken(token, newToken, renameSymbolContext);
 
                 // We don't want to annotate XmlName with RenameActionAnnotation
                 if (newToken.Parent.IsKind(SyntaxKind.XmlName))
@@ -270,22 +275,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     return newToken;
                 }
 
-                var isRenameLocation = IsRenameLocation(token);
+                var isRenameLocation = IsRenameLocation(token, renameSymbolContext);
+                var replacementText = renameSymbolContext.ReplacementText;
 
                 // if this is a reference location, or the identifier token's name could possibly
                 // be a conflict, we need to process this token
-                var isOldText = token.ValueText == _originalText;
+                var isOldText = token.ValueText == renameSymbolContext.OriginalText;
                 var tokenNeedsConflictCheck =
                     isRenameLocation ||
-                    token.ValueText == _replacementText ||
+                    token.ValueText == replacementText ||
                     isOldText ||
-                    _possibleNameConflicts.Contains(token.ValueText) ||
-                    IsPossiblyDestructorConflict(token) ||
-                    IsPropertyAccessorNameConflict(token);
+                    renameSymbolContext.PossibleNameConflicts.Contains(token.ValueText) ||
+                    IsPossiblyDestructorConflict(token, replacementText) ||
+                    IsPropertyAccessorNameConflict(token, replacementText);
 
                 if (tokenNeedsConflictCheck)
                 {
-                    newToken = RenameAndAnnotateAsync(token, newToken, isRenameLocation, isOldText).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
+                    newToken = RenameAndAnnotateAsync(token, newToken, isRenameLocation, isOldText, renameSymbolContext).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
 
                     if (!_isProcessingComplexifiedSpans)
                     {
@@ -296,31 +302,31 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return newToken;
             }
 
-            private bool IsPropertyAccessorNameConflict(SyntaxToken token)
-                => IsGetPropertyAccessorNameConflict(token)
-                || IsSetPropertyAccessorNameConflict(token)
-                || IsInitPropertyAccessorNameConflict(token);
+            private static bool IsPropertyAccessorNameConflict(SyntaxToken token, string replacementText)
+                => IsGetPropertyAccessorNameConflict(token, replacementText)
+                || IsSetPropertyAccessorNameConflict(token, replacementText)
+                || IsInitPropertyAccessorNameConflict(token, replacementText);
 
-            private bool IsGetPropertyAccessorNameConflict(SyntaxToken token)
+            private static bool IsGetPropertyAccessorNameConflict(SyntaxToken token, string replacementText)
                 => token.IsKind(SyntaxKind.GetKeyword)
-                && IsNameConflictWithProperty("get", token.Parent as AccessorDeclarationSyntax);
+                && IsNameConflictWithProperty(replacementText, "get", token.Parent as AccessorDeclarationSyntax);
 
-            private bool IsSetPropertyAccessorNameConflict(SyntaxToken token)
+            private static bool IsSetPropertyAccessorNameConflict(SyntaxToken token, string replacementText)
                 => token.IsKind(SyntaxKind.SetKeyword)
-                && IsNameConflictWithProperty("set", token.Parent as AccessorDeclarationSyntax);
+                && IsNameConflictWithProperty(replacementText, "set", token.Parent as AccessorDeclarationSyntax);
 
-            private bool IsInitPropertyAccessorNameConflict(SyntaxToken token)
+            private static bool IsInitPropertyAccessorNameConflict(SyntaxToken token, string replacementText)
                 => token.IsKind(SyntaxKind.InitKeyword)
                 // using "set" here is intentional. The compiler generates set_PropName for both set and init accessors.
-                && IsNameConflictWithProperty("set", token.Parent as AccessorDeclarationSyntax);
+                && IsNameConflictWithProperty(replacementText, "set", token.Parent as AccessorDeclarationSyntax);
 
-            private bool IsNameConflictWithProperty(string prefix, AccessorDeclarationSyntax? accessor)
+            private static bool IsNameConflictWithProperty(string replacementText, string prefix, AccessorDeclarationSyntax? accessor)
                 => accessor?.Parent?.Parent is PropertyDeclarationSyntax property   // 3 null checks in one: accessor -> accessor list -> property declaration
-                && _replacementText.Equals(prefix + "_" + property.Identifier.Text, StringComparison.Ordinal);
+                && replacementText.Equals(prefix + "_" + property.Identifier.Text, StringComparison.Ordinal);
 
-            private bool IsPossiblyDestructorConflict(SyntaxToken token)
+            private static bool IsPossiblyDestructorConflict(SyntaxToken token, string replacementText)
             {
-                return _replacementText == "Finalize" &&
+                return replacementText == "Finalize" &&
                     token.IsKind(SyntaxKind.IdentifierToken) &&
                     token.Parent.IsKind(SyntaxKind.DestructorDeclaration);
             }
@@ -366,7 +372,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return newNode;
             }
 
-            private async Task<SyntaxToken> RenameAndAnnotateAsync(SyntaxToken token, SyntaxToken newToken, bool isRenameLocation, bool isOldText)
+            private async Task<SyntaxToken> RenameAndAnnotateAsync(SyntaxToken token, SyntaxToken newToken, bool isRenameLocation, bool isOldText, RenameSymbolContext renameSymbolContext)
             {
                 try
                 {
@@ -378,12 +384,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                             var annotation = _renameAnnotations.GetAnnotations(token).OfType<RenameActionAnnotation>().FirstOrDefault();
                             if (annotation != null)
                             {
-                                newToken = RenameToken(token, newToken, annotation.Prefix, annotation.Suffix);
+                                newToken = RenameToken(token, newToken, annotation.Prefix, annotation.Suffix, renameSymbolContext);
                                 AddModifiedSpan(annotation.OriginalSpan, newToken.Span);
                             }
                             else
                             {
-                                newToken = RenameToken(token, newToken, prefix: null, suffix: null);
+                                newToken = RenameToken(token, newToken, prefix: null, suffix: null, renameSymbolContext);
                             }
                         }
 
@@ -393,7 +399,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     var symbols = RenameUtilities.GetSymbolsTouchingPosition(token.Span.Start, _semanticModel, _solution.Workspace.Services, _cancellationToken);
 
                     string? suffix = null;
-                    var prefix = isRenameLocation && _renameLocations[token.Span].IsRenamableAccessor
+                    var prefix = isRenameLocation && renameSymbolContext.RenameLocations[token.Span].IsRenamableAccessor
                         ? newToken.ValueText.Substring(0, newToken.ValueText.IndexOf('_') + 1)
                         : null;
 
@@ -431,7 +437,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     if (isRenameLocation && !this.AnnotateForComplexification)
                     {
                         var oldSpan = token.Span;
-                        newToken = RenameToken(token, newToken, prefix, suffix);
+                        newToken = RenameToken(token, newToken, prefix, suffix, renameSymbolContext);
 
                         AddModifiedSpan(oldSpan, newToken.Span);
                     }
@@ -462,9 +468,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     newToken = _renameAnnotations.WithAdditionalAnnotations(newToken, renameAnnotation, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = token.Span });
 
                     _annotatedIdentifierTokens.Add(token);
-                    if (_renameRenamableSymbolDeclaration != null && _renamableDeclarationLocation == token.GetLocation())
+
+                    var declarationLocation = renameSymbolContext.RenamableDeclarationLocation;
+                    if (declarationLocation != null && declarationLocation == token.GetLocation())
                     {
-                        newToken = _renameAnnotations.WithAdditionalAnnotations(newToken, _renameRenamableSymbolDeclaration);
+                        newToken = _renameAnnotations.WithAdditionalAnnotations(newToken, renameSymbolContext.RenameRenamableSymbolDeclarationAnnotation);
                     }
 
                     return newToken;
@@ -561,11 +569,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return result;
             }
 
-            private bool IsRenameLocation(SyntaxToken token)
+            private bool IsRenameLocation(SyntaxToken token, RenameSymbolContext renameSymbolContext)
             {
                 if (!_isProcessingComplexifiedSpans)
                 {
-                    return _renameLocations.ContainsKey(token.Span);
+                    return renameSymbolContext.RenameLocations.ContainsKey(token.Span);
                 }
                 else
                 {
@@ -584,9 +592,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     if (token.Parent is SimpleNameSyntax && !token.IsKind(SyntaxKind.GlobalKeyword) && token.Parent.Parent.IsKind(SyntaxKind.AliasQualifiedName, SyntaxKind.QualifiedCref, SyntaxKind.QualifiedName))
                     {
                         var symbol = _speculativeModel.GetSymbolInfo(token.Parent, _cancellationToken).Symbol;
+                        var renamedSymbol = renameSymbolContext.RenamedSymbol;
 
-                        if (symbol != null && _renamedSymbol.Kind != SymbolKind.Local && _renamedSymbol.Kind != SymbolKind.RangeVariable &&
-                            (Equals(symbol, _renamedSymbol) || SymbolKey.GetComparer(ignoreCase: true, ignoreAssemblyKeys: false).Equals(symbol.GetSymbolKey(), _renamedSymbol.GetSymbolKey())))
+                        if (symbol != null && renamedSymbol.Kind != SymbolKind.Local && renamedSymbol.Kind != SymbolKind.RangeVariable &&
+                            (Equals(symbol, renamedSymbol) || SymbolKey.GetComparer(ignoreCase: true, ignoreAssemblyKeys: false).Equals(symbol.GetSymbolKey(), renamedSymbol.GetSymbolKey())))
                         {
                             return true;
                         }
@@ -596,26 +605,28 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 }
             }
 
-            private SyntaxToken UpdateAliasAnnotation(SyntaxToken newToken)
+            private SyntaxToken UpdateAliasAnnotation(SyntaxToken newToken, RenameSymbolContext renameSymbolContext)
             {
-                if (_aliasSymbol != null && !this.AnnotateForComplexification && newToken.HasAnnotations(AliasAnnotation.Kind))
+                if (renameSymbolContext.AliasSymbol != null && !this.AnnotateForComplexification && newToken.HasAnnotations(AliasAnnotation.Kind))
                 {
-                    newToken = RenameUtilities.UpdateAliasAnnotation(newToken, _aliasSymbol, _replacementText);
+                    newToken = RenameUtilities.UpdateAliasAnnotation(newToken, renameSymbolContext.AliasSymbol, renameSymbolContext.ReplacementText);
                 }
 
                 return newToken;
             }
 
-            private SyntaxToken RenameToken(SyntaxToken oldToken, SyntaxToken newToken, string? prefix, string? suffix)
+            private SyntaxToken RenameToken(SyntaxToken oldToken, SyntaxToken newToken, string? prefix, string? suffix, RenameSymbolContext renameSymbolContext)
             {
+                var isVerbatim = renameSymbolContext.IsVerbatim;
+                var replacementText = renameSymbolContext.ReplacementText;
                 var parent = oldToken.Parent!;
-                var currentNewIdentifier = _isVerbatim ? _replacementText.Substring(1) : _replacementText;
+                var currentNewIdentifier = isVerbatim ? replacementText.Substring(1) : replacementText;
                 var oldIdentifier = newToken.ValueText;
                 var isAttributeName = SyntaxFacts.IsAttributeName(parent);
 
                 if (isAttributeName)
                 {
-                    if (oldIdentifier != _renamedSymbol.Name)
+                    if (oldIdentifier != renameSymbolContext.RenamedSymbol.Name)
                     {
                         if (currentNewIdentifier.TryGetWithoutAttributeSuffix(out var withoutSuffix))
                         {
@@ -656,11 +667,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 // <param name="\u... is invalid.
 
                 // if it's an attribute name we don't mess with the escaping because it might change overload resolution
-                newToken = _isVerbatim || (isAttributeName && oldToken.IsVerbatimIdentifier())
+                newToken = isVerbatim || (isAttributeName && oldToken.IsVerbatimIdentifier())
                     ? newToken.CopyAnnotationsTo(SyntaxFactory.VerbatimIdentifier(newToken.LeadingTrivia, currentNewIdentifier, valueText, newToken.TrailingTrivia))
                     : newToken.CopyAnnotationsTo(SyntaxFactory.Identifier(newToken.LeadingTrivia, SyntaxKind.IdentifierToken, currentNewIdentifier, valueText, newToken.TrailingTrivia));
 
-                if (_replacementTextValid)
+                if (renameSymbolContext.ReplacementTextValid)
                 {
                     if (newToken.IsVerbatimIdentifier())
                     {
@@ -677,10 +688,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return newToken;
             }
 
-            private SyntaxToken RenameInStringLiteral(SyntaxToken oldToken, SyntaxToken newToken, ImmutableSortedSet<TextSpan>? subSpansToReplace, Func<SyntaxTriviaList, string, string, SyntaxTriviaList, SyntaxToken> createNewStringLiteral)
+            private SyntaxToken RenameInStringLiteral(SyntaxToken oldToken, SyntaxToken newToken, ImmutableSortedSet<TextSpan>? subSpansToReplace, Func<SyntaxTriviaList, string, string, SyntaxTriviaList, SyntaxToken> createNewStringLiteral, RenameSymbolContext renameSymbolContext)
             {
                 var originalString = newToken.ToString();
-                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, _originalText, _replacementText, subSpansToReplace);
+                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, renameSymbolContext.OriginalText, renameSymbolContext.ReplacementText, subSpansToReplace);
                 if (replacedString != originalString)
                 {
                     var oldSpan = oldToken.Span;
@@ -692,23 +703,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return newToken;
             }
 
-            private SyntaxToken RenameInTrivia(SyntaxToken token, IEnumerable<SyntaxTrivia> leadingOrTrailingTriviaList)
+            private SyntaxToken RenameInTrivia(SyntaxToken token, IEnumerable<SyntaxTrivia> leadingOrTrailingTriviaList, RenameSymbolContext renameSymbolContext)
             {
                 return token.ReplaceTrivia(leadingOrTrailingTriviaList, (oldTrivia, newTrivia) =>
                 {
                     if (newTrivia.IsSingleLineComment() || newTrivia.IsMultiLineComment())
                     {
-                        return RenameInCommentTrivia(newTrivia);
+                        return RenameInCommentTrivia(newTrivia, renameSymbolContext);
                     }
 
                     return newTrivia;
                 });
             }
 
-            private SyntaxTrivia RenameInCommentTrivia(SyntaxTrivia trivia)
+            private SyntaxTrivia RenameInCommentTrivia(SyntaxTrivia trivia, RenameSymbolContext renameSymbolContext)
             {
                 var originalString = trivia.ToString();
-                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, _originalText, _replacementText);
+                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, renameSymbolContext.OriginalText, renameSymbolContext.ReplacementText);
                 if (replacedString != originalString)
                 {
                     var oldSpan = trivia.Span;
@@ -720,45 +731,50 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return trivia;
             }
 
-            private SyntaxToken RenameWithinToken(SyntaxToken oldToken, SyntaxToken newToken)
+            private SyntaxToken RenameWithinToken(SyntaxToken oldToken, SyntaxToken newToken, RenameSymbolContext renameSymbolContext)
             {
                 ImmutableSortedSet<TextSpan>? subSpansToReplace = null;
                 if (_isProcessingComplexifiedSpans ||
                     (_isProcessingTrivia == 0 &&
-                    !_stringAndCommentTextSpans.TryGetValue(oldToken.Span, out subSpansToReplace)))
+                    !renameSymbolContext.StringAndCommentTextSpans.TryGetValue(oldToken.Span, out subSpansToReplace)))
                 {
                     return newToken;
                 }
 
-                if (_isRenamingInStrings || subSpansToReplace?.Count > 0)
+                if (renameSymbolContext.IsRenamingInStrings || subSpansToReplace?.Count > 0)
                 {
                     if (newToken.IsKind(SyntaxKind.StringLiteralToken))
                     {
-                        newToken = RenameInStringLiteral(oldToken, newToken, subSpansToReplace, SyntaxFactory.Literal);
+                        newToken = RenameInStringLiteral(oldToken, newToken, subSpansToReplace, SyntaxFactory.Literal, renameSymbolContext);
                     }
                     else if (newToken.IsKind(SyntaxKind.InterpolatedStringTextToken))
                     {
-                        newToken = RenameInStringLiteral(oldToken, newToken, subSpansToReplace, (leadingTrivia, text, value, trailingTrivia) =>
-                            SyntaxFactory.Token(newToken.LeadingTrivia, SyntaxKind.InterpolatedStringTextToken, text, value, newToken.TrailingTrivia));
+                        newToken = RenameInStringLiteral(
+                            oldToken,
+                            newToken,
+                            subSpansToReplace,
+                            (leadingTrivia, text, value, trailingTrivia) =>
+                            SyntaxFactory.Token(newToken.LeadingTrivia, SyntaxKind.InterpolatedStringTextToken, text, value, newToken.TrailingTrivia),
+                            renameSymbolContext);
                     }
                 }
 
-                if (_isRenamingInComments)
+                if (renameSymbolContext.IsRenamingInComments)
                 {
                     if (newToken.IsKind(SyntaxKind.XmlTextLiteralToken))
                     {
-                        newToken = RenameInStringLiteral(oldToken, newToken, subSpansToReplace, SyntaxFactory.XmlTextLiteral);
+                        newToken = RenameInStringLiteral(oldToken, newToken, subSpansToReplace, SyntaxFactory.XmlTextLiteral, renameSymbolContext);
                     }
-                    else if (newToken.IsKind(SyntaxKind.IdentifierToken) && newToken.Parent.IsKind(SyntaxKind.XmlName) && newToken.ValueText == _originalText)
+                    else if (newToken.IsKind(SyntaxKind.IdentifierToken) && newToken.Parent.IsKind(SyntaxKind.XmlName) && newToken.ValueText == renameSymbolContext.OriginalText)
                     {
-                        var newIdentifierToken = SyntaxFactory.Identifier(newToken.LeadingTrivia, _replacementText, newToken.TrailingTrivia);
+                        var newIdentifierToken = SyntaxFactory.Identifier(newToken.LeadingTrivia, renameSymbolContext.ReplacementText, newToken.TrailingTrivia);
                         newToken = newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = oldToken.Span }));
                         AddModifiedSpan(oldToken.Span, newToken.Span);
                     }
 
                     if (newToken.HasLeadingTrivia)
                     {
-                        var updatedToken = RenameInTrivia(oldToken, oldToken.LeadingTrivia);
+                        var updatedToken = RenameInTrivia(oldToken, oldToken.LeadingTrivia, renameSymbolContext);
                         if (updatedToken != oldToken)
                         {
                             newToken = newToken.WithLeadingTrivia(updatedToken.LeadingTrivia);
@@ -767,7 +783,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
                     if (newToken.HasTrailingTrivia)
                     {
-                        var updatedToken = RenameInTrivia(oldToken, oldToken.TrailingTrivia);
+                        var updatedToken = RenameInTrivia(oldToken, oldToken.TrailingTrivia, renameSymbolContext);
                         if (updatedToken != oldToken)
                         {
                             newToken = newToken.WithTrailingTrivia(updatedToken.TrailingTrivia);

@@ -156,15 +156,15 @@ namespace Microsoft.CodeAnalysis.Rename
             RenameAnnotation RenameRenamableSymbolDeclarationAnnotation,
             string ReplacementText,
             string OriginalText,
-            ICollection<string> PosssibleNameConflicts,
+            ICollection<string> PossibleNameConflicts,
             Dictionary<TextSpan, RenameLocation> RenameLocations,
             ISymbol RenamedSymbol,
             IAliasSymbol? AliasSymbol,
-            Location? RenamabelDeclartionLocation,
+            Location? RenamableDeclarationLocation,
             bool IsVerbatim,
             bool ReplacementTextValid,
             bool IsRenamingInStrings,
-            bool IsRenameingInComments,
+            bool IsRenamingInComments,
             ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans);
     }
 }
