@@ -258,6 +258,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
                 public RenameRewriterSymbolParameters ToRenameRewriterParametersForDocument(DocumentId documentId)
                 {
+                    // TODO: Logic could be simplified here.
                     //Get all rename locations for the current document.
                     var renameLocations = RenameLocationSet.Locations;
                     var allTextSpansInSingleSourceTree = renameLocations
@@ -272,9 +273,18 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             g => g.Key,
                             g => GetSubSpansToRenameInStringAndCommentTextSpans(g.Key, g));
 
+                    using var _ = PooledHashSet<TextSpan>.GetInstance(out var relatedSpansBuilder);
+                    foreach (var renameLocation in renameLocations)
+                    {
+                        if (renameLocation.DocumentId == documentId)
+                        {
+                            relatedSpansBuilder.Add(renameLocation.Location.SourceSpan);
+                        }
+                    }
+
                     return new RenameRewriterSymbolParameters(
-                        isRenamingInStrings: RenameOptions.RenameInStrings,
-                        isRenamingInComments: RenameOptions.RenameInComments,
+                        IsRenamingInStrings: RenameOptions.RenameInStrings,
+                        IsRenamingInComments: RenameOptions.RenameInComments,
                         OriginalText,
                         PossibleNameConflicts,
                         RenamedSymbolDeclarationAnnotation,
@@ -282,7 +292,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         RenameLocationSet.Symbol,
                         ReplacementText,
                         ReplacementTextValid,
-                        stringAndCommentTextSpansInSingleSourceTree);
+                        stringAndCommentTextSpansInSingleSourceTree,
+                        relatedSpansBuilder.ToImmutableHashSet());
                 }
             }
 
@@ -609,7 +620,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                                     }
                                     else
                                     {
-                                        // if a complexified location was not a reference location, then it was a resolved conflict of a non reference location
+                                        // if a complexified renameLocation was not a reference renameLocation, then it was a resolved conflict of a non reference renameLocation
                                         if (!conflictAnnotation.IsOriginalTextLocation && complexifiedLocationSpanForThisDocument.Contains(originalLocation))
                                         {
                                             conflictResolution.AddRelatedLocation(
@@ -639,7 +650,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         // as the parent (yes I know, this is a simplification).
                         if (symbolSession.DocumentIdOfRenameSymbolDeclaration.ProjectId == projectId)
                         {
-                            // Calculating declaration conflicts may require location mapping in documents
+                            // Calculating declaration conflicts may require renameLocation mapping in documents
                             // that were not otherwise being processed in the current rename phase, so add
                             // the annotated spans in these documents to reverseMappedLocations.
                             foreach (var unprocessedDocumentIdWithPotentialDeclarationConflicts in allDocumentIdsInProject.Where(d => !documentIdsForConflictResolution.Contains(d)))
@@ -788,7 +799,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
                             if (newLocation != null && conflictAnnotation.RenameDeclarationLocationReferences[symbolIndex].IsSourceLocation)
                             {
-                                // location was in source before, but not after rename
+                                // renameLocation was in source before, but not after rename
                                 if (!newLocation.IsInSource)
                                 {
                                     hasConflict = true;
@@ -1052,7 +1063,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             }
 
             /// We try to rewrite all locations that are invalid candidate locations. If there is only
-            /// one location it must be the correct one (the symbol is ambiguous to something else)
+            /// one renameLocation it must be the correct one (the symbol is ambiguous to something else)
             /// and we always try to rewrite it.  If there are multiple locations, we only allow it
             /// if the candidate reason allows for it).
             private static bool ShouldIncludeLocation(ISet<RenameLocation> renameLocations, RenameLocation location)
@@ -1072,7 +1083,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
             /// <summary>
             /// We try to compute the sub-spans to rename within the given <paramref name="containingLocationForStringOrComment"/>.
-            /// If we are renaming within a string, the locations to rename are always within this containing string location
+            /// If we are renaming within a string, the locations to rename are always within this containing string renameLocation
             /// and we can identify these sub-spans.
             /// However, if we are renaming within a comment, the rename locations can be anywhere in trivia,
             /// so we return null and the rename rewriter will perform a complete regex match within comment trivia
@@ -1087,7 +1098,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 {
                     if (!containingLocationForStringOrComment.Contains(renameLocation.Location.SourceSpan))
                     {
-                        // We found a location outside the 'containingLocationForStringOrComment',
+                        // We found a renameLocation outside the 'containingLocationForStringOrComment',
                         // which is likely in trivia.
                         // Bail out from computing specific sub-spans and let the rename rewriter
                         // do a full regex match and replace.

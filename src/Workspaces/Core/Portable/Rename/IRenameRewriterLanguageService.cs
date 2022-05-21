@@ -12,6 +12,8 @@ using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.CodeAnalysis.Host;
 using Microsoft.CodeAnalysis.LanguageServices;
 using Microsoft.CodeAnalysis.PooledObjects;
+using Microsoft.CodeAnalysis.Rename.ConflictEngine;
+using Microsoft.CodeAnalysis.Text;
 
 namespace Microsoft.CodeAnalysis.Rename
 {
@@ -149,5 +151,20 @@ namespace Microsoft.CodeAnalysis.Rename
                 }
             }
         }
+
+        protected readonly record struct RenameSymbolContext(
+            RenameAnnotation RenameRenamableSymbolDeclarationAnnotation,
+            string ReplacementText,
+            string OriginalText,
+            ICollection<string> PosssibleNameConflicts,
+            Dictionary<TextSpan, RenameLocation> RenameLocations,
+            ISymbol RenamedSymbol,
+            IAliasSymbol? AliasSymbol,
+            Location? RenamabelDeclartionLocation,
+            bool IsVerbatim,
+            bool ReplacementTextValid,
+            bool IsRenamingInStrings,
+            bool IsRenameingInComments,
+            ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans);
     }
 }
