@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.LanguageServices;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.Rename.ConflictEngine;
 using Microsoft.CodeAnalysis.Text;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Rename
 {
@@ -166,5 +167,45 @@ namespace Microsoft.CodeAnalysis.Rename
             bool IsRenamingInStrings,
             bool IsRenamingInComments,
             ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans);
+
+
+        protected static Dictionary<TextSpan, RenameSymbolContext> CreateRenameContextDictionary(
+            ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
+            SemanticModel semanticModel,
+            ISyntaxFactsService syntaxFactsService)
+        {
+            var textSpanToSymbolContext = new Dictionary<TextSpan, RenameSymbolContext>();
+            foreach (var symbolParameter in symbolParameters)
+            {
+                var symbolContext = new RenameSymbolContext(
+                    symbolParameter.RenamedSymbolDeclarationAnnotation,
+                    symbolParameter.ReplacementText,
+                    symbolParameter.OriginalText,
+                    symbolParameter.PossibleNameConflicts,
+                    symbolParameter.RenameLocations,
+                    symbolParameter.RenameSymbol,
+                    symbolParameter.RenameSymbol as IAliasSymbol,
+                    symbolParameter.RenameSymbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == semanticModel.SyntaxTree),
+                    IsVerbatim: syntaxFactsService.IsVerbatimIdentifier(symbolParameter.ReplacementText),
+                    ReplacementTextValid: symbolParameter.ReplacementTextValid,
+                    IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
+                    IsRenamingInComments: symbolParameter.IsRenamingInComments,
+                    StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans);
+                foreach (var relatedSpan in symbolParameter.RelatedTextSpans)
+                {
+                    if (!textSpanToSymbolContext.ContainsKey(relatedSpan))
+                    {
+                        textSpanToSymbolContext[relatedSpan] = symbolContext;
+                    }
+                    else
+                    {
+                        // Each textSpan should only be renamed by one symbol.
+                        RoslynDebug.Assert(false);
+                    }
+                }
+            }
+
+            return textSpanToSymbolContext;
+        }
     }
 }

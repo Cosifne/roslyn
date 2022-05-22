@@ -26,6 +26,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
 
         Private ReadOnly _workspace As TestWorkspace
         Private ReadOnly _resolution As ConflictResolution
+        Private ReadOnly _renamedSymbol As ISymbol
 
         ''' <summary>
         ''' The list of related locations that haven't been asserted about yet. Items are
@@ -38,13 +39,14 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
 
         Private _failedAssert As Boolean
 
-        Private Sub New(workspace As TestWorkspace, resolution As ConflictResolution, renameTo As String)
+        Private Sub New(workspace As TestWorkspace, resolution As ConflictResolution, renameTo As String, renamedSymbol As ISymbol)
             _workspace = workspace
             _resolution = resolution
 
             _unassertedRelatedLocations = New HashSet(Of RelatedLocation)(resolution.RelatedLocations)
 
             _renameTo = renameTo
+            _renamedSymbol = renamedSymbol
         End Sub
 
         Public Shared Function Create(
@@ -95,7 +97,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
                     Assert.Null(result.ErrorMessage)
                 End If
 
-                engineResult = New RenameEngineResult(workspace, result, renameTo)
+                engineResult = New RenameEngineResult(workspace, result, renameTo, symbol)
                 engineResult.AssertUnlabeledSpansRenamedAndHaveNoConflicts()
                 success = True
             Finally
@@ -277,7 +279,7 @@ Namespace Microsoft.CodeAnalysis.Editor.UnitTests.Rename
 
         Public Sub AssertReplacementTextInvalid()
             Try
-                Assert.False(_resolution.ReplacementTextValid)
+                Assert.False(_resolution.RenameSymbolToReplacementTextValid(_renamedSymbol))
             Catch ex As XunitException
                 _failedAssert = True
                 Throw

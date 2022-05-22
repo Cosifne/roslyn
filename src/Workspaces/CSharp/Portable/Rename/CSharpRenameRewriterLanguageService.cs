@@ -150,47 +150,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
                 _simplificationService = parameters.Document.Project.LanguageServices.GetRequiredService<ISimplificationService>();
                 _semanticFactsService = parameters.Document.Project.LanguageServices.GetRequiredService<ISemanticFactsService>();
-                _renameContexts = CreateRenameContextDictionary(parameters.SymbolParameters, _semanticModel);
+                var syntaxFactService = parameters.Document.Project.LanguageServices.GetRequiredService<ISyntaxFactsService>();
+                _renameContexts = CreateRenameContextDictionary(parameters.SymbolParameters, _semanticModel, syntaxFactService);
             }
-
-            private static Dictionary<TextSpan, RenameSymbolContext> CreateRenameContextDictionary(
-                ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
-                SemanticModel semanticModel)
-            {
-                var textSpanToSymbolContext = new Dictionary<TextSpan, RenameSymbolContext>();
-                foreach (var symbolParameter in symbolParameters)
-                {
-                    var symbolContext = new RenameSymbolContext(
-                        symbolParameter.RenamedSymbolDeclarationAnnotation,
-                        symbolParameter.ReplacementText,
-                        symbolParameter.OriginalText,
-                        symbolParameter.PossibleNameConflicts,
-                        symbolParameter.RenameLocations,
-                        symbolParameter.RenameSymbol,
-                        symbolParameter.RenameSymbol as IAliasSymbol,
-                        symbolParameter.RenameSymbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == semanticModel.SyntaxTree),
-                        IsVerbatim: symbolParameter.ReplacementText.StartsWith("@", StringComparison.Ordinal),
-                        ReplacementTextValid: symbolParameter.ReplacementTextValid,
-                        IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
-                        IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                        StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans);
-                    foreach (var relatedSpan in symbolParameter.RelatedTextSpans)
-                    {
-                        if (!textSpanToSymbolContext.ContainsKey(relatedSpan))
-                        {
-                            textSpanToSymbolContext[relatedSpan] = symbolContext;
-                        }
-                        else
-                        {
-                            // Each textSpan should only be renamed by one symbol.
-                            RoslynDebug.Assert(false);
-                        }
-                    }
-                }
-
-                return textSpanToSymbolContext;
-            }
-
             public override SyntaxNode? Visit(SyntaxNode? node)
             {
                 if (node == null)
