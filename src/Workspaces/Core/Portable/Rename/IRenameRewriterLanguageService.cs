@@ -166,8 +166,8 @@ namespace Microsoft.CodeAnalysis.Rename
             bool ReplacementTextValid,
             bool IsRenamingInStrings,
             bool IsRenamingInComments,
-            ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans);
-
+            ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans,
+            ImmutableHashSet<TextSpan> RelatedTextSpans);
 
         protected static Dictionary<TextSpan, RenameSymbolContext> CreateRenameContextDictionary(
             ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
@@ -190,7 +190,8 @@ namespace Microsoft.CodeAnalysis.Rename
                     ReplacementTextValid: symbolParameter.ReplacementTextValid,
                     IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
                     IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                    StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans);
+                    StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans,
+                    RelatedTextSpans: symbolParameter.RelatedTextSpans);
                 foreach (var relatedSpan in symbolParameter.RelatedTextSpans)
                 {
                     if (!textSpanToSymbolContext.ContainsKey(relatedSpan))
