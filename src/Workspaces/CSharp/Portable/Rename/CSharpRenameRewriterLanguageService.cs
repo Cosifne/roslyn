@@ -292,23 +292,24 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     }
                     else
                     {
-                        return AnnotateNonRenameLocation(token);
+                        return AnnotateNonRenameLocation(token, newToken);
                     }
 
                     return newToken;
                 }
                 else
                 {
-                    return AnnotateNonRenameLocation(token);
+                    var newToken = base.VisitToken(token);
+                    return AnnotateNonRenameLocation(token, newToken);
                 }
             }
 
-            private SyntaxToken AnnotateNonRenameLocation(SyntaxToken token)
+            private SyntaxToken AnnotateNonRenameLocation(SyntaxToken token, SyntaxToken newToken)
             {
                 if (!_isProcessingComplexifiedSpans)
                 {
                     // Handle Alias annotations
-                    var newToken = UpdateAliasAnnotation(token);
+                    newToken = UpdateAliasAnnotation(newToken);
 
                     var tokenText = token.ValueText;
                     var replacementMatchedContexts = GetMatchedContexts(context => context.ReplacementText == tokenText);
@@ -327,7 +328,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     return newToken;
                 }
 
-                return token;
+                return newToken;
             }
 
             private static bool IsPropertyAccessorNameConflict(SyntaxToken token, string replacementText)
