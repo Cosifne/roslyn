@@ -290,36 +290,44 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                             _invocationExpressionsNeedingConflictChecks.AddRange(token.GetAncestors<InvocationExpressionSyntax>());
                         }
                     }
+                    else
+                    {
+                        return AnnotateNonRenameLocation(token);
+                    }
 
                     return newToken;
                 }
                 else
                 {
+                    return AnnotateNonRenameLocation(token);
+                }
+            }
 
-                    if (!_isProcessingComplexifiedSpans)
+            private SyntaxToken AnnotateNonRenameLocation(SyntaxToken token)
+            {
+                if (!_isProcessingComplexifiedSpans)
+                {
+                    // Handle Alias annotations
+                    var newToken = UpdateAliasAnnotation(token);
+
+                    var tokenText = token.ValueText;
+                    var replacementMatchedContexts = GetMatchedContexts(context => context.ReplacementText == tokenText);
+                    var originalTextMatchedContexts = GetMatchedContexts(context => context.OriginalText == tokenText);
+                    var possibleNameConflictsContexts = GetMatchedContexts(context => context.PossibleNameConflicts.Contains(tokenText));
+                    var possiblyDestructorConflictContexts = GetMatchedContexts(context => IsPossiblyDestructorConflict(token, context.ReplacementText));
+                    var propertyAccessorNameConflictContexts = GetMatchedContexts(context => IsPropertyAccessorNameConflict(token, context.ReplacementText));
+
+                    if (!replacementMatchedContexts.IsEmpty || !originalTextMatchedContexts.IsEmpty
+                        || !possibleNameConflictsContexts.IsEmpty || !possiblyDestructorConflictContexts.IsEmpty || !propertyAccessorNameConflictContexts.IsEmpty)
                     {
-                        // Handle Alias annotations
-                        var newToken = UpdateAliasAnnotation(token);
-
-                        var tokenText = token.ValueText;
-                        var replacementMatchedContexts = GetMatchedContexts(context => context.ReplacementText == tokenText);
-                        var originalTextMatchedContexts = GetMatchedContexts(context => context.OriginalText == tokenText);
-                        var possibleNameConflictsContexts = GetMatchedContexts(context => context.PossibleNameConflicts.Contains(tokenText));
-                        var possiblyDestructorConflictContexts = GetMatchedContexts(context => IsPossiblyDestructorConflict(token, context.ReplacementText));
-                        var propertyAccessorNameConflictContexts = GetMatchedContexts(context => IsPropertyAccessorNameConflict(token, context.ReplacementText));
-
-                        if (!replacementMatchedContexts.IsEmpty || !originalTextMatchedContexts.IsEmpty
-                            || !possibleNameConflictsContexts.IsEmpty || !possiblyDestructorConflictContexts.IsEmpty || !propertyAccessorNameConflictContexts.IsEmpty)
-                        {
-                            newToken = AnnotateForConflictCheckAsync(newToken, !originalTextMatchedContexts.IsEmpty).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
-                            _invocationExpressionsNeedingConflictChecks.AddRange(token.GetAncestors<InvocationExpressionSyntax>());
-                        }
-
-                        return newToken;
+                        newToken = AnnotateForConflictCheckAsync(newToken, !originalTextMatchedContexts.IsEmpty).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
+                        _invocationExpressionsNeedingConflictChecks.AddRange(token.GetAncestors<InvocationExpressionSyntax>());
                     }
 
-                    return token;
+                    return newToken;
                 }
+
+                return token;
             }
 
             private static bool IsPropertyAccessorNameConflict(SyntaxToken token, string replacementText)
