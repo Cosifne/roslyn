@@ -72,6 +72,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             private List<(TextSpan oldSpan, TextSpan newSpan)>? _modifiedSubSpans;
             private SemanticModel? _speculativeModel;
             private int _isProcessingTrivia;
+            private RenameSymbolContext? _currentContext;
 
             private void AddModifiedSpan(TextSpan oldSpan, TextSpan newSpan)
             {
@@ -264,6 +265,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 if (TryFindRenameContextToRenameToken(token, out var context))
                 {
                     var renameSymbolContext = context.Value;
+                    _currentContext = renameSymbolContext;
                     var shouldCheckTrivia = renameSymbolContext.StringAndCommentTextSpans.ContainsKey(token.Span);
                     _isProcessingTrivia += shouldCheckTrivia ? 1 : 0;
                     var newToken = base.VisitToken(token);
@@ -300,6 +302,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 else
                 {
                     var newToken = base.VisitToken(token);
+                    if (_currentContext != null && _isProcessingTrivia != 0)
+                    {
+                        // Rename matches in strings and comments
+                        newToken = RenameWithinToken(token, newToken, _currentContext.Value);
+                    }
+
                     return AnnotateNonRenameLocation(token, newToken);
                 }
             }
