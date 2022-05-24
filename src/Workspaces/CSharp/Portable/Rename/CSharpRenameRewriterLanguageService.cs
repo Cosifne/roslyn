@@ -282,19 +282,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     }
 
                     var isRenameLocation = IsRenameLocation(token, renameSymbolContext);
-                    //var replacementText = renameSymbolContext.ReplacementText;
-
-                    //// if this is a reference location, or the identifier token's name could possibly
-                    //// be a conflict, we need to process this token
-                    //var isOldText = token.ValueText == renameSymbolContext.OriginalText;
-                    //var tokenNeedsConflictCheck =
-                    //    isRenameLocation ||
-                    //    token.ValueText == renameSymbolContext.ReplacementText ||
-                    //    isOldText ||
-                    //    renameSymbolContext.PossibleNameConflicts.Contains(token.ValueText) ||
-                    //    IsPossiblyDestructorConflict(token, replacementText) ||
-                    //    IsPropertyAccessorNameConflict(token, replacementText);
-
                     if (isRenameLocation)
                     {
                         newToken = RenameAndAnnotateAsync(token, newToken, isRenameLocation: true, isOldText: false, renameSymbolContext).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
@@ -308,18 +295,23 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 }
                 else
                 {
-                    var tokenText = token.ValueText;
-                    var replacementMatchedContexts = GetMatchedContexts(context => context.ReplacementText == tokenText);
-                    var originalTextMatchedContexts = GetMatchedContexts(context => context.OriginalText == tokenText);
-                    var possibleNameConflictsContexts = GetMatchedContexts(context => context.PossibleNameConflicts.Contains(tokenText));
-                    var possiblyDestructorConflictContexts = GetMatchedContexts(context => IsPossiblyDestructorConflict(token, context.ReplacementText));
-                    var propertyAccessorNameConflictContexts = GetMatchedContexts(context => IsPropertyAccessorNameConflict(token, context.ReplacementText));
-                    if (!replacementMatchedContexts.IsEmpty || !originalTextMatchedContexts.IsEmpty
-                        || !possibleNameConflictsContexts.IsEmpty || !possiblyDestructorConflictContexts.IsEmpty || !propertyAccessorNameConflictContexts.IsEmpty)
+
+                    if (!_isProcessingComplexifiedSpans)
                     {
-                        var newToken = AnnotateForConflictCheckAsync(token, !originalTextMatchedContexts.IsEmpty).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
-                        if (!_isProcessingComplexifiedSpans)
+                        // Handle Alias annotations
+                        var newToken = UpdateAliasAnnotation(token);
+
+                        var tokenText = token.ValueText;
+                        var replacementMatchedContexts = GetMatchedContexts(context => context.ReplacementText == tokenText);
+                        var originalTextMatchedContexts = GetMatchedContexts(context => context.OriginalText == tokenText);
+                        var possibleNameConflictsContexts = GetMatchedContexts(context => context.PossibleNameConflicts.Contains(tokenText));
+                        var possiblyDestructorConflictContexts = GetMatchedContexts(context => IsPossiblyDestructorConflict(token, context.ReplacementText));
+                        var propertyAccessorNameConflictContexts = GetMatchedContexts(context => IsPropertyAccessorNameConflict(token, context.ReplacementText));
+
+                        if (!replacementMatchedContexts.IsEmpty || !originalTextMatchedContexts.IsEmpty
+                            || !possibleNameConflictsContexts.IsEmpty || !possiblyDestructorConflictContexts.IsEmpty || !propertyAccessorNameConflictContexts.IsEmpty)
                         {
+                            newToken = AnnotateForConflictCheckAsync(newToken, !originalTextMatchedContexts.IsEmpty).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
                             _invocationExpressionsNeedingConflictChecks.AddRange(token.GetAncestors<InvocationExpressionSyntax>());
                         }
 
