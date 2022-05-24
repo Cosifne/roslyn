@@ -274,6 +274,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             g => GetSubSpansToRenameInStringAndCommentTextSpans(g.Key, g));
 
                     using var _ = PooledHashSet<TextSpan>.GetInstance(out var relatedSpansBuilder);
+                    relatedSpansBuilder.AddRange(allTextSpansInSingleSourceTree.Keys);
+                    relatedSpansBuilder.AddRange(stringAndCommentTextSpansInSingleSourceTree.Keys);
+
                     foreach (var renameLocation in renameLocations)
                     {
                         if (renameLocation.DocumentId == documentId)
