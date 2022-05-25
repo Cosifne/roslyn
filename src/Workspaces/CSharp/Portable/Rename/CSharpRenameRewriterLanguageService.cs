@@ -47,6 +47,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             return renameAnnotationRewriter.Visit(parameters.SyntaxRoot)!;
         }
 
+        private enum RenameRewriterState
+        {
+
+        }
+
         private class RenameRewriter : CSharpSyntaxRewriter
         {
             private readonly Dictionary<TextSpan, RenameSymbolContext> _textSpanToRenameContext;
@@ -104,58 +109,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 var syntaxFactService = parameters.Document.Project.LanguageServices.GetRequiredService<ISyntaxFactsService>();
                 _renameContexts = CreateRenameContexts(parameters.SymbolParameters, _semanticModel, syntaxFactService);
                 _textSpanToRenameContext = GroupSymbolContextsByTextSpan(_renameContexts.Values);
-            }
-
-            protected static Dictionary<ISymbol, RenameSymbolContext> CreateRenameContexts(
-                ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
-                SemanticModel semanticModel,
-                ISyntaxFactsService syntaxFactsService)
-            {
-                var renameContexts = new Dictionary<ISymbol, RenameSymbolContext>();
-                foreach (var symbolParameter in symbolParameters)
-                {
-                    var symbolContext = new RenameSymbolContext(
-                        symbolParameter.RenamedSymbolDeclarationAnnotation,
-                        symbolParameter.ReplacementText,
-                        symbolParameter.OriginalText,
-                        symbolParameter.PossibleNameConflicts,
-                        symbolParameter.RenameLocations,
-                        symbolParameter.RenameSymbol,
-                        symbolParameter.RenameSymbol as IAliasSymbol,
-                        symbolParameter.RenameSymbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == semanticModel.SyntaxTree),
-                        IsVerbatim: syntaxFactsService.IsVerbatimIdentifier(symbolParameter.ReplacementText),
-                        ReplacementTextValid: symbolParameter.ReplacementTextValid,
-                        IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
-                        IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                        StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans,
-                        RelatedTextSpans: symbolParameter.RelatedTextSpans);
-                    renameContexts[symbolParameter.RenameSymbol] = symbolContext;
-                }
-
-                return renameContexts;
-            }
-
-            private static Dictionary<TextSpan, RenameSymbolContext> GroupSymbolContextsByTextSpan(
-                IEnumerable<RenameSymbolContext> renameSymbolContexts)
-            {
-                var textSpanToRenameContext = new Dictionary<TextSpan, RenameSymbolContext>();
-                foreach (var symbolContext in renameSymbolContexts)
-                {
-                    foreach (var textSpan in symbolContext.RelatedTextSpans)
-                    {
-                        if (!textSpanToRenameContext.ContainsKey(textSpan))
-                        {
-                            textSpanToRenameContext[textSpan] = symbolContext;
-                        }
-                        else
-                        {
-                            // How could one text span is needed to be renamed for two symbols?
-                            RoslynDebug.Assert(false);
-                        }
-                    }
-                }
-
-                return textSpanToRenameContext;
             }
 
             public override SyntaxNode? Visit(SyntaxNode? node)
@@ -247,19 +200,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return false;
             }
 
-            private ImmutableHashSet<RenameSymbolContext> GetMatchedContexts(Func<RenameSymbolContext, bool> predicate)
-            {
-                using var _ = PooledHashSet<RenameSymbolContext>.GetInstance(out var builder);
-
-                foreach (var (_, renameSymbolContext) in _renameContexts)
-                {
-                    if (predicate(renameSymbolContext))
-                        builder.Add(renameSymbolContext);
-                }
-
-                return builder.ToImmutableHashSet();
-            }
-
             public override SyntaxToken VisitToken(SyntaxToken token)
             {
                 if (TryFindRenameContextToRenameToken(token, out var context))
@@ -320,11 +260,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     newToken = UpdateAliasAnnotation(newToken);
 
                     var tokenText = token.ValueText;
-                    var replacementMatchedContexts = GetMatchedContexts(context => context.ReplacementText == tokenText);
-                    var originalTextMatchedContexts = GetMatchedContexts(context => context.OriginalText == tokenText);
-                    var possibleNameConflictsContexts = GetMatchedContexts(context => context.PossibleNameConflicts.Contains(tokenText));
-                    var possiblyDestructorConflictContexts = GetMatchedContexts(context => IsPossiblyDestructorConflict(token, context.ReplacementText));
-                    var propertyAccessorNameConflictContexts = GetMatchedContexts(context => IsPropertyAccessorNameConflict(token, context.ReplacementText));
+                    var renameContexts = _renameContexts.Values;
+                    var replacementMatchedContexts = GetMatchedContexts(renameContexts, context => context.ReplacementText == tokenText);
+                    var originalTextMatchedContexts = GetMatchedContexts(renameContexts, context => context.OriginalText == tokenText);
+                    var possibleNameConflictsContexts = GetMatchedContexts(renameContexts, context => context.PossibleNameConflicts.Contains(tokenText));
+                    var possiblyDestructorConflictContexts = GetMatchedContexts(renameContexts, context => IsPossiblyDestructorConflict(token, context.ReplacementText));
+                    var propertyAccessorNameConflictContexts = GetMatchedContexts(renameContexts, context => IsPropertyAccessorNameConflict(token, context.ReplacementText));
 
                     if (!replacementMatchedContexts.IsEmpty || !originalTextMatchedContexts.IsEmpty
                         || !possibleNameConflictsContexts.IsEmpty || !possiblyDestructorConflictContexts.IsEmpty || !propertyAccessorNameConflictContexts.IsEmpty)
