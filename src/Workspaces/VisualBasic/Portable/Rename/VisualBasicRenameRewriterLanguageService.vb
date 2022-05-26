@@ -463,6 +463,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                 End If
 
                 If _isProcessingComplexifiedSpans Then
+
+                    Dim symbol = Me._speculativeModel.GetSymbolInfo(token.Parent, Me._cancellationToken).Symbol
+                    If symbol IsNot Nothing AndAlso _renameContexts.TryGetValue(symbol, renameSymbolContext) Then
+                        Return True
+                    End If
+
                     If Not token.HasAnnotations(RenameAnnotation.Kind) Then
                         renameSymbolContext = Nothing
                         Return False
@@ -481,7 +487,6 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
             End Function
 
             Public Overrides Function VisitToken(oldToken As SyntaxToken) As SyntaxToken
-                Dim t = oldToken.ValueText = "T"
                 If oldToken = Nothing Then
                     Return oldToken
                 End If
