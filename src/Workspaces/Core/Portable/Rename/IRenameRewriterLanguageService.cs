@@ -209,12 +209,12 @@ namespace Microsoft.CodeAnalysis.Rename
             return textSpanToSymbolContext;
         }
 
-        protected static Dictionary<ISymbol, RenameSymbolContext> CreateRenameContexts(
+        protected static Dictionary<SymbolKey, RenameSymbolContext> CreateRenameContexts(
             ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
             SemanticModel semanticModel,
             ISyntaxFactsService syntaxFactsService)
         {
-            var renameContexts = new Dictionary<ISymbol, RenameSymbolContext>();
+            var renameContexts = new Dictionary<SymbolKey, RenameSymbolContext>();
             foreach (var symbolParameter in symbolParameters)
             {
                 var symbolContext = new RenameSymbolContext(
@@ -232,7 +232,7 @@ namespace Microsoft.CodeAnalysis.Rename
                     IsRenamingInComments: symbolParameter.IsRenamingInComments,
                     StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans,
                     RelatedTextSpans: symbolParameter.RelatedTextSpans);
-                renameContexts[symbolParameter.RenameSymbol] = symbolContext;
+                renameContexts[symbolParameter.RenameSymbol.GetSymbolKey()] = symbolContext;
             }
 
             return renameContexts;

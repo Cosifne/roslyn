@@ -55,7 +55,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
         private class RenameRewriter : CSharpSyntaxRewriter
         {
             private readonly Dictionary<TextSpan, RenameSymbolContext> _textSpanToRenameContext;
-            private readonly Dictionary<ISymbol, RenameSymbolContext> _renameContexts;
+            private readonly Dictionary<SymbolKey, RenameSymbolContext> _renameContexts;
 
             private readonly DocumentId _documentId;
             private readonly Solution _solution;
