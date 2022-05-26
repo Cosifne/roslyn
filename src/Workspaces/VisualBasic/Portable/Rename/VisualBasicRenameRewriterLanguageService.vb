@@ -303,6 +303,11 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
 
                 Dim isMemberGroupReference = token.Parent IsNot Nothing AndAlso _semanticFactsService.IsInsideNameOfExpression(_semanticModel, token.Parent, _cancellationToken)
 
+                Dim isNamespaceDeclarationReference = False
+                If token.GetPreviousToken().Kind = SyntaxKind.NamespaceKeyword Then
+                    isNamespaceDeclarationReference = True
+                End If
+
                 Dim renameAnnotation = New RenameActionAnnotation(
                                     token.Span,
                                     isRenameLocation:=False,
@@ -310,7 +315,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                                     Nothing,
                                     isOldText,
                                     renameDeclarationLocations,
-                                    isNamespaceDeclarationReference:=False,
+                                    isNamespaceDeclarationReference:=isNamespaceDeclarationReference,
                                     isInvocationExpression:=False,
                                     isMemberGroupReference:=isMemberGroupReference)
 
@@ -476,6 +481,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
             End Function
 
             Public Overrides Function VisitToken(oldToken As SyntaxToken) As SyntaxToken
+                Dim t = oldToken.ValueText = "T"
                 If oldToken = Nothing Then
                     Return oldToken
                 End If
@@ -567,8 +573,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                     newToken = UpdateAliasAnnotation(newToken)
                     Dim renameContexts = _renameContexts.Values
                     Dim tokenText = oldToken.ValueText
-                    Dim replacementMatchedContexts = GetMatchedContexts(renameContexts, Function(c) CaseInsensitiveComparer.Equals(tokenText, c.ReplacementText))
-                    Dim originalTextMatchedContexts = GetMatchedContexts(renameContexts, Function(c) CaseInsensitiveComparer.Equals(tokenText, c.OriginalText))
+                    Dim replacementMatchedContexts = GetMatchedContexts(renameContexts, Function(c) CaseInsensitiveComparison.Equals(tokenText, c.ReplacementText))
+                    Dim originalTextMatchedContexts = GetMatchedContexts(renameContexts, Function(c) CaseInsensitiveComparison.Equals(tokenText, c.OriginalText))
                     Dim possibleNameConflictContexts = GetMatchedContexts(renameContexts, Function(c) IsPossibleNameConflict(c.PossibleNameConflicts, tokenText))
 
                     If Not replacementMatchedContexts.IsEmpty OrElse Not originalTextMatchedContexts.IsEmpty OrElse Not possibleNameConflictContexts.IsEmpty Then
