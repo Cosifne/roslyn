@@ -47,11 +47,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             return renameAnnotationRewriter.Visit(parameters.SyntaxRoot)!;
         }
 
-        private enum RenameRewriterState
-        {
-
-        }
-
         private class RenameRewriter : CSharpSyntaxRewriter
         {
             private readonly Dictionary<TextSpan, RenameSymbolContext> _textSpanToRenameContext;
@@ -173,8 +168,8 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
             private bool TryFindRenameContextToRenameToken(SyntaxToken token, [NotNullWhen(true)] out RenameSymbolContext? renameSymbolContext)
             {
-                if (!_isProcessingComplexifiedSpans
-                    && _textSpanToRenameContext.TryGetValue(token.Span, out var context))
+                renameSymbolContext = null;
+                if (!_isProcessingComplexifiedSpans && _textSpanToRenameContext.TryGetValue(token.Span, out var context))
                 {
                     renameSymbolContext = context;
                     return true;
@@ -182,9 +177,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
                 if (_isProcessingComplexifiedSpans)
                 {
+                    RoslynDebug.Assert(_speculativeModel != null);
                     if (!token.HasAnnotations(RenameAnnotation.Kind))
                     {
-                        renameSymbolContext = null;
                         return false;
                     }
 
@@ -194,9 +189,20 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                         renameSymbolContext = originalContext;
                         return true;
                     }
+
+                    if (token.Parent == null)
+                    {
+                        return false;
+                    }
+
+                    var symbol = _speculativeModel.GetSymbolInfo(token.Parent, _cancellationToken).Symbol;
+                    if (symbol != null && _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), out var contextForSymbol))
+                    {
+                        renameSymbolContext = contextForSymbol;
+                        return true;
+                    }
                 }
 
-                renameSymbolContext = null;
                 return false;
             }
 
@@ -759,7 +765,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                             newToken,
                             subSpansToReplace,
                             (leadingTrivia, text, value, trailingTrivia) =>
-                            SyntaxFactory.Token(newToken.LeadingTrivia, SyntaxKind.InterpolatedStringTextToken, text, value, newToken.TrailingTrivia),
+                                SyntaxFactory.Token(newToken.LeadingTrivia, SyntaxKind.InterpolatedStringTextToken, text, value, newToken.TrailingTrivia),
                             renameSymbolContext);
                     }
                 }

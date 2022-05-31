@@ -153,22 +153,6 @@ namespace Microsoft.CodeAnalysis.Rename
             }
         }
 
-        protected readonly record struct RenameSymbolContext(
-            RenameAnnotation RenameRenamableSymbolDeclarationAnnotation,
-            string ReplacementText,
-            string OriginalText,
-            ICollection<string> PossibleNameConflicts,
-            Dictionary<TextSpan, RenameLocation> RenameLocations,
-            ISymbol RenamedSymbol,
-            IAliasSymbol? AliasSymbol,
-            Location? RenamableDeclarationLocation,
-            bool IsVerbatim,
-            bool ReplacementTextValid,
-            bool IsRenamingInStrings,
-            bool IsRenamingInComments,
-            ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans,
-            ImmutableHashSet<TextSpan> RelatedTextSpans);
-
         protected static Dictionary<TextSpan, RenameSymbolContext> CreateRenameContextDictionary(
             ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
             SemanticModel semanticModel,

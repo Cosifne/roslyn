@@ -12,18 +12,21 @@ using Microsoft.CodeAnalysis.Text;
 namespace Microsoft.CodeAnalysis.Rename
 {
     /// <summary>
-    /// All the parameters useds to rename a symbol.
+    /// RenameSymbolContext contains all the immutable context information to rename the <paramref name="RenamedSymbol"/>.
     /// </summary>
-    internal readonly record struct RenameRewriterSymbolParameters(
-        bool IsRenamingInStrings,
-        bool IsRenamingInComments,
+    internal readonly record struct RenameSymbolContext(
+        RenameAnnotation RenameRenamableSymbolDeclarationAnnotation,
+        string ReplacementText,
         string OriginalText,
         ICollection<string> PossibleNameConflicts,
-        RenameAnnotation RenamedSymbolDeclarationAnnotation,
         Dictionary<TextSpan, RenameLocation> RenameLocations,
-        ISymbol RenameSymbol,
-        string ReplacementText,
+        ISymbol RenamedSymbol,
+        IAliasSymbol? AliasSymbol,
+        Location? RenamableDeclarationLocation,
+        bool IsVerbatim,
         bool ReplacementTextValid,
+        bool IsRenamingInStrings,
+        bool IsRenamingInComments,
         ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans,
         ImmutableHashSet<TextSpan> RelatedTextSpans);
 }
