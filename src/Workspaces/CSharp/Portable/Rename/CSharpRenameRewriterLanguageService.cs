@@ -51,6 +51,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
         {
             private readonly Dictionary<TextSpan, RenameSymbolContext> _textSpanToRenameContext;
             private readonly Dictionary<SymbolKey, RenameSymbolContext> _renameContexts;
+            private readonly Dictionary<TextSpan, HashSet<RenameSymbolContext>> _stringAndCommentRenameContexts;
 
             private readonly DocumentId _documentId;
             private readonly Solution _solution;
@@ -104,6 +105,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 var syntaxFactService = parameters.Document.Project.LanguageServices.GetRequiredService<ISyntaxFactsService>();
                 _renameContexts = CreateRenameContexts(parameters.SymbolParameters, _semanticModel, syntaxFactService);
                 _textSpanToRenameContext = GroupSymbolContextsByTextSpan(_renameContexts.Values);
+                _stringAndCommentRenameContexts = GroupSymbolContextByStringAndCommentTextSpan(_renameContexts.Values);
             }
 
             public override SyntaxNode? Visit(SyntaxNode? node)
@@ -204,6 +206,21 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 }
 
                 return false;
+            }
+
+            public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
+            {
+                var newTrivia = base.VisitTrivia(trivia);
+                if (_stringAndCommentRenameContexts.TryGetValue(trivia.Span, out var renameSymbolContexts))
+                {
+                    RenameInCommentTrivia()
+                    foreach (var context in renameSymbolContexts)
+                    {
+
+                    }
+                }
+
+                return newTrivia;
             }
 
             public override SyntaxToken VisitToken(SyntaxToken token)
@@ -740,6 +757,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 }
 
                 return trivia;
+            }
+
+            private SyntaxTrivia RenameInCommentTrivia(SyntaxTrivia trivia, HashSet<RenameSymbolContext> renameSymbolContexts)
+            {
+
             }
 
             private SyntaxToken RenameWithinToken(SyntaxToken oldToken, SyntaxToken newToken, RenameSymbolContext renameSymbolContext)
@@ -1347,6 +1369,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             var position = nodeToSpeculate.SpanStart;
             return SpeculationAnalyzer.CreateSpeculativeSemanticModelForNode(nodeToSpeculate, originalSemanticModel, position, isInNamespaceOrTypeContext);
         }
+
+        public override bool IsRenamableTokenInComment(SyntaxToken token)
+            => token.IsKind(SyntaxKind.XmlTextLiteralToken) || token.Parent.IsKind(SyntaxKind.IdentifierToken) && token.Parent.IsKind(SyntaxKind.XmlName);
 
         #endregion
     }

@@ -258,32 +258,32 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
                 public RenameRewriterSymbolParameters ToRenameRewriterParametersForDocument(DocumentId documentId)
                 {
-                    // TODO: Logic could be simplified here.
                     //Get all rename locations for the current document.
                     var renameLocations = RenameLocationSet.Locations;
-                    var allTextSpansInSingleSourceTree = renameLocations
-                        .Where(l => l.DocumentId == documentId && ShouldIncludeLocation(renameLocations, l))
-                        .ToDictionary(l => l.Location.SourceSpan);
+                    using var _1 = PooledHashSet<RenameLocation>.GetInstance(out var renameLocationsInDocument);
+                    using var _2 = PooledHashSet<TextSpan>.GetInstance(out var relatedSpansBuilder);
 
-                    // All textspan in the document documentId, that requires rename in String or Comment
-                    var stringAndCommentTextSpansInSingleSourceTree = renameLocations
-                        .Where(l => l.DocumentId == documentId && l.IsRenameInStringOrComment)
-                        .GroupBy(l => l.ContainingLocationForStringOrComment)
-                        .ToImmutableDictionary(
-                            g => g.Key,
-                            g => GetSubSpansToRenameInStringAndCommentTextSpans(g.Key, g));
-
-                    using var _ = PooledHashSet<TextSpan>.GetInstance(out var relatedSpansBuilder);
-                    relatedSpansBuilder.AddRange(allTextSpansInSingleSourceTree.Keys);
-                    relatedSpansBuilder.AddRange(stringAndCommentTextSpansInSingleSourceTree.Keys);
-
-                    foreach (var renameLocation in renameLocations)
+                    foreach (var location in renameLocations)
                     {
-                        if (renameLocation.DocumentId == documentId)
+                        if (location.DocumentId == documentId)
                         {
-                            relatedSpansBuilder.Add(renameLocation.Location.SourceSpan);
+                            renameLocationsInDocument.Add(location);
+                            relatedSpansBuilder.Add(location.Location.SourceSpan);
                         }
                     }
+
+                    var allTextSpansInSingleSourceTree = renameLocationsInDocument
+                        .Where(renameLocation => ShouldIncludeLocation(renameLocations, renameLocation))
+                        .ToDictionary(renameLocation => renameLocation.Location.SourceSpan);
+
+                    // All textspan in the document documentId, that requires rename in String or Comment
+                    var stringAndCommentTextSpansInSingleSourceTree = renameLocationsInDocument
+                        .Where(renaleLocation => renaleLocation.IsRenameInStringOrComment)
+                        .GroupBy(renameLocation => renameLocation.ContainingLocationForStringOrComment)
+                        .ToDictionary(keySelector: grouping => grouping.Key, elementSelector: grouping => grouping.ToHashSet());
+
+                    relatedSpansBuilder.AddRange(allTextSpansInSingleSourceTree.Keys);
+                    relatedSpansBuilder.AddRange(stringAndCommentTextSpansInSingleSourceTree.Keys);
 
                     return new RenameRewriterSymbolParameters(
                         IsRenamingInStrings: RenameOptions.RenameInStrings,
@@ -413,7 +413,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
                     foreach (var symbolSession in _symbolSessions)
                     {
-                        // This rename could break implicit references of this symbol (e.g. rename MoveNext on a collection like type in a 
+                        // This rename could break implicit references of this symbol (e.grouping. rename MoveNext on a collection like type in a 
                         // foreach/for each statement
                         var renamedSymbolInNewSolution = await GetRenamedSymbolInCurrentSolutionAsync(symbolSession, conflictResolution).ConfigureAwait(false);
 

@@ -24,6 +24,6 @@ namespace Microsoft.CodeAnalysis.Rename
         ISymbol RenameSymbol,
         string ReplacementText,
         bool ReplacementTextValid,
-        ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans,
+        Dictionary<TextSpan, HashSet<RenameLocation>> StringAndCommentTextSpans,
         ImmutableHashSet<TextSpan> RelatedTextSpans);
 }

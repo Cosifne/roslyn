@@ -27,6 +27,6 @@ namespace Microsoft.CodeAnalysis.Rename
         bool ReplacementTextValid,
         bool IsRenamingInStrings,
         bool IsRenamingInComments,
-        ImmutableDictionary<TextSpan, ImmutableSortedSet<TextSpan>?> StringAndCommentTextSpans,
+        Dictionary<TextSpan, HashSet<RenameLocation>> StringAndCommentTextSpans,
         ImmutableHashSet<TextSpan> RelatedTextSpans);
 }

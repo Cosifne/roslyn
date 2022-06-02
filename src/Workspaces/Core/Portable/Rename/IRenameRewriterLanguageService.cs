@@ -121,6 +121,8 @@ namespace Microsoft.CodeAnalysis.Rename
         /// <param name="token">The token to get the complexification target for.</param>
         /// <returns></returns>
         SyntaxNode? GetExpansionTargetForLocation(SyntaxToken token);
+
+        bool IsRenamableTokenInComment(SyntaxToken token);
     }
 
     internal abstract class AbstractRenameRewriterLanguageService : IRenameRewriterLanguageService
@@ -133,6 +135,7 @@ namespace Microsoft.CodeAnalysis.Rename
         public abstract bool IsIdentifierValid(string replacementText, ISyntaxFactsService syntaxFactsService);
         public abstract bool LocalVariableConflict(SyntaxToken token, IEnumerable<ISymbol> newReferencedSymbols);
         public abstract void TryAddPossibleNameConflicts(ISymbol symbol, string newName, ICollection<string> possibleNameConflicts);
+        public abstract bool IsRenamableTokenInComment(SyntaxToken token);
 
         protected static void AddConflictingParametersOfProperties(
             IEnumerable<ISymbol> properties, string newPropertyName, ArrayBuilder<Location> conflicts)
@@ -243,6 +246,28 @@ namespace Microsoft.CodeAnalysis.Rename
             }
 
             return textSpanToRenameContext;
+        }
+
+        protected static Dictionary<TextSpan, HashSet<RenameSymbolContext>> GroupSymbolContextByStringAndCommentTextSpan(
+            IEnumerable<RenameSymbolContext> renameSymbolContexts)
+        {
+            var textSpanToRenameContexts = new Dictionary<TextSpan, HashSet<RenameSymbolContext>>();
+            foreach (var symbolContext in renameSymbolContexts)
+            {
+                foreach (var (containingSpan, _) in symbolContext.StringAndCommentTextSpans)
+                {
+                    if (textSpanToRenameContexts.TryGetValue(containingSpan, out var existingContexts))
+                    {
+                        existingContexts.Add(symbolContext);
+                    }
+                    else
+                    {
+                        textSpanToRenameContexts[containingSpan] = new HashSet<RenameSymbolContext>() { symbolContext };
+                    }
+                }
+            }
+
+            return textSpanToRenameContexts;
         }
 
         protected static ImmutableHashSet<RenameSymbolContext> GetMatchedContexts(IEnumerable<RenameSymbolContext> renameContexts, Func<RenameSymbolContext, bool> predicate)
