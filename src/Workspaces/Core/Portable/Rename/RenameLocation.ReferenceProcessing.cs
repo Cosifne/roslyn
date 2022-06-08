@@ -17,6 +17,7 @@ using Roslyn.Utilities;
 using System.Text.RegularExpressions;
 using System.Collections.Immutable;
 using System.Text;
+using System.Net.WebSockets;
 
 namespace Microsoft.CodeAnalysis.Rename
 {
@@ -559,6 +560,24 @@ namespace Microsoft.CodeAnalysis.Rename
             {
                 var matchString = string.Format(@"\b{0}\b", matchText);
                 return new Regex(matchString, RegexOptions.CultureInvariant);
+            }
+
+            internal static string ReplaceMatchingSubStrings(
+                string originalString,
+                ImmutableSortedDictionary<TextSpan, string> subSpanToReplacementText)
+            {
+                var stringBuilder = new StringBuilder();
+                var startOffset = 0;
+                foreach (var (textSpan, replacementString) in subSpanToReplacementText)
+                {
+                    var offset = textSpan.Start - startOffset;
+                    stringBuilder.Append(originalString.AsSpan(startOffset, offset));
+                    stringBuilder.Append(replacementString);
+                    startOffset += offset + textSpan.Length;
+                }
+
+                stringBuilder.Append(originalString.AsSpan(startOffset));
+                return stringBuilder.ToString();
             }
 
             internal static string ReplaceMatchingSubStrings(
