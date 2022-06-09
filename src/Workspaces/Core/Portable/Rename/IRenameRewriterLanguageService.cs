@@ -156,45 +156,6 @@ namespace Microsoft.CodeAnalysis.Rename
             }
         }
 
-        protected static Dictionary<TextSpan, RenameSymbolContext> CreateRenameContextDictionary(
-            ImmutableHashSet<RenameSymbolContext> symbolParameters)
-        {
-            var textSpanToSymbolContext = new Dictionary<TextSpan, RenameSymbolContext>();
-            foreach (var symbolParameter in symbolParameters)
-            {
-                var symbolContext = new RenameSymbolContext(
-                    Priority: 1,
-                    symbolParameter.RenamedSymbolDeclarationAnnotation,
-                    symbolParameter.ReplacementText,
-                    symbolParameter.OriginalText,
-                    symbolParameter.PossibleNameConflicts,
-                    symbolParameter.RenameLocations,
-                    symbolParameter.RenameSymbol,
-                    symbolParameter.RenameSymbol as IAliasSymbol,
-                    symbolParameter.RenameSymbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == semanticModel.SyntaxTree),
-                    IsVerbatim: syntaxFactsService.IsVerbatimIdentifier(symbolParameter.ReplacementText),
-                    ReplacementTextValid: symbolParameter.ReplacementTextValid,
-                    IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
-                    IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                    StringAndCommentRenameLocations: symbolParameter.StringAndCommentTextSpans,
-                    RelatedTextSpans: symbolParameter.RelatedTextSpans);
-                foreach (var relatedSpan in symbolParameter.RelatedTextSpans)
-                {
-                    if (!textSpanToSymbolContext.ContainsKey(relatedSpan))
-                    {
-                        textSpanToSymbolContext[relatedSpan] = symbolContext;
-                    }
-                    else
-                    {
-                        // Each textSpan should only be renamed by one symbol.
-                        RoslynDebug.Assert(false);
-                    }
-                }
-            }
-
-            return textSpanToSymbolContext;
-        }
-
         protected static Dictionary<SymbolKey, RenameSymbolContext> GroupRenameContextBySymbolKey(
             ImmutableArray<RenameSymbolContext> symbolContexts)
         {
@@ -211,18 +172,14 @@ namespace Microsoft.CodeAnalysis.Rename
             IEnumerable<RenameSymbolContext> renameSymbolContexts)
         {
             var textSpanToRenameContext = new Dictionary<TextSpan, RenameSymbolContext>();
-            foreach (var symbolContext in renameSymbolContexts.OrderByDescending(c => c.Priority))
+            foreach (var symbolContext in renameSymbolContexts)
             {
-                foreach (var (textSpan, _) in symbolContext.RenameLocations)
+                foreach (var renameLocation in symbolContext.RenameLocations)
                 {
+                    var textSpan = renameLocation.Location.SourceSpan;
                     if (!textSpanToRenameContext.ContainsKey(textSpan))
                     {
                         textSpanToRenameContext[textSpan] = symbolContext;
-                    }
-                    else
-                    {
-                        // How could one text span is needed to be renamed for two symbols?
-                        RoslynDebug.Assert(false);
                     }
                 }
             }
