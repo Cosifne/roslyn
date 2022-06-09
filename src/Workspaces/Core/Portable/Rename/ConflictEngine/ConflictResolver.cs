@@ -40,7 +40,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         internal static async Task<ConflictResolution> ResolveConflictsAsync(
             Solution solution,
-            ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
+            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -84,7 +84,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         private static async Task<ConflictResolution> ResolveConflictsInCurrentProcressAsync(
             Solution solution,
-            ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
+            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
         {
             var resolution = await ResolveMutableConflictsAsync(
@@ -105,11 +105,11 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         private static async Task<MutableConflictResolution> ResolveMutableConflictsAsync(
             Solution solution,
-            ImmutableDictionary<ISymbol, RenameSymbolInfo> renameSymbolsInfo,
+            ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var renamedSymbolNotInSource = renameSymbolsInfo.Values.FirstOrDefault(info => info.RenameLocations.Symbol.Locations.Any(l => !l.IsInSource));
+            var renamedSymbolNotInSource = renameSymbolsInfo.FirstOrDefault(info => info.RenameLocations.Symbol.Locations.Any(l => !l.IsInSource));
             if (renamedSymbolNotInSource != null)
             {
                 // Symbol "{0}" is not from source.
@@ -121,7 +121,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 throw ExceptionUtilities.UnexpectedValue(renameSymbolsInfo);
             }
 
-            var fallbackOptions = renameSymbolsInfo.First().Value.RenameLocations.FallbackOptions;
+            var fallbackOptions = renameSymbolsInfo.First().RenameLocations.FallbackOptions;
             var session = await Session.CreateAsync(solution, renameSymbolsInfo, fallbackOptions, cancellationToken).ConfigureAwait(false);
             return await session.ResolveConflictsAsync().ConfigureAwait(false);
         }
@@ -142,10 +142,11 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 return new MutableConflictResolution(string.Format(WorkspacesResources.Symbol_0_is_not_from_source, renameLocationSet.Symbol.Name));
             }
 
-            var RenameSymbolInfo = new RenameSymbolInfo(replacementText, nonConflictSymbols, renameLocationSet);
+            // Priority is only used when rename multiple symbols.
+            var renameSymbolInfo = new RenameSymbolInfo(Priority: 0, replacementText, nonConflictSymbols, renameLocationSet);
             var session = await Session.CreateAsync(
                 renameLocationSet.Solution,
-                ImmutableDictionary<ISymbol, RenameSymbolInfo>.Empty.Add(renameLocationSet.Symbol, RenameSymbolInfo),
+                ImmutableArray.Create(renameSymbolInfo),
                 renameLocationSet.FallbackOptions,
                  cancellationToken).ConfigureAwait(false);
             return await session.ResolveConflictsAsync().ConfigureAwait(false);
@@ -540,5 +541,24 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
         private static bool IsIdentifierSeparator(char element)
             => s_metadataNameSeparators.IndexOf(element) != -1;
+
+        /// We try to rewrite all locations that are invalid candidate locations. If there is only
+        /// one renameLocation it must be the correct one (the symbol is ambiguous to something else)
+        /// and we always try to rewrite it.  If there are multiple locations, we only allow it
+        /// if the candidate reason allows for it).
+        private static bool ShouldIncludeLocation(ISet<RenameLocation> renameLocations, RenameLocation location)
+        {
+            if (location.IsRenameInStringOrComment)
+            {
+                return false;
+            }
+
+            if (renameLocations.Count == 1)
+            {
+                return true;
+            }
+
+            return RenameLocation.ShouldRename(location);
+        }
     }
 }

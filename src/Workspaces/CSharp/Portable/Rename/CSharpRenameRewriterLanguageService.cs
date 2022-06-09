@@ -100,10 +100,11 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 _renameAnnotations = parameters.RenameAnnotations;
                 _simplificationService = parameters.Document.Project.LanguageServices.GetRequiredService<ISimplificationService>();
                 _semanticFactsService = parameters.Document.Project.LanguageServices.GetRequiredService<ISemanticFactsService>();
-                var syntaxFactService = parameters.Document.Project.LanguageServices.GetRequiredService<ISyntaxFactsService>();
-                _renameContexts = CreateRenameContexts(parameters.SymbolParameters, _semanticModel, syntaxFactService);
-                _textSpanToRenameContext = GroupSymbolContextsByTextSpan(_renameContexts.Values);
-                _stringAndCommentRenameContexts = GroupSymbolContextByStringAndCommentTextSpan(_renameContexts.Values);
+
+                var renameSymbolContexts = parameters.RenameSymbolContexts.OrderByDescending(c => c.Priority).ToImmutableArray();
+                _renameContexts = GroupRenameContextBySymbolKey(renameSymbolContexts);
+                _textSpanToRenameContext = GroupSymbolContextsByTextSpan(renameSymbolContexts);
+                _stringAndCommentRenameContexts = GroupSymbolContextByStringAndCommentTextSpan(renameSymbolContexts);
             }
 
             public override SyntaxNode? Visit(SyntaxNode? node)

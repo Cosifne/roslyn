@@ -157,9 +157,7 @@ namespace Microsoft.CodeAnalysis.Rename
         }
 
         protected static Dictionary<TextSpan, RenameSymbolContext> CreateRenameContextDictionary(
-            ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
-            SemanticModel semanticModel,
-            ISyntaxFactsService syntaxFactsService)
+            ImmutableHashSet<RenameSymbolContext> symbolParameters)
         {
             var textSpanToSymbolContext = new Dictionary<TextSpan, RenameSymbolContext>();
             foreach (var symbolParameter in symbolParameters)
@@ -197,31 +195,13 @@ namespace Microsoft.CodeAnalysis.Rename
             return textSpanToSymbolContext;
         }
 
-        protected static Dictionary<SymbolKey, RenameSymbolContext> CreateRenameContexts(
-            ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
-            SemanticModel semanticModel,
-            ISyntaxFactsService syntaxFactsService)
+        protected static Dictionary<SymbolKey, RenameSymbolContext> GroupRenameContextBySymbolKey(
+            ImmutableArray<RenameSymbolContext> symbolContexts)
         {
             var renameContexts = new Dictionary<SymbolKey, RenameSymbolContext>();
-            foreach (var symbolParameter in symbolParameters)
+            foreach (var context in symbolContexts)
             {
-                var symbolContext = new RenameSymbolContext(
-                    Priority: 1,
-                    symbolParameter.RenamedSymbolDeclarationAnnotation,
-                    symbolParameter.ReplacementText,
-                    symbolParameter.OriginalText,
-                    symbolParameter.PossibleNameConflicts,
-                    symbolParameter.RenameLocations,
-                    symbolParameter.RenameSymbol,
-                    symbolParameter.RenameSymbol as IAliasSymbol,
-                    symbolParameter.RenameSymbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == semanticModel.SyntaxTree),
-                    IsVerbatim: syntaxFactsService.IsVerbatimIdentifier(symbolParameter.ReplacementText),
-                    ReplacementTextValid: symbolParameter.ReplacementTextValid,
-                    IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
-                    IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                    StringAndCommentRenameLocations: symbolParameter.StringAndCommentTextSpans,
-                    RelatedTextSpans: symbolParameter.RelatedTextSpans);
-                renameContexts[symbolParameter.RenameSymbol.GetSymbolKey()] = symbolContext;
+                renameContexts[context.RenamedSymbol.GetSymbolKey()] = context;
             }
 
             return renameContexts;
@@ -231,9 +211,9 @@ namespace Microsoft.CodeAnalysis.Rename
             IEnumerable<RenameSymbolContext> renameSymbolContexts)
         {
             var textSpanToRenameContext = new Dictionary<TextSpan, RenameSymbolContext>();
-            foreach (var symbolContext in renameSymbolContexts)
+            foreach (var symbolContext in renameSymbolContexts.OrderByDescending(c => c.Priority))
             {
-                foreach (var textSpan in symbolContext.RelatedTextSpans)
+                foreach (var (textSpan, _) in symbolContext.RenameLocations)
                 {
                     if (!textSpanToRenameContext.ContainsKey(textSpan))
                     {

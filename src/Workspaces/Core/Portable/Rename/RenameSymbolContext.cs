@@ -20,7 +20,7 @@ namespace Microsoft.CodeAnalysis.Rename
         string ReplacementText,
         string OriginalText,
         ICollection<string> PossibleNameConflicts,
-        Dictionary<TextSpan, RenameLocation> RenameLocations,
+        ImmutableArray<RenameLocation> RenameLocations,
         ISymbol RenamedSymbol,
         IAliasSymbol? AliasSymbol,
         Location? RenamableDeclarationLocation,
@@ -28,6 +28,5 @@ namespace Microsoft.CodeAnalysis.Rename
         bool ReplacementTextValid,
         bool IsRenamingInStrings,
         bool IsRenamingInComments,
-        ImmutableArray<RenameLocation> StringAndCommentRenameLocations,
-        ImmutableHashSet<TextSpan> RelatedTextSpans);
+        ImmutableArray<RenameLocation> StringAndCommentRenameLocations);
 }

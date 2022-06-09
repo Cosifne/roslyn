@@ -146,13 +146,13 @@ namespace Microsoft.CodeAnalysis.Rename
 
         internal static async Task<ConflictResolution> ReanmeSymbolsAsync(
             Solution solution,
-            ImmutableDictionary<ISymbol, (string newName, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols)> renameSymbolsToRenameParameters,
+            ImmutableArray<(ISymbol symbol, string newName, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols)> renameSymbolsInfo,
             CodeCleanupOptionsProvider fallbackOptions,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             // TODO: Move this all to OOP.
-            return await RenameSymbolsInCurrentProcessAsync(solution, renameSymbolsToRenameParameters, fallbackOptions, cancellationToken).ConfigureAwait(false);
+            return await RenameSymbolsInCurrentProcessAsync(solution, renameSymbolsInfo, fallbackOptions, cancellationToken).ConfigureAwait(false);
         }
 
         internal static async Task<ConflictResolution> RenameSymbolAsync(
@@ -226,20 +226,29 @@ namespace Microsoft.CodeAnalysis.Rename
 
         private static async Task<ConflictResolution> RenameSymbolsInCurrentProcessAsync(
             Solution solution,
-            ImmutableDictionary<ISymbol, (string newName, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols)> renameSymbolsInfo,
+            ImmutableArray<(ISymbol symbol, string newName, SymbolRenameOptions options, ImmutableHashSet<ISymbol>? nonConflictSymbols)> renameSymbolsInfo,
             CodeCleanupOptionsProvider fallbackOptions,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            using var _ = PooledDictionary<ISymbol, RenameSymbolInfo>.GetInstance(out var builder);
-            foreach (var (symbol, (newName, renameOptions, nonConflictSymbols)) in renameSymbolsInfo)
+            using var _ = ArrayBuilder<RenameSymbolInfo>.GetInstance(out var builder);
+
+            for (var i = 0; i < renameSymbolsInfo.Length; i++)
             {
+                var (symbol, newName, renameOptions, nonConflictSymbols) = renameSymbolsInfo[i];
+
                 // Consider using the new FAR API to get all the rename locations in one batched call. 
                 var renamelocations = await FindRenameLocationsAsync(solution, symbol, renameOptions, fallbackOptions, cancellationToken).ConfigureAwait(false);
-                builder[symbol] = new RenameSymbolInfo(newName, nonConflictSymbols, renamelocations);
+                var priority = renameSymbolsInfo.Length - i;
+
+                builder.Add(new RenameSymbolInfo(
+                    Priority: priority,
+                    newName,
+                    nonConflictSymbols,
+                    renamelocations));
             }
 
-            return await RenameLocations.ResolveConflictsAsync(solution, builder.ToImmutableDictionary(), cancellationToken).ConfigureAwait(false);
+            return await RenameLocations.ResolveConflictsAsync(solution, builder.ToImmutableArray(), cancellationToken).ConfigureAwait(false);
         }
     }
 }
