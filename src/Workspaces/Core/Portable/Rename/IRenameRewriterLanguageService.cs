@@ -165,6 +165,7 @@ namespace Microsoft.CodeAnalysis.Rename
             foreach (var symbolParameter in symbolParameters)
             {
                 var symbolContext = new RenameSymbolContext(
+                    Priority: 1,
                     symbolParameter.RenamedSymbolDeclarationAnnotation,
                     symbolParameter.ReplacementText,
                     symbolParameter.OriginalText,
@@ -177,7 +178,7 @@ namespace Microsoft.CodeAnalysis.Rename
                     ReplacementTextValid: symbolParameter.ReplacementTextValid,
                     IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
                     IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                    StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans,
+                    StringAndCommentRenameLocations: symbolParameter.StringAndCommentTextSpans,
                     RelatedTextSpans: symbolParameter.RelatedTextSpans);
                 foreach (var relatedSpan in symbolParameter.RelatedTextSpans)
                 {
@@ -205,6 +206,7 @@ namespace Microsoft.CodeAnalysis.Rename
             foreach (var symbolParameter in symbolParameters)
             {
                 var symbolContext = new RenameSymbolContext(
+                    Priority: 1,
                     symbolParameter.RenamedSymbolDeclarationAnnotation,
                     symbolParameter.ReplacementText,
                     symbolParameter.OriginalText,
@@ -217,7 +219,7 @@ namespace Microsoft.CodeAnalysis.Rename
                     ReplacementTextValid: symbolParameter.ReplacementTextValid,
                     IsRenamingInStrings: symbolParameter.IsRenamingInStrings,
                     IsRenamingInComments: symbolParameter.IsRenamingInComments,
-                    StringAndCommentTextSpans: symbolParameter.StringAndCommentTextSpans,
+                    StringAndCommentRenameLocations: symbolParameter.StringAndCommentTextSpans,
                     RelatedTextSpans: symbolParameter.RelatedTextSpans);
                 renameContexts[symbolParameter.RenameSymbol.GetSymbolKey()] = symbolContext;
             }
@@ -254,8 +256,9 @@ namespace Microsoft.CodeAnalysis.Rename
             var textSpanToRenameContexts = new Dictionary<TextSpan, HashSet<RenameSymbolContext>>();
             foreach (var symbolContext in renameSymbolContexts)
             {
-                foreach (var (containingSpan, _) in symbolContext.StringAndCommentTextSpans)
+                foreach (var renameLocation in symbolContext.StringAndCommentRenameLocations)
                 {
+                    var containingSpan = renameLocation.ContainingLocationForStringOrComment;
                     if (textSpanToRenameContexts.TryGetValue(containingSpan, out var existingContexts))
                     {
                         existingContexts.Add(symbolContext);

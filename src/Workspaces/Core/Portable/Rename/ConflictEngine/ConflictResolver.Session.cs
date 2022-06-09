@@ -32,8 +32,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         {
             private readonly Solution _baseSolution;
             private readonly ImmutableArray<SymbolSession> _symbolSessions;
-            private readonly ImmutableDictionary<DocumentId, HashSet<SymbolSession>> _documentIdToAffectSymbolSessions;
-            private readonly ImmutableDictionary<ProjectId, HashSet<SymbolSession>> _projectIdToAffectSymbolSessions;
+            private readonly ImmutableDictionary<DocumentId, ImmutableArray<SymbolSession>> _documentIdToAffectSymbolSessions;
+            private readonly ImmutableDictionary<ProjectId, ImmutableArray<SymbolSession>> _projectIdToAffectSymbolSessions;
 
             // Rename Symbol's Source Location
             private readonly CancellationToken _cancellationToken;
@@ -48,8 +48,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 Solution solution,
                 ImmutableArray<ProjectId> topologicallySortedProjects,
                 ImmutableArray<SymbolSession> symbolSessions,
-                ImmutableDictionary<DocumentId, HashSet<SymbolSession>> documentIdToAffectSymbolSessions,
-                ImmutableDictionary<ProjectId, HashSet<SymbolSession>> projectIdToAffectSymbolSessions,
+                ImmutableDictionary<DocumentId, ImmutableArray<SymbolSession>> documentIdToAffectSymbolSessions,
+                ImmutableDictionary<ProjectId, ImmutableArray<SymbolSession>> projectIdToAffectSymbolSessions,
                 RenamedSpansTracker renamedSpansTracker,
                 CodeCleanupOptionsProvider fallbackOptions,
                 CancellationToken cancellationToken)
@@ -80,7 +80,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 // So later when rename & check conflict for a document, we know the symbols need to be renamed within this document.
                 var documentIdToAffectSymbolSessions = GroupSymbolSessionsByDocumentsId(symbolSessions);
                 var projectIdToAffectSymbolSessions = GroupSymbolSessionsByProjectsId(symbolSessions);
-                var renamedSpansTracker = new RenamedSpansTracker(GetAreAllReplacementTextsValidInDocument(documentIdToAffectSymbolSessions));
+                var renamedSpansTracker = new RenamedSpansTracker(
+                    GetAreAllReplacementTextsValidInDocument(documentIdToAffectSymbolSessions));
                 return new Session(
                     solution,
                     topologicallySortedProjects,
@@ -137,9 +138,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 return symbolSesssionBuilder.ToImmutableArray();
             }
 
-            private static ImmutableDictionary<DocumentId, HashSet<SymbolSession>> GroupSymbolSessionsByDocumentsId(ImmutableArray<SymbolSession> symbolSessions)
+            private static ImmutableDictionary<DocumentId, ImmutableArray<SymbolSession>> GroupSymbolSessionsByDocumentsId(ImmutableArray<SymbolSession> symbolSessions)
             {
-                using var _ = PooledDictionary<DocumentId, HashSet<SymbolSession>>.GetInstance(out var builder);
+                using var _ = PooledDictionary<DocumentId, ImmutableArray<SymbolSession>>.GetInstance(out var builder);
                 foreach (var session in symbolSessions)
                 {
                     foreach (var documentId in session.DocumentsIdsToBeCheckedForConflict)
@@ -180,7 +181,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 return builder.ToImmutableDictionary();
             }
 
-            private static ImmutableDictionary<DocumentId, bool> GetAreAllReplacementTextsValidInDocument(ImmutableDictionary<DocumentId, HashSet<SymbolSession>> documentToSessions)
+            private static ImmutableDictionary<DocumentId, bool> GetAreAllReplacementTextsValidInDocument(
+                ImmutableDictionary<DocumentId, ImmutableArray<SymbolSession>> documentToSessions)
             {
                 using var _ = PooledDictionary<DocumentId, bool>.GetInstance(out var builder);
                 foreach (var (documentId, sessions) in documentToSessions)
@@ -229,6 +231,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
                 public readonly bool ReplacementTextValid;
                 public bool DocumentOfRenameSymbolHasBeenRenamed { get; set; } = false;
+
+                public readonly RenameSymbolContext RenameSymbolContext;
 
                 public SymbolRenameOptions RenameOptions => RenameLocationSet.Options;
 
@@ -279,11 +283,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     // All textspan in the document documentId, that requires rename in String or Comment
                     var stringAndCommentTextSpansInSingleSourceTree = renameLocationsInDocument
                         .Where(renaleLocation => renaleLocation.IsRenameInStringOrComment)
-                        .GroupBy(renameLocation => renameLocation.ContainingLocationForStringOrComment)
-                        .ToDictionary(keySelector: grouping => grouping.Key, elementSelector: grouping => grouping.ToHashSet());
+                        .ToImmutableArray();
 
                     relatedSpansBuilder.AddRange(allTextSpansInSingleSourceTree.Keys);
-                    relatedSpansBuilder.AddRange(stringAndCommentTextSpansInSingleSourceTree.Keys);
 
                     return new RenameRewriterSymbolParameters(
                         IsRenamingInStrings: RenameOptions.RenameInStrings,
@@ -1021,9 +1023,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         var originalSyntaxRoot = await semanticModel.SyntaxTree.GetRootAsync(_cancellationToken).ConfigureAwait(false);
 
                         // Get all the symbols need to rename in this document.
-                        var symbolsRenameParameters = GetRenameRewriterSymbolParametersForDocument(
-                            _documentIdToAffectSymbolSessions[documentId],
-                            documentId);
+                        var symbolsRenameParameters = _documentIdToAffectSymbolSessions[documentId].SelectAsArray(session => session.ToRenameRewriterParametersForDocument(documentId));
 
                         var conflictLocationSpans = _conflictLocations
                                                     .Where(t => t.DocumentId == documentId)

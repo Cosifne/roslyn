@@ -22,7 +22,7 @@ namespace Microsoft.CodeAnalysis.Rename
         internal readonly Document Document;
         internal readonly SemanticModel SemanticModel;
         internal readonly AnnotationTable<RenameAnnotation> RenameAnnotations;
-        internal readonly ImmutableHashSet<RenameRewriterSymbolParameters> SymbolParameters;
+        internal readonly ImmutableArray<RenameSymbolContext> RenameSymbolContexts;
 
         public RenameRewriterParameters(
             Solution originalSolution,
@@ -30,7 +30,7 @@ namespace Microsoft.CodeAnalysis.Rename
             Document document,
             SemanticModel semanticModel,
             SyntaxNode syntaxRoot,
-            ImmutableHashSet<RenameRewriterSymbolParameters> symbolParameters,
+            ImmutableArray<RenameSymbolContext> renameSymbolContexts,
             ISet<TextSpan> conflictLocationSpans,
             AnnotationTable<RenameAnnotation> renameAnnotations,
             CancellationToken cancellationToken)
@@ -43,7 +43,7 @@ namespace Microsoft.CodeAnalysis.Rename
             Document = document;
             SemanticModel = semanticModel;
             RenameAnnotations = renameAnnotations;
-            SymbolParameters = symbolParameters;
+            RenameSymbolContexts = renameSymbolContexts;
             OriginalSyntaxTree = semanticModel.SyntaxTree;
         }
     }
