@@ -943,8 +943,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             .SelectAsArray(session => session.GetRenameSymbolContextForDocument(document, semanticModel.SyntaxTree));
 
                         var conflictLocationSpans = _conflictLocations
-                                                    .Where(t => t.DocumentId == documentId)
-                                                    .Select(t => t.ComplexifiedSpan).ToSet();
+                            .Where(t => t.DocumentId == documentId)
+                            .Select(t => t.ComplexifiedSpan).ToSet();
 
                         // Annotate all nodes with a RenameLocation annotations to record old locations & old referenced symbols.
                         // Also annotate nodes that should get complexified (nodes for rename locations + conflict locations)

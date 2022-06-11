@@ -37,8 +37,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             public readonly ImmutableHashSet<DocumentId> DocumentsIdsToBeCheckedForConflict;
 
             public readonly bool ReplacementTextValid;
-            public bool DocumentOfRenameSymbolHasBeenRenamed { get; set; } = false;
+            public readonly RenameSymbolContext RenameSymbolContext;
 
+            public bool DocumentOfRenameSymbolHasBeenRenamed { get; set; } = false;
             public SymbolRenameOptions RenameOptions => RenameLocationSet.Options;
 
             public SymbolSession(
@@ -65,6 +66,20 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 PossibleNameConflicts = possibleNameConflicts;
                 DocumentsIdsToBeCheckedForConflict = documentsIdsToBeCheckedForConflict;
                 ReplacementTextValid = replacementTextValid;
+
+                var symbol = RenameLocationSet.Symbol;
+                RenameSymbolContext = new RenameSymbolContext(
+                    priority,
+                    renamedSymbolDeclarationAnnotation,
+                    replacementText,
+                    originalText,
+                    possibleNameConflicts,
+                    symbol,
+                    symbol as IAliasSymbol,
+                    symbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == syntaxTree),
+                    ReplacementTextValid,
+                    RenameLocationSet.Options.RenameInStrings,
+                    RenameLocationSet.Options.RenameInComments);
             }
 
             public RenameSymbolContext GetRenameSymbolContextForDocument(
@@ -75,7 +90,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
 
                 //Get all rename locations for the current document.
                 var renameLocations = RenameLocationSet.Locations;
-                using var _1 = PooledHashSet<RenameLocation>.GetInstance(out var renameLocationsInDocument);
+                using var _ = PooledHashSet<RenameLocation>.GetInstance(out var renameLocationsInDocument);
 
                 foreach (var location in renameLocations)
                 {

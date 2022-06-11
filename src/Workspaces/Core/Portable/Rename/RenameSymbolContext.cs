@@ -16,17 +16,18 @@ namespace Microsoft.CodeAnalysis.Rename
     /// </summary>
     internal record RenameSymbolContext(
         int Priority,
-        RenameAnnotation RenameRenamableSymbolDeclarationAnnotation,
+        RenameAnnotation RenamableSymbolDeclarationAnnotation,
         string ReplacementText,
         string OriginalText,
         ICollection<string> PossibleNameConflicts,
-        ImmutableArray<RenameLocation> RenameLocations,
         ISymbol RenamedSymbol,
         IAliasSymbol? AliasSymbol,
-        Location? RenamableDeclarationLocation,
-        bool IsVerbatim,
         bool ReplacementTextValid,
         bool IsRenamingInStrings,
-        bool IsRenamingInComments,
-        ImmutableArray<RenameLocation> StringAndCommentRenameLocations);
+        bool IsRenamingInComments);
+
+    internal record TextSpanRenameContext(RenameLocation RenameLocation, bool IsReplacementVerbatim, RenameSymbolContext SymbolContext)
+    {
+        public int Priority => SymbolContext.Priority;
+    }
 }

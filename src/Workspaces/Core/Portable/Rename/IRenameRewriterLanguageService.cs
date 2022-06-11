@@ -168,42 +168,36 @@ namespace Microsoft.CodeAnalysis.Rename
             return renameContexts;
         }
 
-        protected static Dictionary<TextSpan, RenameSymbolContext> GroupSymbolContextsByTextSpan(
-            IEnumerable<RenameSymbolContext> renameSymbolContexts)
+        protected static Dictionary<TextSpan, TextSpanRenameContext> GroupTextRenameContextsByTextSpan(
+            ImmutableArray<TextSpanRenameContext> textSpanRenameContexts)
         {
-            var textSpanToRenameContext = new Dictionary<TextSpan, RenameSymbolContext>();
-            foreach (var symbolContext in renameSymbolContexts)
+            var textSpanToRenameContext = new Dictionary<TextSpan, TextSpanRenameContext>();
+            foreach (var context in textSpanRenameContexts)
             {
-                foreach (var renameLocation in symbolContext.RenameLocations)
+                var textSpan = context.RenameLocation.Location.SourceSpan;
+                if (!textSpanToRenameContext.ContainsKey(textSpan))
                 {
-                    var textSpan = renameLocation.Location.SourceSpan;
-                    if (!textSpanToRenameContext.ContainsKey(textSpan))
-                    {
-                        textSpanToRenameContext[textSpan] = symbolContext;
-                    }
+                    textSpanToRenameContext[textSpan] = context;
                 }
             }
 
             return textSpanToRenameContext;
         }
 
-        protected static Dictionary<TextSpan, HashSet<RenameSymbolContext>> GroupSymbolContextByStringAndCommentTextSpan(
-            IEnumerable<RenameSymbolContext> renameSymbolContexts)
+        protected static Dictionary<TextSpan, HashSet<TextSpanRenameContext>> GroupStringAndCommentsTextSpanRenameContexts(
+            ImmutableArray<TextSpanRenameContext> renameSymbolContexts)
         {
-            var textSpanToRenameContexts = new Dictionary<TextSpan, HashSet<RenameSymbolContext>>();
-            foreach (var symbolContext in renameSymbolContexts)
+            var textSpanToRenameContexts = new Dictionary<TextSpan, HashSet<TextSpanRenameContext>>();
+            foreach (var context in renameSymbolContexts)
             {
-                foreach (var renameLocation in symbolContext.StringAndCommentRenameLocations)
+                var containingSpan = context.RenameLocation.ContainingLocationForStringOrComment;
+                if (textSpanToRenameContexts.TryGetValue(containingSpan, out var existingContexts))
                 {
-                    var containingSpan = renameLocation.ContainingLocationForStringOrComment;
-                    if (textSpanToRenameContexts.TryGetValue(containingSpan, out var existingContexts))
-                    {
-                        existingContexts.Add(symbolContext);
-                    }
-                    else
-                    {
-                        textSpanToRenameContexts[containingSpan] = new HashSet<RenameSymbolContext>() { symbolContext };
-                    }
+                    existingContexts.Add(context);
+                }
+                else
+                {
+                    textSpanToRenameContexts[containingSpan] = new HashSet<TextSpanRenameContext>() { context };
                 }
             }
 
