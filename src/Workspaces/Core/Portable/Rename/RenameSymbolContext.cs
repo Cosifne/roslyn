@@ -26,8 +26,33 @@ namespace Microsoft.CodeAnalysis.Rename
         bool IsRenamingInStrings,
         bool IsRenamingInComments);
 
-    internal record TextSpanRenameContext(RenameLocation RenameLocation, bool IsReplacementVerbatim, RenameSymbolContext SymbolContext)
+    internal record TextSpanRenameContext(RenameLocation RenameLocation, RenameSymbolContext SymbolContext)
     {
         public int Priority => SymbolContext.Priority;
+
+        public TextSpanRenameContext GetTextSpanRenameContextForDocument(
+            RenameSymbolContext renameSymbolContext,
+            Document document,
+            SyntaxTree syntaxTree)
+        {
+            //Get all rename locations for the current document.
+            var renameLocations = RenameLocationSet.Locations;
+            using var _ = PooledHashSet<RenameLocation>.GetInstance(out var renameLocationsInDocument);
+
+            foreach (var location in renameLocations)
+            {
+                if (location.DocumentId == document.Id)
+                    renameLocationsInDocument.Add(location);
+            }
+
+            var allTextSpansInSingleSourceTree = renameLocationsInDocument
+                .Where(renameLocation => ShouldIncludeLocation(renameLocations, renameLocation))
+                .ToImmutableArray();
+
+            // All textspan in the document documentId, that requires rename in String or Comment
+            var stringAndCommentTextSpansInSingleSourceTree = renameLocationsInDocument
+                .Where(renaleLocation => renaleLocation.IsRenameInStringOrComment)
+                .ToImmutableArray();
+        }
     }
 }

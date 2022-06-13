@@ -19,6 +19,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
     {
         private class SymbolSession
         {
+            public readonly RenameSymbolContext RenameSymbolContext;
+
             private readonly int Priority;
             // Set of All Locations that will be renamed (does not include non-reference locations that need to be checked for conflicts)
             public readonly RenameLocations RenameLocationSet;
@@ -37,7 +39,6 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             public readonly ImmutableHashSet<DocumentId> DocumentsIdsToBeCheckedForConflict;
 
             public readonly bool ReplacementTextValid;
-            public readonly RenameSymbolContext RenameSymbolContext;
 
             public bool DocumentOfRenameSymbolHasBeenRenamed { get; set; } = false;
             public SymbolRenameOptions RenameOptions => RenameLocationSet.Options;
@@ -76,54 +77,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     possibleNameConflicts,
                     symbol,
                     symbol as IAliasSymbol,
-                    symbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == syntaxTree),
                     ReplacementTextValid,
                     RenameLocationSet.Options.RenameInStrings,
                     RenameLocationSet.Options.RenameInComments);
-            }
-
-            public RenameSymbolContext GetRenameSymbolContextForDocument(
-                Document document,
-                SyntaxTree syntaxTree)
-            {
-                var syntaxFactsService = document.Project.GetRequiredLanguageService<ISyntaxFactsService>();
-
-                //Get all rename locations for the current document.
-                var renameLocations = RenameLocationSet.Locations;
-                using var _ = PooledHashSet<RenameLocation>.GetInstance(out var renameLocationsInDocument);
-
-                foreach (var location in renameLocations)
-                {
-                    if (location.DocumentId == document.Id)
-                        renameLocationsInDocument.Add(location);
-                }
-
-                var allTextSpansInSingleSourceTree = renameLocationsInDocument
-                    .Where(renameLocation => ShouldIncludeLocation(renameLocations, renameLocation))
-                    .ToImmutableArray();
-
-                // All textspan in the document documentId, that requires rename in String or Comment
-                var stringAndCommentTextSpansInSingleSourceTree = renameLocationsInDocument
-                    .Where(renaleLocation => renaleLocation.IsRenameInStringOrComment)
-                    .ToImmutableArray();
-
-                var symbol = RenameLocationSet.Symbol;
-
-                return new RenameSymbolContext(
-                    Priority,
-                    RenamedSymbolDeclarationAnnotation,
-                    ReplacementText,
-                    OriginalText,
-                    PossibleNameConflicts,
-                    allTextSpansInSingleSourceTree,
-                    symbol,
-                    symbol as IAliasSymbol,
-                    symbol.Locations.FirstOrDefault(loc => loc.IsInSource && loc.SourceTree == syntaxTree),
-                    syntaxFactsService.IsVerbatimIdentifier(ReplacementText),
-                    ReplacementTextValid,
-                    RenameLocationSet.Options.RenameInStrings,
-                    RenameLocationSet.Options.RenameInComments,
-                    stringAndCommentTextSpansInSingleSourceTree);
             }
         }
     }

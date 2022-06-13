@@ -13,7 +13,6 @@ namespace Microsoft.CodeAnalysis.Rename
 {
     internal class RenameRewriterParameters
     {
-        internal readonly CancellationToken CancellationToken;
         internal readonly ISet<TextSpan> ConflictLocationSpans;
         internal readonly Solution OriginalSolution;
         internal readonly SyntaxTree OriginalSyntaxTree;
@@ -24,29 +23,34 @@ namespace Microsoft.CodeAnalysis.Rename
         internal readonly AnnotationTable<RenameAnnotation> RenameAnnotations;
         internal readonly ImmutableArray<TextSpanRenameContext> TokenTextSpanRenameContexts;
         internal readonly ImmutableArray<TextSpanRenameContext> StringAndCommentsTextSpanRenameContexts;
-        internal readonly ImmutableArray<RenameSymbolContext> RenameSymbolContexts; 
+        internal readonly ImmutableArray<RenameSymbolContext> RenameSymbolContexts;
+        internal readonly CancellationToken CancellationToken;
 
         public RenameRewriterParameters(
+            ISet<TextSpan> conflictLocationSpans,
             Solution originalSolution,
             RenamedSpansTracker renameSpansTracker,
+            SyntaxNode syntaxRoot,
             Document document,
             SemanticModel semanticModel,
-            SyntaxNode syntaxRoot,
-            ImmutableArray<TextSpanRenameContext> textSpanRenameContexts,
-            ISet<TextSpan> conflictLocationSpans,
             AnnotationTable<RenameAnnotation> renameAnnotations,
+            ImmutableArray<TextSpanRenameContext> tokenTextSpanRenameContexts,
+            ImmutableArray<TextSpanRenameContext> stringAndCommentsTextSpanRenameContexts,
+            ImmutableArray<RenameSymbolContext> renameSymbolContexts,
             CancellationToken cancellationToken)
         {
-            CancellationToken = cancellationToken;
             ConflictLocationSpans = conflictLocationSpans;
             OriginalSolution = originalSolution;
             RenameSpansTracker = renameSpansTracker;
             SyntaxRoot = syntaxRoot;
             Document = document;
             SemanticModel = semanticModel;
-            RenameAnnotations = renameAnnotations;
-            TextSpanRenameContexts = textSpanRenameContexts;
             OriginalSyntaxTree = semanticModel.SyntaxTree;
+            RenameAnnotations = renameAnnotations;
+            TokenTextSpanRenameContexts = tokenTextSpanRenameContexts;
+            StringAndCommentsTextSpanRenameContexts = stringAndCommentsTextSpanRenameContexts;
+            RenameSymbolContexts = renameSymbolContexts;
+            CancellationToken = cancellationToken;
         }
     }
 }

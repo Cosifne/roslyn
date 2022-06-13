@@ -280,7 +280,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     {
                         return RenameComplexifiedToken(token, newToken, renameSymbolContext);
                     }
-
                 }
 
                 return AnnotateNonRenameLocation(token, newToken);
@@ -450,7 +449,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                             newToken,
                             annotation.Prefix,
                             annotation.Suffix,
-                            textSpanRenameContext.IsReplacementVerbatim,
+                            _syntaxFactsService.IsVerbatimIdentifier(textSpanRenameContext.SymbolContext.ReplacementText),
                             textSpanRenameContext.SymbolContext.OriginalText,
                             textSpanRenameContext.SymbolContext.ReplacementText,
                             textSpanRenameContext.SymbolContext.ReplacementTextValid);
@@ -555,7 +554,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                             newToken,
                             prefix,
                             suffix,
-                            renameSymbolContext.IsReplacementVerbatim,
+                            _syntaxFactsService.IsVerbatimIdentifier(renameSymbolContext.SymbolContext.ReplacementText),
                             renameSymbolContext.SymbolContext.OriginalText,
                             renameSymbolContext.SymbolContext.ReplacementText,
                             renameSymbolContext.SymbolContext.ReplacementTextValid);

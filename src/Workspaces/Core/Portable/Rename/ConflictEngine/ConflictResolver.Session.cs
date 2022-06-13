@@ -33,8 +33,12 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
         {
             private readonly Solution _baseSolution;
             private readonly ImmutableArray<SymbolSession> _symbolSessions;
-            private readonly ImmutableDictionary<DocumentId, HashSet<SymbolSession>> _documentIdToAffectSymbolSessions;
+            //private readonly ImmutableDictionary<DocumentId, HashSet<SymbolSession>> _documentIdToAffectSymbolSessions;
             private readonly ImmutableDictionary<ProjectId, HashSet<SymbolSession>> _projectIdToAffectSymbolSessions;
+
+            private readonly ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> _documentIdToTextSpanRenameContext;
+            private readonly ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> _documentIdToStringAndCommentRenameContext;
+            private readonly ImmutableArray<RenameSymbolContext> _renameSymbolContexts;
 
             // Rename Symbol's Source Location
             private readonly CancellationToken _cancellationToken;
@@ -111,11 +115,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         var renameSymbolDeclarationLocation = symbol.Locations.Where(loc => loc.IsInSource).FirstOrDefault();
                         var originalText = symbol.Name;
 
-                        // only process documents which possibly contain the identifiers.
-                        var documentIdOfRenameSymbolDeclaration = solution.GetRequiredDocument(renameSymbolDeclarationLocation.SourceTree!).Id;
-
                         using var _1 = PooledHashSet<DocumentId>.GetInstance(out var documentsIdsToBeCheckedForConflictBuilder);
-
                         var possibleNameConflicts = new List<string>();
                         await FindDocumentsAndPossibleNameConflictsAsync(
                             solution,
@@ -127,6 +127,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             cancellationToken).ConfigureAwait(false);
                         var replacementTextValid = IsIdentifierValid_Worker(solution, replacementText, documentsIdsToBeCheckedForConflictBuilder.Select(doc => doc.ProjectId));
 
+                        var documentIdOfRenameSymbolDeclaration = solution.GetRequiredDocument(renameSymbolDeclarationLocation.SourceTree!).Id;
                         symbolSesssionBuilder.Add(new SymbolSession(
                             priority,
                             renameLocationSet,
@@ -938,9 +939,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         var semanticModel = await document.GetRequiredSemanticModelAsync(_cancellationToken).ConfigureAwait(false);
                         var originalSyntaxRoot = await semanticModel.SyntaxTree.GetRootAsync(_cancellationToken).ConfigureAwait(false);
 
-                        // Get all the symbols need to rename in this document.
-                        var symbolsRenameContexts = _documentIdToAffectSymbolSessions[documentId]
-                            .SelectAsArray(session => session.GetRenameSymbolContextForDocument(document, semanticModel.SyntaxTree));
+                        //// Get all the symbols need to rename in this document.
+                        //var symbolsRenameContexts = _documentIdToAffectSymbolSessions[documentId]
+                        //    .SelectAsArray(session => session.GetRenameSymbolContextForDocument(document, semanticModel.SyntaxTree));
 
                         var conflictLocationSpans = _conflictLocations
                             .Where(t => t.DocumentId == documentId)
@@ -949,14 +950,16 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         // Annotate all nodes with a RenameLocation annotations to record old locations & old referenced symbols.
                         // Also annotate nodes that should get complexified (nodes for rename locations + conflict locations)
                         var parameters = new RenameRewriterParameters(
+                            conflictLocationSpans,
                             originalSolution,
                             renameSpansTracker,
+                            originalSyntaxRoot,
                             document,
                             semanticModel,
-                            originalSyntaxRoot,
-                            symbolsRenameContexts,
-                            conflictLocationSpans,
                             _renameAnnotations,
+                            _documentIdToTextSpanRenameContext[documentId],
+                            _documentIdToStringAndCommentRenameContext[documentId],
+                            _renameSymbolContexts,
                             _cancellationToken);
 
                         var renameRewriterLanguageService = document.GetRequiredLanguageService<IRenameRewriterLanguageService>();
