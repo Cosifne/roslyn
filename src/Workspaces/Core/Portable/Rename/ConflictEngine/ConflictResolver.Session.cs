@@ -36,8 +36,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
             //private readonly ImmutableDictionary<DocumentId, HashSet<SymbolSession>> _documentIdToAffectSymbolSessions;
             private readonly ImmutableDictionary<ProjectId, HashSet<SymbolSession>> _projectIdToAffectSymbolSessions;
 
-            private readonly ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> _documentIdToTextSpanRenameContext;
-            private readonly ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> _documentIdToStringAndCommentRenameContext;
+            private readonly ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> _documentIdToTextSpanRenameContexts;
+            private readonly ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> _documentIdToStringAndCommentRenameContexts;
             private readonly ImmutableArray<RenameSymbolContext> _renameSymbolContexts;
 
             // Rename Symbol's Source Location
@@ -53,8 +53,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 Solution solution,
                 ImmutableArray<ProjectId> topologicallySortedProjects,
                 ImmutableArray<SymbolSession> symbolSessions,
-                ImmutableDictionary<DocumentId, HashSet<SymbolSession>> documentIdToAffectSymbolSessions,
                 ImmutableDictionary<ProjectId, HashSet<SymbolSession>> projectIdToAffectSymbolSessions,
+                ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> documentIdToTextSpanRenameContexts,
+                ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> documentIdToStringAndCommentsRenameContexts,
                 RenamedSpansTracker renamedSpansTracker,
                 CodeCleanupOptionsProvider fallbackOptions,
                 CancellationToken cancellationToken)
@@ -62,8 +63,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 _baseSolution = solution;
                 _topologicallySortedProjects = topologicallySortedProjects;
                 _symbolSessions = symbolSessions;
-                _documentIdToAffectSymbolSessions = documentIdToAffectSymbolSessions;
                 _projectIdToAffectSymbolSessions = projectIdToAffectSymbolSessions;
+                _documentIdToTextSpanRenameContexts = documentIdToTextSpanRenameContexts;
+                _documentIdToStringAndCommentRenameContexts = documentIdToStringAndCommentsRenameContexts;
                 _fallbackOptions = fallbackOptions;
                 _conflictLocations = SpecializedCollections.EmptySet<ConflictLocationInfo>();
                 _renameAnnotations = new AnnotationTable<RenameAnnotation>(RenameAnnotation.Kind);
@@ -85,6 +87,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 // So later when rename & check conflict for a document, we know the symbols need to be renamed within this document.
                 var documentIdToAffectSymbolSessions = GroupSymbolSessionsByDocumentsId(symbolSessions);
                 var projectIdToAffectSymbolSessions = GroupSymbolSessionsByProjectsId(symbolSessions);
+
+                var (documentIdToTextSpanRenameContexts, documentIdToStringAndCommentRenameContexts) = CreateTextSpanRenameContexts(symbolSessions);
                 var renamedSpansTracker = new RenamedSpansTracker(
                     AreAllReplacementTextsValidInDocument(documentIdToAffectSymbolSessions));
 
@@ -92,8 +96,9 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     solution,
                     topologicallySortedProjects,
                     symbolSessions,
-                    documentIdToAffectSymbolSessions,
                     projectIdToAffectSymbolSessions,
+                    documentIdToTextSpanRenameContexts,
+                    documentIdToStringAndCommentRenameContexts,
                     renamedSpansTracker,
                     fallbackOptions,
                     cancellationToken);
@@ -104,7 +109,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 ImmutableArray<RenameSymbolInfo> renameSymbolsInfo,
                 CancellationToken cancellationToken)
             {
-                using var _ = ArrayBuilder<SymbolSession>.GetInstance(out var symbolSesssionBuilder);
+                using var _1 = ArrayBuilder<SymbolSession>.GetInstance(out var symbolSesssionBuilder);
                 foreach (var renameSymbolsInfoGroupByLanguage in renameSymbolsInfo.GroupBy(s => s.RenameLocations.Symbol.Language))
                 {
                     var languageName = renameSymbolsInfoGroupByLanguage.Key;
@@ -115,7 +120,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                         var renameSymbolDeclarationLocation = symbol.Locations.Where(loc => loc.IsInSource).FirstOrDefault();
                         var originalText = symbol.Name;
 
-                        using var _1 = PooledHashSet<DocumentId>.GetInstance(out var documentsIdsToBeCheckedForConflictBuilder);
+                        using var _2 = PooledHashSet<DocumentId>.GetInstance(out var documentsIdsToBeCheckedForConflictBuilder);
                         var possibleNameConflicts = new List<string>();
                         await FindDocumentsAndPossibleNameConflictsAsync(
                             solution,
@@ -144,6 +149,40 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 }
 
                 return symbolSesssionBuilder.ToImmutableArray();
+            }
+
+            private static (ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> tokenRenameContexts, ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> stringAndCommentsRenameContexts) CreateTextSpanRenameContexts(
+                ImmutableArray<SymbolSession> symbolSessions)
+            {
+                using var _1 = PooledDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>>.GetInstance(out var tokenRenameContextsBuilder);
+                using var _2 = PooledDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>>.GetInstance(out var stringAndCommentRenameContextsBuilder);
+                var documentsNeedConflictCheck = symbolSessions.SelectMany(session => session.DocumentsIdsToBeCheckedForConflict).ToImmutableHashSet();
+
+                foreach (var documentId in documentsNeedConflictCheck)
+                {
+                    foreach (var session in symbolSessions)
+                    {
+                        using var _ = PooledHashSet<RenameLocation>.GetInstance(out var locationsSetInDocument);
+                        foreach (var location in session.RenameLocationSet.Locations)
+                        {
+                            if (location.DocumentId == documentId)
+                                locationsSetInDocument.Add(location);
+                        }
+
+                        var renameLocationsInDocument = locationsSetInDocument
+                            .Where(renameLocation => ShouldIncludeLocation(session.RenameLocationSet.Locations, renameLocation))
+                            .SelectAsArray(renameLocation => new TextSpanRenameContext(renameLocation, session.RenameSymbolContext));
+
+                        var stringAndCommentRenameLocations = locationsSetInDocument
+                            .Where(renaleLocation => renaleLocation.IsRenameInStringOrComment)
+                            .SelectAsArray(renameLocation => new TextSpanRenameContext(renameLocation, session.RenameSymbolContext));
+
+                        tokenRenameContextsBuilder[documentId] = renameLocationsInDocument;
+                        tokenRenameContextsBuilder[documentId] = stringAndCommentRenameLocations;
+                    }
+                }
+
+                return (tokenRenameContextsBuilder.ToImmutableDictionary(), stringAndCommentRenameContextsBuilder.ToImmutableDictionary());
             }
 
             private static ImmutableDictionary<DocumentId, HashSet<SymbolSession>> GroupSymbolSessionsByDocumentsId(ImmutableArray<SymbolSession> symbolSessions)
@@ -957,8 +996,8 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             document,
                             semanticModel,
                             _renameAnnotations,
-                            _documentIdToTextSpanRenameContext[documentId],
-                            _documentIdToStringAndCommentRenameContext[documentId],
+                            _documentIdToTextSpanRenameContexts[documentId],
+                            _documentIdToStringAndCommentRenameContexts[documentId],
                             _renameSymbolContexts,
                             _cancellationToken);
 
