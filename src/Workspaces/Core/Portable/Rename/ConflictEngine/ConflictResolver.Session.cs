@@ -181,7 +181,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                             .SelectAsArray(renameLocation => new TextSpanRenameContext(renameLocation, session.RenameSymbolContext));
 
                         tokenRenameContextsBuilder[documentId] = renameLocationsInDocument;
-                        tokenRenameContextsBuilder[documentId] = stringAndCommentRenameLocations;
+                        stringAndCommentRenameContextsBuilder[documentId] = stringAndCommentRenameLocations;
                     }
                 }
 
