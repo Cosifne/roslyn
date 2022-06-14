@@ -216,5 +216,39 @@ namespace Microsoft.CodeAnalysis.Rename
 
             return builder.ToImmutableHashSet();
         }
+
+        protected static ImmutableSortedDictionary<TextSpan, string> CreateSubSpanToReplacementTextDictionary(
+            HashSet<TextSpanRenameContext> textSpanRenameContexts)
+        {
+            var subSpanToReplacementTextBuilder = ImmutableSortedDictionary.CreateBuilder<TextSpan, string>();
+            foreach (var context in textSpanRenameContexts.OrderByDescending(c => c.Priority))
+            {
+                var location = context.RenameLocation.Location;
+                if (location.IsInSource)
+                {
+                    var subSpan = location.SourceSpan;
+
+                    // If two symbols tries to rename a same sub span,
+                    // e.g.
+                    //      // Comment Hello
+                    // class Hello
+                    // {
+                    //    
+                    // }
+                    // class World
+                    // {
+                    //    void Hello() { }
+                    // }
+                    // If try to rename both 'class Hello' to 'Bar' and 'void Hello()' to 'Goo'.
+                    // For '// Comment Hello', igore the one with lower priority
+                    if (!subSpanToReplacementTextBuilder.ContainsKey(subSpan))
+                    {
+                        subSpanToReplacementTextBuilder[subSpan] = context.SymbolContext.ReplacementText;
+                    }
+                }
+            }
+
+            return subSpanToReplacementTextBuilder.ToImmutable();
+        }
     }
 }

@@ -571,12 +571,12 @@ namespace Microsoft.CodeAnalysis.Rename
                 foreach (var (textSpan, replacementString) in subSpanToReplacementText)
                 {
                     var offset = textSpan.Start - startOffset;
-                    stringBuilder.Append(originalString.AsSpan(startOffset, offset));
+                    stringBuilder.Append(originalString.Substring(startOffset, offset));
                     stringBuilder.Append(replacementString);
                     startOffset += offset + textSpan.Length;
                 }
 
-                stringBuilder.Append(originalString.AsSpan(startOffset));
+                stringBuilder.Append(originalString.Substring(startOffset));
                 return stringBuilder.ToString();
             }
 

@@ -56,6 +56,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 ImmutableDictionary<ProjectId, HashSet<SymbolSession>> projectIdToAffectSymbolSessions,
                 ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> documentIdToTextSpanRenameContexts,
                 ImmutableDictionary<DocumentId, ImmutableArray<TextSpanRenameContext>> documentIdToStringAndCommentsRenameContexts,
+                ImmutableArray<RenameSymbolContext> renameSymbolContexts,
                 RenamedSpansTracker renamedSpansTracker,
                 CodeCleanupOptionsProvider fallbackOptions,
                 CancellationToken cancellationToken)
@@ -66,6 +67,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                 _projectIdToAffectSymbolSessions = projectIdToAffectSymbolSessions;
                 _documentIdToTextSpanRenameContexts = documentIdToTextSpanRenameContexts;
                 _documentIdToStringAndCommentRenameContexts = documentIdToStringAndCommentsRenameContexts;
+                _renameSymbolContexts = renameSymbolContexts;
                 _fallbackOptions = fallbackOptions;
                 _conflictLocations = SpecializedCollections.EmptySet<ConflictLocationInfo>();
                 _renameAnnotations = new AnnotationTable<RenameAnnotation>(RenameAnnotation.Kind);
@@ -99,6 +101,7 @@ namespace Microsoft.CodeAnalysis.Rename.ConflictEngine
                     projectIdToAffectSymbolSessions,
                     documentIdToTextSpanRenameContexts,
                     documentIdToStringAndCommentRenameContexts,
+                    symbolSessions.SelectAsArray(s => s.RenameSymbolContext),
                     renamedSpansTracker,
                     fallbackOptions,
                     cancellationToken);

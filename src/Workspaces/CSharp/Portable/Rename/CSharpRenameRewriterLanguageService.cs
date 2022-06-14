@@ -49,7 +49,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
         private class RenameRewriter : CSharpSyntaxRewriter
         {
-            private readonly Dictionary<TextSpan, TextSpanRenameContext> _textSpanToRenameContext;
+            private readonly Dictionary<TextSpan, TextSpanRenameContext> _textSpanToRenameContexts;
             private readonly Dictionary<SymbolKey, RenameSymbolContext> _renameContexts;
             private readonly Dictionary<TextSpan, HashSet<TextSpanRenameContext>> _stringAndCommentRenameContexts;
 
@@ -104,7 +104,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 _syntaxFactsService = parameters.Document.GetRequiredLanguageService<ISyntaxFactsService>();
 
                 _renameContexts = GroupRenameContextBySymbolKey(parameters.RenameSymbolContexts);
-                _textSpanToRenameContext = GroupTextRenameContextsByTextSpan(parameters.TokenTextSpanRenameContexts);
+                _textSpanToRenameContexts = GroupTextRenameContextsByTextSpan(parameters.TokenTextSpanRenameContexts);
                 _stringAndCommentRenameContexts = GroupStringAndCommentsTextSpanRenameContexts(parameters.StringAndCommentsTextSpanRenameContexts);
             }
 
@@ -204,39 +204,6 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return false;
             }
 
-            private static ImmutableSortedDictionary<TextSpan, string> CreateSubSpanToReplacementTextDictionary(
-                HashSet<TextSpanRenameContext> textSpanRenameContexts)
-            {
-                var subSpanToReplacementTextBuilder = ImmutableSortedDictionary.CreateBuilder<TextSpan, string>();
-                foreach (var context in textSpanRenameContexts.OrderByDescending(c => c.Priority))
-                {
-                    var location = context.RenameLocation.Location;
-                    if (location.IsInSource)
-                    {
-                        var subSpan = location.SourceSpan;
-
-                        // If two symbols tries to rename a same sub span,
-                        // e.g.
-                        //      // Comment Hello
-                        // class Hello
-                        // {
-                        //    
-                        // }
-                        // class World
-                        // {
-                        //    void Hello() { }
-                        // }
-                        // If try to rename both 'class Hello' to 'Bar' and 'void Hello()' to 'Goo'.
-                        // For '// Comment Hello', igore the one with lower priority
-                        if (!subSpanToReplacementTextBuilder.ContainsKey(subSpan))
-                        {
-                            subSpanToReplacementTextBuilder[subSpan] = context.SymbolContext.ReplacementText;
-                        }
-                    }
-                }
-
-                return subSpanToReplacementTextBuilder.ToImmutable();
-            }
 
             public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
             {
@@ -263,8 +230,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                         isRenameLocation: true,
                         isOldText: false,
                         textSpanRenameContext).WaitAndGetResult_CanCallOnBackground(_cancellationToken);
-                    if (!_isProcessingComplexifiedSpans)
-                        _invocationExpressionsNeedingConflictChecks.AddRange(token.GetAncestors<InvocationExpressionSyntax>());
+                    _invocationExpressionsNeedingConflictChecks.AddRange(token.GetAncestors<InvocationExpressionSyntax>());
 
                     return newToken;
                 }
@@ -289,7 +255,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             {
                 if (!_isProcessingComplexifiedSpans)
                 {
-                    return _textSpanToRenameContext.TryGetValue(token.Span, out textSpanRenameContext);
+                    return _textSpanToRenameContexts.TryGetValue(token.Span, out textSpanRenameContext);
                 }
                 else
                 {
@@ -301,7 +267,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
 
                     // After a node is complexfied, try to find the original rename context for the given token based on the original span.
                     var annotation = _renameAnnotations.GetAnnotations(token).OfType<RenameActionAnnotation>().SingleOrDefault(annotation => annotation.IsRenameLocation);
-                    if (annotation != null && _textSpanToRenameContext.TryGetValue(annotation.OriginalSpan, out var originalContext))
+                    if (annotation != null && _textSpanToRenameContexts.TryGetValue(annotation.OriginalSpan, out var originalContext))
                     {
                         textSpanRenameContext = originalContext;
                         return true;
@@ -923,10 +889,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 }
                 else if (newToken.IsKind(SyntaxKind.IdentifierToken) && newToken.Parent.IsKind(SyntaxKind.XmlName))
                 {
-                    var matchingContext = textSpanSymbolContexts.OrderByDescending(c => c.Priority).First(c => c.SymbolContext.OriginalText == newToken.ValueText);
-                    var newIdentifierToken = SyntaxFactory.Identifier(newToken.LeadingTrivia, matchingContext.SymbolContext.ReplacementText, newToken.TrailingTrivia);
-                    newToken = newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = token.Span }));
-                    AddModifiedSpan(token.Span, newToken.Span);
+                    var matchingContext = textSpanSymbolContexts.OrderByDescending(c => c.Priority).FirstOrDefault(c => c.SymbolContext.OriginalText == newToken.ValueText);
+                    if (matchingContext != null)
+                    {
+                        var newIdentifierToken = SyntaxFactory.Identifier(newToken.LeadingTrivia, matchingContext.SymbolContext.ReplacementText, newToken.TrailingTrivia);
+                        newToken = newToken.CopyAnnotationsTo(_renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, new RenameTokenSimplificationAnnotation() { OriginalTextSpan = token.Span }));
+                        AddModifiedSpan(token.Span, newToken.Span);
+                    }
                 }
 
                 return newToken;
