@@ -193,7 +193,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     // if we are going to rename 'SomeOtherType' to 'Bar', and 'class X' to 'Y', then when processing document1,
                     // 'SomeOtherType' needs to be replaced by its fully qualified name. so here we need to check if the token is linked to other rename contexts.
                     var symbol = _speculativeModel.GetSymbolInfo(token.Parent, _cancellationToken).Symbol;
-                    if (symbol != null && _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), out var symbolContext))
+                    if (symbol != null
+                        && _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), out var symbolContext)
+                        && token.IsKind(SyntaxKind.IdentifierToken)
+                        && token.ValueText == symbolContext.OriginalText)
                     {
                         renameSymbolContext = symbolContext;
                         return true;
@@ -204,11 +207,10 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 return false;
             }
 
-
             public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
             {
                 var newTrivia = base.VisitTrivia(trivia);
-                if (_stringAndCommentRenameContexts.TryGetValue(trivia.Span, out var textSpanRenameContexts))
+                if (!trivia.HasStructure && _stringAndCommentRenameContexts.TryGetValue(trivia.Span, out var textSpanRenameContexts))
                 {
                     var subSpanToReplacementText = CreateSubSpanToReplacementTextDictionary(textSpanRenameContexts);
                     return RenameInCommentTrivia(trivia, subSpanToReplacementText);
@@ -259,6 +261,12 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                 }
                 else
                 {
+                    if (token.HasAnnotations(AliasAnnotation.Kind))
+                    {
+                        textSpanRenameContext = null;
+                        return false;
+                    }
+
                     if (!token.HasAnnotations(RenameAnnotation.Kind))
                     {
                         textSpanRenameContext = null;
@@ -829,7 +837,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             private SyntaxTrivia RenameInCommentTrivia(SyntaxTrivia trivia, ImmutableSortedDictionary<TextSpan, string> subSpanToReplacementString)
             {
                 var originalString = trivia.ToString();
-                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, subSpanToReplacementString);
+                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, trivia.SpanStart, subSpanToReplacementString);
                 if (replacedString != originalString)
                 {
                     var oldSpan = trivia.Span;
@@ -845,7 +853,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             private SyntaxToken RenameInStringLiteral(SyntaxToken oldToken, SyntaxToken newToken, ImmutableSortedDictionary<TextSpan, string> subSpanToReplacementString, Func<SyntaxTriviaList, string, string, SyntaxTriviaList, SyntaxToken> createNewStringLiteral)
             {
                 var originalString = newToken.ToString();
-                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, subSpanToReplacementString);
+                var replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, oldToken.SpanStart, subSpanToReplacementString);
                 if (replacedString != originalString)
                 {
                     var oldSpan = oldToken.Span;
@@ -1508,7 +1516,7 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
         }
 
         public override bool IsRenamableTokenInComment(SyntaxToken token)
-            => token.IsKind(SyntaxKind.XmlTextLiteralToken) || token.Parent.IsKind(SyntaxKind.IdentifierToken) && token.Parent.IsKind(SyntaxKind.XmlName);
+            => token.IsKind(SyntaxKind.XmlTextLiteralToken) || token.IsKind(SyntaxKind.IdentifierToken) && token.Parent.IsKind(SyntaxKind.XmlName);
 
         #endregion
     }

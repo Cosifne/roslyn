@@ -564,13 +564,15 @@ namespace Microsoft.CodeAnalysis.Rename
 
             internal static string ReplaceMatchingSubStrings(
                 string originalString,
+                int containingTokenOrTriviaStart,
                 ImmutableSortedDictionary<TextSpan, string> subSpanToReplacementText)
             {
                 var stringBuilder = new StringBuilder();
                 var startOffset = 0;
                 foreach (var (textSpan, replacementString) in subSpanToReplacementText)
                 {
-                    var offset = textSpan.Start - startOffset;
+                    var matchedSpanStart = textSpan.Start - containingTokenOrTriviaStart;
+                    var offset = matchedSpanStart - startOffset;
                     stringBuilder.Append(originalString.Substring(startOffset, offset));
                     stringBuilder.Append(replacementString);
                     startOffset += offset + textSpan.Length;

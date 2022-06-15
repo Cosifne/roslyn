@@ -775,7 +775,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
 
             Private Function RenameInStringLiteral(oldToken As SyntaxToken, newToken As SyntaxToken, subSpanToReplacementString As ImmutableSortedDictionary(Of TextSpan, String), createNewStringLiteral As Func(Of SyntaxTriviaList, String, String, SyntaxTriviaList, SyntaxToken)) As SyntaxToken
                 Dim originalString = newToken.ToString()
-                Dim replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, subSpanToReplacementString)
+                Dim replacedString = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, oldToken.SpanStart, subSpanToReplacementString)
                 If replacedString <> originalString Then
                     Dim oldSPan = oldToken.Span
                     newToken = createNewStringLiteral(newToken.LeadingTrivia, replacedString, replacedString, newToken.TrailingTrivia)
