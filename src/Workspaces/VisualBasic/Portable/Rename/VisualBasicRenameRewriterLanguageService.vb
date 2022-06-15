@@ -454,6 +454,11 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                 If Not _isProcessingComplexifiedSpans Then
                     Return _textSpanToRenameContexts.TryGetValue(token.Span, textSpanRenameContext)
                 Else
+
+                    If token.HasAnnotations(AliasAnnotation.Kind) Then
+                        Return False
+                    End If
+
                     If Not token.HasAnnotations(RenameAnnotation.Kind) Then
                         Return False
                     End If
@@ -461,7 +466,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                     Dim annotation = _renameAnnotations.GetAnnotations(token).OfType(Of RenameActionAnnotation).SingleOrDefault(
                         Function(renameActionAnnotation) renameActionAnnotation.IsRenameLocation)
 
-                    Return annotation IsNot Nothing AndAlso _textSpanToRenameContexts.TryGetValue(annotation.OriginalSpan, textSpanRenameContext)
+                    Return annotation IsNot Nothing AndAlso
+                        _textSpanToRenameContexts.TryGetValue(annotation.OriginalSpan, textSpanRenameContext) AndAlso
+                        token.IsKind(SyntaxKind.IdentifierToken) AndAlso
+                        token.ValueText = textSpanRenameContext.SymbolContext.OriginalText
                 End If
 
                 Return False
@@ -495,6 +503,18 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
             '    renameSymbolContext = Nothing
             '    Return False
             'End Function
+
+            Public Overrides Function VisitTrivia(trivia As SyntaxTrivia) As SyntaxTrivia
+                Dim newTrivia = MyBase.VisitTrivia(trivia)
+
+                Dim textSpanRenameContexts As HashSet(Of TextSpanRenameContext) = Nothing
+                If Not trivia.HasStructure AndAlso _stringAndCommentRenameContexts.TryGetValue(trivia.Span, textSpanRenameContexts) Then
+                    Dim subSpanToReplacement = CreateSubSpanToReplacementTextDictionary(textSpanRenameContexts)
+                    Return RenameInCommentTrivia(trivia, subSpanToReplacement)
+                End If
+
+                Return newTrivia
+            End Function
 
             Public Overrides Function VisitToken(token As SyntaxToken) As SyntaxToken
                 If token = Nothing Then
@@ -797,6 +817,19 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                 End If
 
                 Return newToken
+            End Function
+
+            Private Function RenameInCommentTrivia(trivia As SyntaxTrivia, subSpanToReplacementString As ImmutableSortedDictionary(Of TextSpan, String)) As SyntaxTrivia
+                Dim originalString = trivia.ToString()
+                Dim replacedString As String = RenameLocations.ReferenceProcessing.ReplaceMatchingSubStrings(originalString, trivia.SpanStart, subSpanToReplacementString)
+                If replacedString <> originalString Then
+                    Dim oldSpan = trivia.Span
+                    Dim newTrivia = SyntaxFactory.CommentTrivia(replacedString)
+                    AddModifiedSpan(oldSpan, newTrivia.Span)
+                    Return trivia.CopyAnnotationsTo(Me._renameAnnotations.WithAdditionalAnnotations(newTrivia, New RenameTokenSimplificationAnnotation() With {.OriginalTextSpan = oldSpan}))
+                End If
+
+                Return trivia
             End Function
 
             Private Function RenameInCommentTrivia(trivia As SyntaxTrivia, renameSymbolContext As RenameSymbolContext) As SyntaxTrivia
