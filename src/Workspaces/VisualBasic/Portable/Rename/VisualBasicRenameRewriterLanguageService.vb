@@ -442,7 +442,8 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                     End If
 
                     Dim symbol = Me._speculativeModel.GetSymbolInfo(token.Parent, Me._cancellationToken).Symbol
-                    If symbol IsNot Nothing AndAlso _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), renameSymbolContext) Then
+                    If symbol IsNot Nothing AndAlso _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), renameSymbolContext) AndAlso
+                        renameSymbolContext.OriginalText = token.ValueText AndAlso token.IsKind(SyntaxKind.IdentifierToken) Then
                         Return True
                     End If
                 End If
@@ -466,10 +467,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                     Dim annotation = _renameAnnotations.GetAnnotations(token).OfType(Of RenameActionAnnotation).SingleOrDefault(
                         Function(renameActionAnnotation) renameActionAnnotation.IsRenameLocation)
 
-                    Return annotation IsNot Nothing AndAlso
-                        _textSpanToRenameContexts.TryGetValue(annotation.OriginalSpan, textSpanRenameContext) AndAlso
-                        token.IsKind(SyntaxKind.IdentifierToken) AndAlso
-                        token.ValueText = textSpanRenameContext.SymbolContext.OriginalText
+                    Return annotation IsNot Nothing AndAlso _textSpanToRenameContexts.TryGetValue(annotation.OriginalSpan, textSpanRenameContext)
                 End If
 
                 Return False
@@ -800,7 +798,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                     Dim oldSPan = oldToken.Span
                     newToken = createNewStringLiteral(newToken.LeadingTrivia, replacedString, replacedString, newToken.TrailingTrivia)
                     AddModifiedSpan(oldSPan, newToken.Span)
-                    Return newToken.CopyAnnotationsTo(Me._renameAnnotations.WithAdditionalAnnotations(newToken, New RenameTokenSimplificationAnnotation() With {.OriginalTextSpan = oldSPan}))
+                    Return oldToken.CopyAnnotationsTo(Me._renameAnnotations.WithAdditionalAnnotations(newToken, New RenameTokenSimplificationAnnotation() With {.OriginalTextSpan = oldSPan}))
                 End If
 
                 Return newToken
@@ -847,7 +845,7 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
 
             Private Function RenameTokenInStringOrComment(token As SyntaxToken, newToken As SyntaxToken) As SyntaxToken
                 Dim textSpanSymbolContexts As HashSet(Of TextSpanRenameContext) = Nothing
-                If Not _isProcessingComplexifiedSpans OrElse Not _stringAndCommentRenameContexts.TryGetValue(token.Span, textSpanSymbolContexts) OrElse textSpanSymbolContexts.Count = 0 Then
+                If _isProcessingComplexifiedSpans OrElse Not _stringAndCommentRenameContexts.TryGetValue(token.Span, textSpanSymbolContexts) OrElse textSpanSymbolContexts.Count = 0 Then
                     Return newToken
                 End If
 
@@ -865,10 +863,12 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
                     If matchingContext IsNot Nothing Then
                         Dim replacementText = matchingContext.SymbolContext.ReplacementText
                         Dim newIdentifierToken = SyntaxFactory.XmlNameToken(newToken.LeadingTrivia, replacementText, SyntaxFacts.GetKeywordKind(replacementText), newToken.TrailingTrivia)
-                        newToken = newToken.CopyAnnotationsTo(Me._renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, New RenameTokenSimplificationAnnotation() With {.OriginalTextSpan = token.Span}))
+                        newToken = token.CopyAnnotationsTo(Me._renameAnnotations.WithAdditionalAnnotations(newIdentifierToken, New RenameTokenSimplificationAnnotation() With {.OriginalTextSpan = token.Span}))
                         AddModifiedSpan(token.Span, newToken.Span)
                     End If
                 End If
+
+                Return newToken
             End Function
 
             Private Function RenameInTrivia(token As SyntaxToken, leadingOrTrailingTriviaList As IEnumerable(Of SyntaxTrivia), renameSymbolContext As RenameSymbolContext) As SyntaxToken
