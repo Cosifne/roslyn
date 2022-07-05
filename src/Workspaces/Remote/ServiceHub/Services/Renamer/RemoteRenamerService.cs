@@ -66,6 +66,27 @@ namespace Microsoft.CodeAnalysis.Remote
             }, cancellationToken);
         }
 
+        public ValueTask<SerializableConflictResolution?> RenameSymbolsAsync(
+            Checksum solutionCheckSum,
+            RemoteServiceCallbackId callbackId,
+            ImmutableArray<SerializableSymbolRenameInfo> serializableRenameSymbolsInfo,
+            CancellationToken cancellationToken)
+        {
+            return RunServiceAsync(solutionCheckSum, async solution =>
+            {
+                var renameSymbolsInfo = await serializableRenameSymbolsInfo
+                    .SelectAsArrayAsync(async (info, cancellationToken) => await info.RehydrateAsync(solution, cancellationToken).ConfigureAwait(false), cancellationToken).ConfigureAwait(false);
+                var nonNullRenameSymbolsInfo = renameSymbolsInfo.WhereAsArray(info => info is not null);
+                if (nonNullRenameSymbolsInfo.IsEmpty)
+                {
+                    return null;
+                }
+
+                var result = await Renamer.RenameSymbolsAsync(solution, nonNullRenameSymbolsInfo, cancellationToken).ConfigureAwait(false);
+                return await result.DehydrateAsync(cancellationToken).ConfigureAwait(false);
+            }, cancellationToken);
+        }
+
         public ValueTask<SerializableRenameLocations?> FindRenameLocationsAsync(
             Checksum solutionChecksum,
             RemoteServiceCallbackId callbackId,
