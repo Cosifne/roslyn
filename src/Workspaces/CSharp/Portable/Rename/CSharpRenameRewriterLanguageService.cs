@@ -179,6 +179,17 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                         return false;
                     }
 
+                    //if (token.Parent is SimpleNameSyntax && !token.IsKind(SyntaxKind.GlobalKeyword) && token.Parent.Parent.IsKind(SyntaxKind.AliasQualifiedName, SyntaxKind.QualifiedCref, SyntaxKind.QualifiedName))
+                    //{
+                    //    var symbol = _speculativeModel.GetSymbolInfo(token.Parent, _cancellationToken).Symbol;
+
+                    //    if (symbol != null && _renamedSymbol.Kind != SymbolKind.Local && _renamedSymbol.Kind != SymbolKind.RangeVariable &&
+                    //        (Equals(symbol, _renamedSymbol) || SymbolKey.GetComparer(ignoreCase: true, ignoreAssemblyKeys: false).Equals(symbol.GetSymbolKey(), _renamedSymbol.GetSymbolKey())))
+                    //    {
+                    //        return true;
+                    //    }
+                    //}
+
                     // Some tokens might be introduced for the complexified node, for example
                     // document1:
                     // class Bar
@@ -192,15 +203,15 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
                     // }
                     // if we are going to rename 'SomeOtherType' to 'Bar', and 'class X' to 'Y', then when processing document1,
                     // 'SomeOtherType' needs to be replaced by its fully qualified name. so here we need to check if the token is linked to other rename contexts.
-                    var symbol = _speculativeModel.GetSymbolInfo(token.Parent, _cancellationToken).Symbol;
-                    if (symbol != null
-                        && _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), out var symbolContext)
-                        && token.IsKind(SyntaxKind.IdentifierToken)
-                        && token.ValueText == symbolContext.OriginalText)
-                    {
-                        renameSymbolContext = symbolContext;
-                        return true;
-                    }
+                    //var symbol = _speculativeModel.GetSymbolInfo(token.Parent, _cancellationToken).Symbol;
+                    //if (symbol != null
+                    //    && _renameContexts.TryGetValue(symbol.GetSymbolKey(_cancellationToken), out var symbolContext)
+                    //    && token.IsKind(SyntaxKind.IdentifierToken)
+                    //    && token.ValueText == symbolContext.OriginalText)
+                    //{
+                    //    renameSymbolContext = symbolContext;
+                    //    return true;
+                    //}
                 }
 
                 renameSymbolContext = null;
