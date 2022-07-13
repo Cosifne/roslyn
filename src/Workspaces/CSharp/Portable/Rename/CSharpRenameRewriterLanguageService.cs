@@ -1210,6 +1210,9 @@ namespace Microsoft.CodeAnalysis.CSharp.Rename
             return enclosingStatement ?? enclosingNameMemberCrefOrnull ?? token.GetAncestors(n => n is SimpleNameSyntax).FirstOrDefault();
         }
 
+        public override bool IsRenamableTokenInComment(SyntaxToken token)
+            => token.IsKind(SyntaxKind.XmlTextLiteralToken) || token.IsKind(SyntaxKind.IdentifierToken) && token.Parent.IsKind(SyntaxKind.XmlName);
+
         #region "Helper Methods"
 
         public override bool IsIdentifierValid(string replacementText, ISyntaxFactsService syntaxFactsService)

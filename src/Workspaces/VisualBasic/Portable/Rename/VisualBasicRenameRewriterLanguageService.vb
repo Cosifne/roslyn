@@ -871,6 +871,10 @@ Namespace Microsoft.CodeAnalysis.VisualBasic.Rename
             Return If(enclosingStatement, If(possibleLambdaExpression, token.FirstAncestorOrSelf(Function(n) TypeOf (n) Is SimpleNameSyntax)))
         End Function
 
+        Public Overrides Function IsRenamableTokenInComment(token As SyntaxToken) As Boolean
+            Return token.IsKind(SyntaxKind.XmlTextLiteralToken, SyntaxKind.XmlNameToken)
+        End Function
+
 #Region "Helper Methods"
         Public Overrides Function IsIdentifierValid(replacementText As String, syntaxFactsService As ISyntaxFactsService) As Boolean
             replacementText = SyntaxFacts.MakeHalfWidthIdentifier(replacementText)
