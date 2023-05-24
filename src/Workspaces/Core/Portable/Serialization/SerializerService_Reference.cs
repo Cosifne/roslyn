@@ -564,13 +564,10 @@ namespace Microsoft.CodeAnalysis.Serialization
             }
         }
 
-        private sealed class PinnedObject : IDisposable
+        private sealed class PinnedObject(byte[] array) : IDisposable
         {
             // shouldn't be read-only since GCHandle is a mutable struct
-            private GCHandle _gcHandle;
-
-            public PinnedObject(byte[] array)
-                => _gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            private GCHandle _gcHandle = GCHandle.Alloc(array, GCHandleType.Pinned);
 
             internal IntPtr GetPointer()
                 => _gcHandle.AddrOfPinnedObject();
@@ -593,18 +590,9 @@ namespace Microsoft.CodeAnalysis.Serialization
             }
         }
 
-        private sealed class MissingMetadataReference : PortableExecutableReference
+        private sealed class MissingMetadataReference(
+            MetadataReferenceProperties properties, string? fullPath, DocumentationProvider initialDocumentation) : PortableExecutableReference(properties, fullPath, initialDocumentation)
         {
-            private readonly DocumentationProvider _provider;
-
-            public MissingMetadataReference(
-                MetadataReferenceProperties properties, string? fullPath, DocumentationProvider initialDocumentation)
-                : base(properties, fullPath, initialDocumentation)
-            {
-                // TODO: doc comment provider is a bit weird.
-                _provider = initialDocumentation;
-            }
-
             protected override DocumentationProvider CreateDocumentationProvider()
             {
                 // TODO: properly implement this
@@ -623,27 +611,14 @@ namespace Microsoft.CodeAnalysis.Serialization
             }
 
             protected override PortableExecutableReference WithPropertiesImpl(MetadataReferenceProperties properties)
-                => new MissingMetadataReference(properties, FilePath, _provider);
+                => new MissingMetadataReference(properties, FilePath, initialDocumentation);
         }
 
         [DebuggerDisplay("{" + nameof(Display) + ",nq}")]
-        private sealed class SerializedMetadataReference : PortableExecutableReference, ISupportTemporaryStorage
+        private sealed class SerializedMetadataReference(
+            MetadataReferenceProperties properties, string? fullPath,
+            Metadata metadata, ImmutableArray<ITemporaryStreamStorageInternal> storagesOpt, DocumentationProvider initialDocumentation) : PortableExecutableReference(properties, fullPath, initialDocumentation), ISupportTemporaryStorage
         {
-            private readonly Metadata _metadata;
-            private readonly ImmutableArray<ITemporaryStreamStorageInternal> _storagesOpt;
-            private readonly DocumentationProvider _provider;
-
-            public SerializedMetadataReference(
-                MetadataReferenceProperties properties, string? fullPath,
-                Metadata metadata, ImmutableArray<ITemporaryStreamStorageInternal> storagesOpt, DocumentationProvider initialDocumentation)
-                : base(properties, fullPath, initialDocumentation)
-            {
-                _metadata = metadata;
-                _storagesOpt = storagesOpt;
-
-                _provider = initialDocumentation;
-            }
-
             protected override DocumentationProvider CreateDocumentationProvider()
             {
                 // this uses documentation provider given at the constructor
@@ -651,13 +626,13 @@ namespace Microsoft.CodeAnalysis.Serialization
             }
 
             protected override Metadata GetMetadataImpl()
-                => _metadata;
+                => metadata;
 
             protected override PortableExecutableReference WithPropertiesImpl(MetadataReferenceProperties properties)
-                => new SerializedMetadataReference(properties, FilePath, _metadata, _storagesOpt, _provider);
+                => new SerializedMetadataReference(properties, FilePath, metadata, storagesOpt, initialDocumentation);
 
             public IReadOnlyList<ITemporaryStreamStorageInternal>? GetStorages()
-                => _storagesOpt.IsDefault ? null : _storagesOpt;
+                => storagesOpt.IsDefault ? null : storagesOpt;
         }
     }
 }

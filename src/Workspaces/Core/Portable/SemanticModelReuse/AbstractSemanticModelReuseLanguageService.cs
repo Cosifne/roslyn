@@ -124,20 +124,8 @@ namespace Microsoft.CodeAnalysis.SemanticModelReuse
             }
         }
 
-        private sealed class NonEquivalentTreeException : Exception
+        private sealed class NonEquivalentTreeException(string message, SyntaxTree originalSyntaxTree, SyntaxTree updatedSyntaxTree) : Exception(message)
         {
-            // Used for analyzing dumps
-#pragma warning disable IDE0052 // Remove unread private members
-            private readonly SyntaxTree _originalSyntaxTree;
-            private readonly SyntaxTree _updatedSyntaxTree;
-#pragma warning restore IDE0052 // Remove unread private members
-
-            public NonEquivalentTreeException(string message, SyntaxTree originalSyntaxTree, SyntaxTree updatedSyntaxTree)
-                : base(message)
-            {
-                _originalSyntaxTree = originalSyntaxTree;
-                _updatedSyntaxTree = updatedSyntaxTree;
-            }
         }
     }
 }

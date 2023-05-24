@@ -13,16 +13,13 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Shared.TestHooks
 {
-    internal sealed partial class AsynchronousOperationListener : IAsynchronousOperationListener, IAsynchronousOperationWaiter
+    internal sealed partial class AsynchronousOperationListener(string featureName, bool enableDiagnosticTokens) : IAsynchronousOperationListener, IAsynchronousOperationWaiter
     {
         private readonly NonReentrantLock _gate = new();
-
-#pragma warning disable IDE0052 // Remove unread private members - Can this field be removed?
-        private readonly string _featureName;
 #pragma warning restore IDE0052 // Remove unread private members
 
         private readonly HashSet<TaskCompletionSource<bool>> _pendingTasks = new();
-        private CancellationTokenSource _expeditedDelayCancellationTokenSource;
+        private CancellationTokenSource _expeditedDelayCancellationTokenSource = new CancellationTokenSource();
 
         private List<DiagnosticAsyncToken> _diagnosticTokenList = new();
         private int _counter;
@@ -31,13 +28,6 @@ namespace Microsoft.CodeAnalysis.Shared.TestHooks
         public AsynchronousOperationListener()
             : this(featureName: "noname", enableDiagnosticTokens: false)
         {
-        }
-
-        public AsynchronousOperationListener(string featureName, bool enableDiagnosticTokens)
-        {
-            _featureName = featureName;
-            _expeditedDelayCancellationTokenSource = new CancellationTokenSource();
-            TrackActiveTokens = Debugger.IsAttached || enableDiagnosticTokens;
         }
 
         [PerformanceSensitive(
@@ -213,7 +203,7 @@ namespace Microsoft.CodeAnalysis.Shared.TestHooks
                     _diagnosticTokenList = new List<DiagnosticAsyncToken>();
                 }
             }
-        }
+        } = Debugger.IsAttached || enableDiagnosticTokens;
 
         public bool HasPendingWork
         {

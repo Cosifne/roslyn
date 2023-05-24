@@ -8,17 +8,12 @@ namespace Microsoft.CodeAnalysis.Shared.Utilities
 {
     internal partial class Matcher<T>
     {
-        private class ChoiceMatcher : Matcher<T>
+        private class ChoiceMatcher(params Matcher<T>[] matchers) : Matcher<T>
         {
-            private readonly IEnumerable<Matcher<T>> _matchers;
-
-            public ChoiceMatcher(params Matcher<T>[] matchers)
-                => _matchers = matchers;
-
             public override bool TryMatch(IList<T> sequence, ref int index)
             {
                 // we can't use .Any() here because ref parameters can't be used in lambdas
-                foreach (var matcher in _matchers)
+                foreach (var matcher in matchers)
                 {
                     if (matcher.TryMatch(sequence, ref index))
                     {
@@ -30,7 +25,7 @@ namespace Microsoft.CodeAnalysis.Shared.Utilities
             }
 
             public override string ToString()
-                => $"({string.Join("|", _matchers)})";
+                => $"({string.Join("|", matchers)})";
         }
     }
 }
