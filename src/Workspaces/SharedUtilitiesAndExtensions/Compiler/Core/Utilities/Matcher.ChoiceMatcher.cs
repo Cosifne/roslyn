@@ -25,7 +25,7 @@ namespace Microsoft.CodeAnalysis.Shared.Utilities
             }
 
             public override string ToString()
-                => $"({string.Join("|", matchers)})";
+                => $"({string.Join("|", (object[])matchers)})";
         }
     }
 }

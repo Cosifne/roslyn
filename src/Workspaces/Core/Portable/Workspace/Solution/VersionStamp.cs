@@ -232,8 +232,8 @@ namespace Microsoft.CodeAnalysis
         internal TestAccessor GetTestAccessor()
             => new(this);
 
-        internal readonly struct TestAccessor(in VersionStamp versionStamp)
-        {
+        internal readonly struct TestAccessor(VersionStamp versionStamp)
+       {
 
             /// <summary>
             /// True if this VersionStamp is newer than the specified one.

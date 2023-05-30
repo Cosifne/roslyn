@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Roslyn.Utilities;
+using static Microsoft.CodeAnalysis.Remote.RemoteServiceCallbackDispatcherRegistry;
 
 namespace Microsoft.CodeAnalysis.Remote
 {

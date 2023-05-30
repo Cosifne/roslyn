@@ -106,7 +106,7 @@ namespace Microsoft.CodeAnalysis.Shared.Utilities
 
         /// <summary>
         /// Node which replaces the <see cref="OriginalExpression"/>.
-        /// Note that this node is a cloned version of <see cref="_newExpressionForReplace"/> node, which has been re-parented
+        /// Note that this node is a cloned version of <see cref="newExpression"/> node, which has been re-parented
         /// under the node to be speculated, i.e. <see cref="SemanticRootOfReplacedExpression"/>.
         /// </summary>
         public TExpressionSyntax ReplacedExpression

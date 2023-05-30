@@ -23,7 +23,7 @@ namespace Microsoft.CodeAnalysis.Shared.TestHooks
 
         private List<DiagnosticAsyncToken> _diagnosticTokenList = new();
         private int _counter;
-        private bool _trackActiveTokens;
+        private bool _trackActiveTokens = Debugger.IsAttached || enableDiagnosticTokens;
 
         public AsynchronousOperationListener()
             : this(featureName: "noname", enableDiagnosticTokens: false)
@@ -203,7 +203,7 @@ namespace Microsoft.CodeAnalysis.Shared.TestHooks
                     _diagnosticTokenList = new List<DiagnosticAsyncToken>();
                 }
             }
-        } = Debugger.IsAttached || enableDiagnosticTokens;
+        }
 
         public bool HasPendingWork
         {

@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using Roslyn.Utilities;
+using static Microsoft.CodeAnalysis.Checksum;
 
 namespace Microsoft.CodeAnalysis
 {

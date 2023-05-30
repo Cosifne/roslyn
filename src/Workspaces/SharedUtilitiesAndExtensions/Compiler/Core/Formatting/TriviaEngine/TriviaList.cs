@@ -11,6 +11,9 @@ namespace Microsoft.CodeAnalysis.Formatting
         public SyntaxTrivia this[int index]
             => index < list1.Count ? list1[index] : list2[index - list1.Count];
 
+        public SyntaxTriviaList List1 => list1;
+        public SyntaxTriviaList List2 => list2;
+
         public Enumerator GetEnumerator()
             => new(this);
 
@@ -24,8 +27,8 @@ namespace Microsoft.CodeAnalysis.Formatting
 
             internal Enumerator(TriviaList triviaList)
             {
-                _list1 = list1;
-                _list2 = list2;
+                _list1 = triviaList.List1;
+                _list2 = triviaList.List2;
 
                 _index = -1;
                 _enumerator = _list1.GetEnumerator();

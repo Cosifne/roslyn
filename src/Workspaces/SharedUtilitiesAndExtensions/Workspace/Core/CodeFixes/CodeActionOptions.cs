@@ -148,7 +148,7 @@ namespace Microsoft.CodeAnalysis.CodeActions
     internal sealed class DelegatingCodeActionOptionsProvider(Func<LanguageServices, CodeActionOptions> @delegate) : AbstractCodeActionOptionsProvider
     {
         public override CodeActionOptions GetOptions(LanguageServices languageService)
-            => delegate(languageService);
+            => @delegate(languageService);
     }
 
     internal static class CodeActionOptionsProviders

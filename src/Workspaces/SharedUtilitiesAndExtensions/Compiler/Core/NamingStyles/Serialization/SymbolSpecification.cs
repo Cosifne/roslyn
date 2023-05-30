@@ -14,6 +14,7 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Roslyn.Utilities;
 using System.Runtime.Serialization;
 using System.Diagnostics;
+using static Microsoft.CodeAnalysis.Diagnostics.Analyzers.NamingStyles.SymbolSpecification;
 
 #if CODE_STYLE
 using Microsoft.CodeAnalysis.Internal.Editing;
