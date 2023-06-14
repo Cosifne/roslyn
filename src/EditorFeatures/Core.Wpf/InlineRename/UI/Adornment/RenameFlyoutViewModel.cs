@@ -145,12 +145,8 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         public bool PreviewChangesFlag
         {
-            get => _session.PreviewChanges;
-            set
-            {
-                _globalOptionService.SetGlobalOption(InlineRenameSessionOptionsStorage.PreviewChanges, value);
-                _session.SetPreviewChanges(value);
-            }
+            get => _session.RenameService.GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.PreviewChanges);
+            set => _globalOptionService.SetGlobalOption(InlineRenameSessionOptionsStorage.PreviewChanges, value);
         }
 
         public bool RenameOverloadsFlag

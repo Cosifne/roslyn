@@ -111,8 +111,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 RenameInComments: GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.RenameInComments),
                 RenameFile: canRenameFile && GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.RenameFile));
 
-            var previewChanges = GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.PreviewChanges);
-
             // The session currently has UI thread affinity.
             await _threadingContext.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             ActiveSession = new InlineRenameSession(
@@ -122,13 +120,13 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 renameInfo.TriggerSpan.ToSnapshotSpan(snapshot),
                 renameInfo,
                 options,
-                previewChanges,
                 _uiThreadOperationExecutor,
                 _textBufferAssociatedViewService,
                 _textBufferFactoryService,
                 _textBufferCloneService,
                 _featureServiceFactory,
                 _refactorNotifyServices,
+                GlobalOptions,
                 _asyncListener);
 
             return new InlineRenameSessionInfo(ActiveSession);

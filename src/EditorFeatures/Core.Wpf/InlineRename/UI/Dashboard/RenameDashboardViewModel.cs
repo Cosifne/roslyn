@@ -281,13 +281,8 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         public bool DefaultPreviewChangesFlag
         {
-            get => _session.PreviewChanges;
-
-            set
-            {
-                _session.RenameService.GlobalOptions.SetGlobalOption(InlineRenameSessionOptionsStorage.PreviewChanges, value);
-                _session.SetPreviewChanges(value);
-            }
+            get => _session.RenameService.GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.PreviewChanges);
+            set => _session.RenameService.GlobalOptions.SetGlobalOption(InlineRenameSessionOptionsStorage.PreviewChanges, value);
         }
 
         public string OriginalName => _session.OriginalSymbolName;
