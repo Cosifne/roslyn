@@ -720,18 +720,18 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         }
 
         public void Commit(bool previewChanges = false)
-            => CommitWorker(previewChanges);
+            => CommitWorkerAsync(previewChanges);
 
         /// <returns><see langword="true"/> if the rename operation was committed, <see
         /// langword="false"/> otherwise</returns>
-        private bool CommitWorker(bool previewChanges)
+        private Task<bool> CommitWorkerAsync(bool previewChanges)
         {
             // We're going to synchronously block the UI thread here.  So we can't use the background work indicator (as
             // it needs the UI thread to update itself.  This will force us to go through the Threaded-Wait-Dialog path
             // which at least will allow the user to cancel the rename if they want.
             //
             // In the future we should remove this entrypoint and have all callers use CommitAsync instead.
-            return _threadingContext.JoinableTaskFactory.Run(() => CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: false, CancellationToken.None));
+            return CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: true, CancellationToken.None);
         }
 
         public Task CommitAsync(bool previewChanges, CancellationToken cancellationToken)
@@ -774,7 +774,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                     var factory = _workspace.Services.GetRequiredService<IBackgroundWorkIndicatorFactory>();
                     using var context = factory.Create(
                         _triggerView, TriggerSpan, EditorFeaturesResources.Computing_Rename_information,
-                        cancelOnEdit: false, cancelOnFocusLost: false);
+                        cancelOnEdit: true, cancelOnFocusLost: false);
 
                     await CommitCoreAsync(context, previewChanges).ConfigureAwait(true);
                 }
@@ -834,7 +834,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 }
 
                 // The user hasn't canceled by now, so we're done waiting for them. Off to rename!
-                using var _ = operationContext.AddScope(allowCancellation: false, EditorFeaturesResources.Updating_files);
+                using var _ = operationContext.AddScope(allowCancellation: true, EditorFeaturesResources.Updating_files);
 
                 await DismissUIAndRollbackEditsAndEndRenameSessionAsync(
                     RenameLogMessage.UserActionOutcome.Committed, previewChanges,
@@ -974,7 +974,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 => _inlineRenameSession = inlineRenameSession;
 
             public bool CommitWorker(bool previewChanges)
-                => _inlineRenameSession.CommitWorker(previewChanges);
+                => _inlineRenameSession.CommitWorkerAsync(previewChanges).Result;
         }
     }
 }
