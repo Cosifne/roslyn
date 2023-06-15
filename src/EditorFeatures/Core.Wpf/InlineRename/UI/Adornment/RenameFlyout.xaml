@@ -9,6 +9,7 @@
              xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
              xmlns:imageutils="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
              xmlns:utils="clr-namespace:Microsoft.CodeAnalysis.Utilities"
+             xmlns:vsui="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Shell.15.0"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800"
              MinWidth="200"
@@ -43,6 +44,7 @@
                     Grid.Column="0"
                     x:Name="IdentifierTextBox" 
                     Text="{Binding IdentifierText, UpdateSourceTrigger=PropertyChanged}" 
+                    Background="{DynamicResource {x:Static vsui:CommonControlsColors.TextBoxBackgroundBrushKey}}"
                     GotFocus="IdentifierTextBox_GotFocus"
                     IsEnabled="{Binding RenameBoardEditable, UpdateSourceTrigger=PropertyChanged}"
                     HorizontalAlignment="Stretch" />

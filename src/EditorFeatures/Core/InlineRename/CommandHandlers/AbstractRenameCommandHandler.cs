@@ -7,6 +7,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis.Editor.BackgroundWorkIndicator;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Editor.Shared.Utilities;
+using Microsoft.CodeAnalysis.Notification;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text;
@@ -97,12 +98,15 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         private void CommitIfActive(EditorCommandArgs args)
         {
-            if (_renameService.ActiveSession != null)
+            var activeSession = _renameService.ActiveSession;
+            if (activeSession != null)
             {
+                if (!activeSession.CommittingChanges)
+                {
+                    activeSession.Commit();
+                }
+
                 var selection = args.TextView.Selection.VirtualSelectedSpans.First();
-
-                _renameService.ActiveSession.Commit();
-
                 var translatedSelection = selection.TranslateTo(args.TextView.TextBuffer.CurrentSnapshot);
                 args.TextView.Selection.Select(translatedSelection.Start, translatedSelection.End);
                 args.TextView.Caret.MoveTo(translatedSelection.End);
