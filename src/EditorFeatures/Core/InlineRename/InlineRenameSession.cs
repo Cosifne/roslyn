@@ -61,7 +61,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         private bool _dismissed;
         private bool _isApplyingEdit;
 
-        private bool _startCommittingChanges;
+        private bool _committingChanges;
         private string _replacementText;
         private SymbolRenameOptions _symbolRenameOptions;
         private readonly Dictionary<ITextBuffer, OpenTextBufferManager> _openTextBuffers = new Dictionary<ITextBuffer, OpenTextBufferManager>();
@@ -193,7 +193,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             // _cancellationTokenSource is canceled (which we always do when the session is finally ended).
             _keepAliveSession = RemoteKeepAliveSession.Create(_baseSolution, asyncListener);
             InitializeOpenBuffers(triggerSpan);
-            _startCommittingChanges = false;
+            _committingChanges = false;
             _commitGate = new SemaphoreSlim(initialCount: 1);
         }
 
@@ -348,13 +348,25 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         public SymbolRenameOptions Options => _symbolRenameOptions;
         public bool HasRenameOverloads => _renameInfo.HasOverloads;
         public bool MustRenameOverloads => _renameInfo.MustRenameOverloads;
+        public bool CommittingChanges
+        {
+            get => _committingChanges;
+            private set
+            {
+                if (value != _committingChanges)
+                {
+                    _committingChanges = value;
+                    CommittingChangesChanged?.Invoke(this, _committingChanges);
+                }
+            }
+        }
 
         public IInlineRenameUndoManager UndoManager { get; }
 
         public event EventHandler<ImmutableArray<InlineRenameLocation>> ReferenceLocationsChanged;
         public event EventHandler<IInlineRenameReplacementInfo> ReplacementsComputed;
         public event EventHandler ReplacementTextChanged;
-        public event EventHandler<bool> StartCommittingChanges;
+        public event EventHandler<bool> CommittingChangesChanged;
 
         internal OpenTextBufferManager GetBufferManager(ITextBuffer buffer)
             => _openTextBuffers[buffer];
@@ -747,19 +759,19 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         public Task CommitAsync(bool previewChanges, CancellationToken cancellationToken)
            => CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: true, cancellationToken);
 
-        /// <returns><see langword="true"/> if the rename operation was commited, <see
+        /// <returns><see langword="true"/> if the rename operation was committed, <see
         /// langword="false"/> otherwise</returns>
         private async Task<bool> CommitWorkerAsync(bool previewChanges, bool canUseBackgroundWorkIndicator, CancellationToken cancellationToken)
         {
-            // In case multiple thread want to commit the same session. Make sure we only commit it once.
+            // In case multiple threads want to commit the same session. Make sure we only commit it once.
             await _commitGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-            if (_startCommittingChanges)
+            if (_committingChanges)
                 return true;
 
-            _startCommittingChanges = true;
+            _committingChanges = true;
             _commitGate.Release();
 
-            StartCommittingChanges?.Invoke(this, _startCommittingChanges);
+            CommittingChangesChanged?.Invoke(this, _committingChanges);
 
             await _threadingContext.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             VerifyNotDismissed();

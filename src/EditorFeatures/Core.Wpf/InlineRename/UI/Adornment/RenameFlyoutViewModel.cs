@@ -42,10 +42,17 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             _session.ReplacementTextChanged += OnReplacementTextChanged;
             _session.ReplacementsComputed += OnReplacementsComputed;
             _session.ReferenceLocationsChanged += OnReferenceLocationsChanged;
+            _session.CommittingChangesChanged += OnCommittingChangesChanged;
             StartingSelection = selectionSpan;
             InitialTrackingSpan = session.TriggerSpan.CreateTrackingSpan(SpanTrackingMode.EdgeInclusive);
 
             RegisterOleComponent();
+        }
+
+        private void OnCommittingChangesChanged(object sender, bool committingChanges)
+        {
+            NotifyPropertyChanged(nameof(IsRenameOverloadsEditable));
+            NotifyPropertyChanged(nameof(RenameBoardEditable));
         }
 
         public string IdentifierText
@@ -65,7 +72,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         public ITrackingSpan InitialTrackingSpan { get; }
 
-        public bool AllowFileRename => _session.FileRenameInfo == InlineRenameFileRenameInfo.Allowed && _isReplacementTextValid;
+        public bool AllowFileRename => _session.FileRenameInfo == InlineRenameFileRenameInfo.Allowed && _isReplacementTextValid && RenameBoardEditable;
         public bool ShowFileRename => _session.FileRenameInfo != InlineRenameFileRenameInfo.NotAllowed;
 
         public string FileRenameString => _session.FileRenameInfo switch
@@ -180,10 +187,12 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         }
 
         public bool IsRenameOverloadsEditable
-            => !_session.MustRenameOverloads;
+            => !_session.MustRenameOverloads && RenameBoardEditable;
 
         public bool IsRenameOverloadsVisible
             => _session.HasRenameOverloads;
+
+        public bool RenameBoardEditable => !_session.CommittingChanges;
 
         public TextSpan StartingSelection { get; }
 
@@ -285,6 +294,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 {
                     _session.ReplacementTextChanged -= OnReplacementTextChanged;
                     _session.ReplacementsComputed -= OnReplacementsComputed;
+                    _session.CommittingChangesChanged -= OnCommittingChangesChanged;
 
                     UnregisterOleComponent();
                 }
