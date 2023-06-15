@@ -406,6 +406,13 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 }));
 
                 Cancel();
+                return;
+            }
+
+            if (_committingChanges)
+            {
+                // If the session is committingChange, no edit is allowed.
+                Cancel();
             }
         }
 
