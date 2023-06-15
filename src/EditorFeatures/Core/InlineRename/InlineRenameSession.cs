@@ -720,17 +720,21 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         }
 
         public void Commit(bool previewChanges = false)
-            => CommitWorkerAsync(previewChanges);
+        {
+            if (_globalOptionService.GetOption(InlineRenameSessionOptionsStorage.RenameAsynchronously))
+            {
+                CommitWorkerAsync(previewChanges);
+            }
+            else
+            {
+                _threadingContext.JoinableTaskFactory.Run(() => CommitWorkerAsync(previewChanges));
+            }
+        }
 
         /// <returns><see langword="true"/> if the rename operation was committed, <see
         /// langword="false"/> otherwise</returns>
         private Task<bool> CommitWorkerAsync(bool previewChanges)
         {
-            // We're going to synchronously block the UI thread here.  So we can't use the background work indicator (as
-            // it needs the UI thread to update itself.  This will force us to go through the Threaded-Wait-Dialog path
-            // which at least will allow the user to cancel the rename if they want.
-            //
-            // In the future we should remove this entrypoint and have all callers use CommitAsync instead.
             return CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: true, CancellationToken.None);
         }
 
