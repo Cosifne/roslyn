@@ -661,6 +661,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
+
         public void Cancel()
         {
             _threadingContext.ThrowIfNotOnUIThread();
@@ -668,6 +669,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             // This wait is safe.  We are not passing the async callback to DismissUIAndRollbackEditsAndEndRenameSessionAsync.
             // So everything in that method will happen synchronously.
             DismissUIAndRollbackEditsAndEndRenameSessionAsync(
+
                 RenameLogMessage.UserActionOutcome.Canceled, previewChanges: false).Wait();
         }
 
@@ -687,6 +689,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
 
             _dismissed = true;
+            _committingChanges = false;
 
             // Remove all our adornments and restore all buffer texts to their initial state.
             DismissUIAndRollbackEdits();
@@ -709,6 +712,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             LogRenameSession(outcome, previewChanges);
 
             // Remove all our rename trackers from the text buffer properties.
+
             RenameTrackingDismisser.DismissRenameTracking(_workspace, _workspace.GetOpenDocumentIds());
 
             // Log how long the full rename took.
