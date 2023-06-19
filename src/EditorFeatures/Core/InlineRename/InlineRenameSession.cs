@@ -764,7 +764,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         /// langword="false"/> otherwise</returns>
         private Task<bool> CommitWorkerAsync(bool previewChanges)
         {
-            return CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: true, CancellationToken.None);
+            return CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: false, CancellationToken.None);
         }
 
         public Task CommitAsync(bool previewChanges, CancellationToken cancellationToken)
