@@ -42,14 +42,14 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             _session.ReplacementTextChanged += OnReplacementTextChanged;
             _session.ReplacementsComputed += OnReplacementsComputed;
             _session.ReferenceLocationsChanged += OnReferenceLocationsChanged;
-            _session.CommitStarted += OnCommittingChangesChanged;
+            _session.CommitStateChange += OnCommitStateChange;
             StartingSelection = selectionSpan;
             InitialTrackingSpan = session.TriggerSpan.CreateTrackingSpan(SpanTrackingMode.EdgeInclusive);
 
             RegisterOleComponent();
         }
 
-        private void OnCommittingChangesChanged(object sender, bool committingChanges)
+        private void OnCommitStateChange(object sender, CommitState commitState)
         {
             NotifyPropertyChanged(nameof(IsRenameOverloadsEditable));
             NotifyPropertyChanged(nameof(RenameBoardEditable));
@@ -192,7 +192,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         public bool IsRenameOverloadsVisible
             => _session.HasRenameOverloads;
 
-        public bool RenameBoardEditable => !_session.CommittingChanges;
+        public bool RenameBoardEditable => _session.CommitState != CommitState.NotStarted;
 
         public TextSpan StartingSelection { get; }
 
@@ -294,7 +294,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 {
                     _session.ReplacementTextChanged -= OnReplacementTextChanged;
                     _session.ReplacementsComputed -= OnReplacementsComputed;
-                    _session.CommitStarted -= OnCommittingChangesChanged;
+                    _session.CommitStateChange -= OnCommitStateChange;
 
                     UnregisterOleComponent();
                 }

@@ -101,7 +101,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             var activeSession = _renameService.ActiveSession;
             if (activeSession != null)
             {
-                if (!activeSession.CommittingChanges)
+                if (activeSession.CommitState == CommitState.NotStarted)
                 {
                     activeSession.Commit();
                 }

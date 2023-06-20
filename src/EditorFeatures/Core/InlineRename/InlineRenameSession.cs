@@ -823,7 +823,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                     await CommitCoreAsync(context, previewChanges).ConfigureAwait(true);
                 }
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
                 await DismissUIAndRollbackEditsAndEndRenameSessionAsync(
                     RenameLogMessage.UserActionOutcome.Canceled | RenameLogMessage.UserActionOutcome.Committed, previewChanges).ConfigureAwait(false);
@@ -1000,11 +1000,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         internal TestAccessor GetTestAccessor()
             => new TestAccessor(this);
-
-        public void Dispose()
-        {
-            _commitGate.Dispose();
-        }
 
         public readonly struct TestAccessor
         {
