@@ -53,6 +53,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         {
             NotifyPropertyChanged(nameof(IsRenameOverloadsEditable));
             NotifyPropertyChanged(nameof(RenameBoardEditable));
+            NotifyPropertyChanged(nameof(AllowFileRename));
         }
 
         public string IdentifierText
