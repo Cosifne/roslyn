@@ -36,7 +36,7 @@ using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 {
-    internal partial class InlineRenameSession : IInlineRenameSession, IFeatureController, IDisposable
+    internal partial class InlineRenameSession : IInlineRenameSession, IFeatureController
     {
         private readonly Workspace _workspace;
         private readonly IUIThreadOperationExecutor _uiThreadOperationExecutor;
@@ -55,13 +55,12 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         private readonly IDisposable _inlineRenameSessionDurationLogBlock;
         private readonly IThreadingContext _threadingContext;
         private readonly IGlobalOptionService _globalOptionService;
-        private readonly SemaphoreSlim _commitGate;
         public readonly InlineRenameService RenameService;
 
         private bool _dismissed;
         private bool _isApplyingEdit;
 
-        private bool _committingChanges;
+        private CommitState _commitState;
         private string _replacementText;
         private SymbolRenameOptions _symbolRenameOptions;
         private readonly Dictionary<ITextBuffer, OpenTextBufferManager> _openTextBuffers = new Dictionary<ITextBuffer, OpenTextBufferManager>();
@@ -85,6 +84,19 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             {
                 _replacementText = value;
                 ReplacementTextChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        public CommitState CommitState
+        {
+            get => _commitState;
+            private set
+            {
+                if (value != _commitState)
+                {
+                    _commitState = value;
+                    CommitStateChange?.Invoke(this, value);
+                }
             }
         }
 
@@ -193,8 +205,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             // _cancellationTokenSource is canceled (which we always do when the session is finally ended).
             _keepAliveSession = RemoteKeepAliveSession.Create(_baseSolution, asyncListener);
             InitializeOpenBuffers(triggerSpan);
-            _committingChanges = false;
-            _commitGate = new SemaphoreSlim(initialCount: 1);
+            CommitState = CommitState.NotStarted;
         }
 
         public string OriginalSymbolName => _renameInfo.DisplayName;
@@ -348,25 +359,13 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         public SymbolRenameOptions Options => _symbolRenameOptions;
         public bool HasRenameOverloads => _renameInfo.HasOverloads;
         public bool MustRenameOverloads => _renameInfo.MustRenameOverloads;
-        public bool CommittingChanges
-        {
-            get => _committingChanges;
-            private set
-            {
-                if (value != _committingChanges)
-                {
-                    _committingChanges = value;
-                    CommittingChangesChanged?.Invoke(this, _committingChanges);
-                }
-            }
-        }
 
         public IInlineRenameUndoManager UndoManager { get; }
 
         public event EventHandler<ImmutableArray<InlineRenameLocation>> ReferenceLocationsChanged;
         public event EventHandler<IInlineRenameReplacementInfo> ReplacementsComputed;
         public event EventHandler ReplacementTextChanged;
-        public event EventHandler<bool> CommittingChangesChanged;
+        public event EventHandler<CommitState> CommitStateChange;
 
         internal OpenTextBufferManager GetBufferManager(ITextBuffer buffer)
             => _openTextBuffers[buffer];
@@ -396,6 +395,12 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
+        private void VerifyNotCommitNotStarted()
+        {
+            if (CommitState != CommitState.NotStarted)
+                throw new InvalidOperationException("Rename Session can only be committed once.");
+        }
+
         private void OnWorkspaceChanged(object sender, WorkspaceChangeEventArgs args)
         {
             if (args.Kind != WorkspaceChangeKind.DocumentChanged)
@@ -409,9 +414,9 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 return;
             }
 
-            if (_committingChanges)
+            if (CommitState == CommitState.WaitingConflictResolution)
             {
-                // If the session is committingChange, no edit is allowed.
+                // If workspace get changed during the computation of new solution, cancel the task because it means the base solution of the rename session is invalid.
                 Cancel();
             }
         }
@@ -661,7 +666,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
-
         public void Cancel()
         {
             _threadingContext.ThrowIfNotOnUIThread();
@@ -669,7 +673,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             // This wait is safe.  We are not passing the async callback to DismissUIAndRollbackEditsAndEndRenameSessionAsync.
             // So everything in that method will happen synchronously.
             DismissUIAndRollbackEditsAndEndRenameSessionAsync(
-
                 RenameLogMessage.UserActionOutcome.Canceled, previewChanges: false).Wait();
         }
 
@@ -689,7 +692,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
 
             _dismissed = true;
-            _committingChanges = false;
 
             // Remove all our adornments and restore all buffer texts to their initial state.
             DismissUIAndRollbackEdits();
@@ -717,6 +719,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
             // Log how long the full rename took.
             _inlineRenameSessionDurationLogBlock.Dispose();
+            CommitState = CommitState.NotStarted;
 
             return;
 
@@ -750,14 +753,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         public void Commit(bool previewChanges = false)
         {
-            if (_globalOptionService.GetOption(InlineRenameSessionOptionsStorage.RenameAsynchronously))
-            {
-                CommitWorkerAsync(previewChanges);
-            }
-            else
-            {
-                _threadingContext.JoinableTaskFactory.Run(() => CommitWorkerAsync(previewChanges));
-            }
+            _ = CommitWorkerAsync(previewChanges);
         }
 
         /// <returns><see langword="true"/> if the rename operation was committed, <see
@@ -774,18 +770,10 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         /// langword="false"/> otherwise</returns>
         private async Task<bool> CommitWorkerAsync(bool previewChanges, bool canUseBackgroundWorkIndicator, CancellationToken cancellationToken)
         {
-            // In case multiple threads want to commit the same session. Make sure we only commit it once.
-            await _commitGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-            if (_committingChanges)
-                return true;
-
-            _committingChanges = true;
-            _commitGate.Release();
-
-            CommittingChangesChanged?.Invoke(this, _committingChanges);
-
             await _threadingContext.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
             VerifyNotDismissed();
+            VerifyNotCommitNotStarted();
+            CommitState = CommitState.Started;
 
             // If the identifier was deleted (or didn't change at all) then cancel the operation.
             // Note: an alternative approach would be for the work we're doing (like detecting
@@ -835,7 +823,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                     await CommitCoreAsync(context, previewChanges).ConfigureAwait(true);
                 }
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException e)
             {
                 await DismissUIAndRollbackEditsAndEndRenameSessionAsync(
                     RenameLogMessage.UserActionOutcome.Canceled | RenameLogMessage.UserActionOutcome.Committed, previewChanges).ConfigureAwait(false);
@@ -851,11 +839,14 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             var eventName = previewChanges ? FunctionId.Rename_CommitCoreWithPreview : FunctionId.Rename_CommitCore;
             using (Logger.LogBlock(eventName, KeyValueLogMessage.Create(LogType.UserAction), cancellationToken))
             {
+                CommitState = CommitState.WaitingConflictResolution;
                 var info = await _conflictResolutionTask.JoinAsync(cancellationToken).ConfigureAwait(true);
+
                 var newSolution = info.NewSolution;
 
                 if (previewChanges)
                 {
+                    CommitState = CommitState.Preview;
                     var previewService = _workspace.Services.GetService<IPreviewDialogService>();
 
                     // The preview service needs to be called from the UI thread, since it's doing COM calls underneath.
@@ -877,7 +868,8 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 }
 
                 // The user hasn't canceled by now, so we're done waiting for them. Off to rename!
-                using var _ = operationContext.AddScope(allowCancellation: true, EditorFeaturesResources.Updating_files);
+                CommitState = CommitState.ApplyingNewSolution;
+                using var _ = operationContext.AddScope(allowCancellation: false, EditorFeaturesResources.Updating_files);
 
                 await DismissUIAndRollbackEditsAndEndRenameSessionAsync(
                     RenameLogMessage.UserActionOutcome.Committed, previewChanges,

@@ -42,7 +42,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             _session.ReplacementTextChanged += OnReplacementTextChanged;
             _session.ReplacementsComputed += OnReplacementsComputed;
             _session.ReferenceLocationsChanged += OnReferenceLocationsChanged;
-            _session.CommittingChangesChanged += OnCommittingChangesChanged;
+            _session.CommitStarted += OnCommittingChangesChanged;
             StartingSelection = selectionSpan;
             InitialTrackingSpan = session.TriggerSpan.CreateTrackingSpan(SpanTrackingMode.EdgeInclusive);
 
@@ -294,7 +294,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 {
                     _session.ReplacementTextChanged -= OnReplacementTextChanged;
                     _session.ReplacementsComputed -= OnReplacementsComputed;
-                    _session.CommittingChangesChanged -= OnCommittingChangesChanged;
+                    _session.CommitStarted -= OnCommittingChangesChanged;
 
                     UnregisterOleComponent();
                 }
