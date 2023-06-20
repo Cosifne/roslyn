@@ -31,7 +31,11 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         protected virtual void Commit(InlineRenameSession activeSession, ITextView textView)
         {
-            activeSession.Commit();
+            if (activeSession.CommitState == CommitState.NotStarted)
+            {
+                activeSession.Commit();
+            }
+
             SetFocusToTextView(textView);
         }
     }

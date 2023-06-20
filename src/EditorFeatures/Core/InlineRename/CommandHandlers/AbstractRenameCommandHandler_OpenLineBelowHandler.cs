@@ -17,7 +17,10 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         {
             HandlePossibleTypingCommand(args, nextHandler, (activeSession, span) =>
             {
-                activeSession.Commit();
+                if (activeSession.CommitState == CommitState.NotStarted)
+                {
+                    activeSession.Commit();
+                }
                 nextHandler();
             });
         }

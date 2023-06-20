@@ -82,7 +82,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                     SetFocusToAdornment(args.TextView);
                     return;
                 }
-                else
+                else if (_renameService.ActiveSession.CommitState == CommitState.NotStarted)
                 {
                     // Otherwise, commit the existing session and start a new one.
                     _renameService.ActiveSession.Commit();
