@@ -192,7 +192,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         public bool IsRenameOverloadsVisible
             => _session.HasRenameOverloads;
 
-        public bool RenameBoardEditable => _session.CommitState != CommitState.NotStarted;
+        public bool RenameBoardEditable => _session.CommitState == CommitState.NotStarted;
 
         public TextSpan StartingSelection { get; }
 
