@@ -46,7 +46,7 @@
                     Text="{Binding IdentifierText, UpdateSourceTrigger=PropertyChanged}" 
                     Background="{DynamicResource {x:Static vsui:CommonControlsColors.TextBoxBackgroundBrushKey}}"
                     GotFocus="IdentifierTextBox_GotFocus"
-                    IsEnabled="{Binding RenameBoardEditable, UpdateSourceTrigger=PropertyChanged}"
+                    IsEnabled="{Binding CommitNotStarted, UpdateSourceTrigger=PropertyChanged}"
                     HorizontalAlignment="Stretch" />
 
                 <!-- Expand/Collapse button and glyph -->
