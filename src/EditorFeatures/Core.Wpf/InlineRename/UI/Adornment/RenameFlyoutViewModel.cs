@@ -50,7 +50,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         private void OnCommitStateChange(object sender, CommitState commitState)
         {
             NotifyPropertyChanged(nameof(IsRenameOverloadsEditable));
-            NotifyPropertyChanged(nameof(RenameBoardEditable));
+            NotifyPropertyChanged(nameof(CommitNotStarted));
             NotifyPropertyChanged(nameof(AllowFileRename));
         }
 
@@ -71,7 +71,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         public ITrackingSpan InitialTrackingSpan { get; }
 
-        public bool AllowFileRename => _session.FileRenameInfo == InlineRenameFileRenameInfo.Allowed && _isReplacementTextValid && RenameBoardEditable;
+        public bool AllowFileRename => _session.FileRenameInfo == InlineRenameFileRenameInfo.Allowed && _isReplacementTextValid && CommitNotStarted;
         public bool ShowFileRename => _session.FileRenameInfo != InlineRenameFileRenameInfo.NotAllowed;
 
         public string FileRenameString => _session.FileRenameInfo switch
@@ -186,12 +186,12 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         }
 
         public bool IsRenameOverloadsEditable
-            => !_session.MustRenameOverloads && RenameBoardEditable;
+            => !_session.MustRenameOverloads && CommitNotStarted;
 
         public bool IsRenameOverloadsVisible
             => _session.HasRenameOverloads;
 
-        public bool RenameBoardEditable => _session.CommitState == CommitState.NotStarted;
+        public bool CommitNotStarted => _session.CommitState == CommitState.NotStarted;
 
         public TextSpan StartingSelection { get; }
 

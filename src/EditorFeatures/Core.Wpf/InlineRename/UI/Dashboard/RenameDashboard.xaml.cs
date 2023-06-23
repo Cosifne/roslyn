@@ -278,7 +278,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 #pragma warning disable CA1822 // Mark members as static - used in xaml
         public string RenameOverloads => EditorFeaturesResources.Include_overload_s;
         public Visibility RenameOverloadsVisibility => _model.RenameOverloadsVisibility;
-        public bool IsRenameOverloadsEditable => _model.IsRenameOverloadsEditable;
         public string SearchInComments => EditorFeaturesResources.Include_comments;
         public string SearchInStrings => EditorFeaturesResources.Include_strings;
         public string ApplyRename => EditorFeaturesResources.Apply1;
