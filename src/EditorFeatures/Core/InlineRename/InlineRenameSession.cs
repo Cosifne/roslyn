@@ -59,7 +59,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         private bool _dismissed;
         private bool _isApplyingEdit;
-
         private CommitState _commitState;
         private string _replacementText;
         private SymbolRenameOptions _symbolRenameOptions;
@@ -714,7 +713,6 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             LogRenameSession(outcome, previewChanges);
 
             // Remove all our rename trackers from the text buffer properties.
-
             RenameTrackingDismisser.DismissRenameTracking(_workspace, _workspace.GetOpenDocumentIds());
 
             // Log how long the full rename took.
@@ -805,7 +803,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                     var factory = _workspace.Services.GetRequiredService<IBackgroundWorkIndicatorFactory>();
                     using var context = factory.Create(
                         _triggerView, TriggerSpan, EditorFeaturesResources.Computing_Rename_information,
-                        cancelOnEdit: true, cancelOnFocusLost: false);
+                        cancelOnEdit: false, cancelOnFocusLost: false);
 
                     await CommitCoreAsync(context, previewChanges).ConfigureAwait(true);
                 }
