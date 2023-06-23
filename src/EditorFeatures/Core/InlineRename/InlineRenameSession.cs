@@ -751,14 +751,15 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         public void Commit(bool previewChanges = false)
         {
-            _ = CommitWorkerAsync(previewChanges);
-        }
-
-        /// <returns><see langword="true"/> if the rename operation was committed, <see
-        /// langword="false"/> otherwise</returns>
-        private Task<bool> CommitWorkerAsync(bool previewChanges)
-        {
-            return CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: false, CancellationToken.None);
+            var cancellationToken = CancellationToken.None;
+            if (_globalOptionService.GetOption(InlineRenameSessionOptionsStorage.RenameAsynchronously))
+            {
+                _ = CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: false, cancellationToken);
+            }
+            else
+            {
+                _threadingContext.JoinableTaskFactory.Run(() => CommitWorkerAsync(previewChanges, canUseBackgroundWorkIndicator: false, cancellationToken));
+            }
         }
 
         public Task CommitAsync(bool previewChanges, CancellationToken cancellationToken)
@@ -793,7 +794,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
             try
             {
-                if (canUseBackgroundWorkIndicator && _globalOptionService.GetOption(InlineRenameSessionOptionsStorage.RenameAsynchronously))
+                if (canUseBackgroundWorkIndicator)
                 {
                     // We do not cancel on edit because as part of the rename system we have asynchronous work still
                     // occurring that itself may be asynchronously editing the buffer (for example, updating reference
