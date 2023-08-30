@@ -211,10 +211,24 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         {
             var start = IdentifierTextBox.SelectionStart;
             var length = IdentifierTextBox.SelectionLength;
+            var end = start + length;
 
-            var buffer = _viewModel.InitialTrackingSpan.TextBuffer;
-            var startPoint = _viewModel.InitialTrackingSpan.GetStartPoint(buffer.CurrentSnapshot);
-            _textView.SetSelection(new SnapshotSpan(startPoint + start, length));
+            var textBuffer = _viewModel.InitialTrackingSpan.TextBuffer;
+            var initialTrackingSpanStart = _viewModel.InitialTrackingSpan.GetStartPoint(textBuffer.CurrentSnapshot);
+            var textViewSelectionRelativeStart = _textView.Selection.Start.Position - initialTrackingSpanStart;
+            var textViewSelectionRelativeEnd = _textView.Selection.End.Position - initialTrackingSpanStart;
+
+            if (start != textViewSelectionRelativeStart || end != textViewSelectionRelativeEnd)
+            {
+                if (this.IdentifierTextBox.IsFocused)
+                {
+                    _textView.SetSelection(new SnapshotSpan(initialTrackingSpanStart + start, length));
+                }
+                else
+                {
+                    this.IdentifierTextBox.Select(textViewSelectionRelativeStart, textViewSelectionRelativeEnd - textViewSelectionRelativeStart);
+                }
+            }
         }
     }
 }
