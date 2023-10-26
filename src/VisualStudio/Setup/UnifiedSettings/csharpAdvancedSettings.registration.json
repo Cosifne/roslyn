@@ -1,3 +1,70 @@
 ﻿{
-
+  "properties": {
+        "textEditor.c#.advanced.runBackgroundCodeAnalysisFor": {
+      "title": "%textEditor.c#.advanced.runBackgroundCodeAnalysisFor.title%",
+      "type": "string",
+      "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
+      "default": "Current Document",
+      "requiresRestart": false,
+      "migration": {
+        "enumIntegerToString": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.Csharp.Specific.BackgroundAnalysisScopeOption"
+          },
+          "map": [
+            {
+              "result": "None",
+              "match": 3
+            },
+            {
+              "result": "Current Document",
+              "match": 0
+            },
+            {
+              "result": "Open Documents",
+              "match": 1
+            },
+            {
+              "result": "Entire Solution",
+              "match": 2
+            }
+          ]
+        }
+      }
+    },
+    "textEditor.c#.advanced.showCompilerErrorsAndWarningsFor": {
+      "title": "%textEditor.c#.advanced.showCompilerErrorsAndWarningsFor.title%",
+      "type": "string",
+      "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
+      "default": "Open Documents",
+      "requiresRestart": false,
+      "migration": {
+        "enumIntegerToString": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.Csharp.Specific.CompilerDiagnosticsScopeOption"
+          },
+          "map": [
+            {
+              "result": "None",
+              "match": 0
+            },
+            {
+              "result": "Current Document",
+              "match": 1
+            },
+            {
+              "result": "Open Documents",
+              "match": 2
+            },
+            {
+              "result": "Entire Solution",
+              "match": 3
+            }
+          ]
+        }
+      }
+    }
+  }
 }
