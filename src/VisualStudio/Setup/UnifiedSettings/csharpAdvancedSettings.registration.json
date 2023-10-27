@@ -15,19 +15,19 @@
           },
           "map": [
             {
-              "result": "%textEditor.c#.advanced.analysis.none%",
+              "result": "None",
               "match": 3
             },
             {
-              "result": "%textEditor.c#.advanced.analysis.currentDocument%",
+              "result": "Current Document",
               "match": 0
             },
             {
-              "result": "%textEditor.c#.advanced.analysis.OpenDocuments%",
+              "result": "Open Documents",
               "match": 1
             },
             {
-              "result": "%textEditor.c#.advanced.analysis.EntireSolution%",
+              "result": "Entire Solution",
               "match": 2
             }
           ]
@@ -49,19 +49,19 @@
           },
           "map": [
             {
-              "result": "%textEditor.c#.advanced.analysis.none%",
+              "result": "None",
               "match": 0
             },
             {
-              "result": "%textEditor.c#.advanced.analysis.currentDocument%",
+              "result": "Current Document",
               "match": 1
             },
             {
-              "result": "%textEditor.c#.advanced.analysis.OpenDocuments%",
+              "result": "Open Documents",
               "match": 2
             },
             {
-              "result": "%textEditor.c#.advanced.analysis.EntireSolution%",
+              "result": "Entire Solution",
               "match": 3
             }
           ]
@@ -70,10 +70,8 @@
     }
   },
   "textEditor.c#.advanced": {
-    "exampleTopLevelCategory": {
       "title": "%textEditor.c#.advanced.title%",
       "helpUri": "%textEditor.c#.advanced.helpUri%",
       "legacyOptionPageId": "8FD0B177-B244-4A97-8E37-6FB7B27DE3AF"
-    }
   }
 }
