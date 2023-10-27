@@ -1,6 +1,6 @@
 ﻿{
   "properties": {
-        "textEditor.c#.advanced.runBackgroundCodeAnalysisFor": {
+    "textEditor.c#.advanced.runBackgroundCodeAnalysisFor": {
       "title": "%textEditor.c#.advanced.runBackgroundCodeAnalysisFor.title%",
       "type": "string",
       "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
@@ -10,7 +10,7 @@
         "enumIntegerToString": {
           "input": {
             "store": "SettingsManager",
-            "path": "TextEditor.Csharp.Specific.BackgroundAnalysisScopeOption"
+            "path": "TextEditor.CSharp.Specific.BackgroundAnalysisScopeOption"
           },
           "map": [
             {
@@ -43,7 +43,7 @@
         "enumIntegerToString": {
           "input": {
             "store": "SettingsManager",
-            "path": "TextEditor.Csharp.Specific.CompilerDiagnosticsScopeOption"
+            "path": "TextEditor.CSharp.Specific.CompilerDiagnosticsScopeOption"
           },
           "map": [
             {
@@ -65,6 +65,13 @@
           ]
         }
       }
+    }
+  },
+  "textEditor.c#.advanced": {
+    "exampleTopLevelCategory": {
+      "title": "%textEditor.c#.advanced.title%",
+      "helpUri": "%textEditor.c#.advanced.helpUri%",
+      "legacyOptionPageId": "8FD0B177-B244-4A97-8E37-6FB7B27DE3AF"
     }
   }
 }

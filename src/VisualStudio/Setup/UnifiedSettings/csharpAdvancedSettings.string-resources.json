@@ -1,4 +1,6 @@
 {
+  "textEditor.c#.advanced.title": "Advanced",
   "textEditor.c#.advanced.runBackgroundCodeAnalysisFor.title": "Run background code analysis for:",
-  "textEditor.c#.advanced.showCompilerErrorsAndWarningsFor.title": "Show compiler errors and warnings for:"
+  "textEditor.c#.advanced.showCompilerErrorsAndWarningsFor.title": "Show compiler errors and warnings for:",
+  "textEditor.c#.advanced.helpUri": "https://learn.microsoft.com/visualstudio/ide/reference/options-text-editor-csharp-advanced"
 }

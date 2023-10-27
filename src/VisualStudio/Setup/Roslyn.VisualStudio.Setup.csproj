@@ -355,7 +355,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <Visible>false</Visible>
     </Content>
-    <Content Include="UnifiedSettings\csharpAdvancedSettings.string-resources.json" IncludeInVSIX"true"/>
+    <Content Include="UnifiedSettings\csharpAdvancedSettings.string-resources.json" IncludeInVSIX="true"/>
     <Content Include="UnifiedSettings\csharpAdvancedSettings.registration.json" IncludeInVSIX="true" />
   </ItemGroup>
   <ItemGroup>
