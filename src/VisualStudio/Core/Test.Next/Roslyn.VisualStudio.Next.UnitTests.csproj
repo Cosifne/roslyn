@@ -89,5 +89,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="TestFiles\analyzer_input.csv" />
+    <EmbeddedResource Include="..\..\Setup\UnifiedSettings\csharpAdvancedSettings.registration.json" />
   </ItemGroup>
 </Project>
