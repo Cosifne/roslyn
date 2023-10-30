@@ -17,9 +17,10 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
 {
     public class UnifiedSettingsTests
     {
-        private static readonly ImmutableArray<IOption2> s_migratedOptionsInAdvancedOptionPage = ImmutableArray.Create<IOption2>(
-            SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption,
-            SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption);
+        private static readonly ImmutableDictionary<IOption2, string> s_migratedOptionsInAdvancedOptionPage = ImmutableDictionary<IOption2, string>.Empty
+            .Add(SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption, "analysis.runBackgroundCodeAnalysisFor")
+            .Add(SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption, "analysis.showCompilerErrorsAndWarningsFor");
+
         private const string CSharpAdvancedCatalogName = "textEditor.c#.advanced";
 
         [Fact]
@@ -33,7 +34,7 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
             {
                 if (jsonProperty.Name is "properties")
                 {
-                    VerifyProperties(jsonProperty.Value, CSharpAdvancedCatalogName, s_migratedOptionsInAdvancedOptionPage));
+                    VerifyProperties(jsonProperty.Value, CSharpAdvancedCatalogName, s_migratedOptionsInAdvancedOptionPage);
                 }
                 else if (jsonProperty.Name is CSharpAdvancedCatalogName)
                 {
@@ -46,10 +47,18 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
             }
         }
 
-        private static void VerifyProperties(JsonElement jsonElement, string expectedCatalog, ImmutableArray<IOption2> expectedOptions)
+        private static void VerifyProperties(
+            JsonElement jsonElement, string expectedCatalog, ImmutableDictionary<IOption2, string> expectedOptionsInSettings)
         {
-            var allSettingsInJson = jsonElement.EnumerateObject();
+            var expectedOptionsInSettingsSet = expectedOptionsInSettings.ToHashSet();
+            foreach (var actualProperty in jsonElement.EnumerateObject())
+            {
+                // 1. Assert type
+                if (actualProperty.Value.TryGetProperty("type", out var actualType))
+                {
 
+                }
+            }
         }
 
         private static void VerifyCatalog(JsonElement unifiedSettingCatalog, string legacyOptionPageId)
