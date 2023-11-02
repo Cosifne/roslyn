@@ -2,20 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ICSharpCode.Decompiler.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.SolutionCrawler;
-using Microsoft.CodeAnalysis.UnitTests;
 using Microsoft.VisualStudio.LanguageServices;
-using Microsoft.VisualStudio.LanguageServices.Implementation.MoveStaticMembers;
-using Microsoft.VisualStudio.PlatformUI;
 using Roslyn.Utilities;
 using Xunit;
 
@@ -71,7 +65,7 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
                 }
                 else
                 {
-                    Contract.Fail($"Option is not found in the unifiedSettings registration file. Please add the option to test list if you onboard new option to unifiedSettings. PropertyName: {propertyNameListedInRegistrationFile}.");
+                    Contract.Fail($"Option in the unifiedSettings registration file is not tested. Please add the option to test list if you onboard new option to unifiedSettings. PropertyName: {propertyNameListedInRegistrationFile}.");
                 }
             }
         }

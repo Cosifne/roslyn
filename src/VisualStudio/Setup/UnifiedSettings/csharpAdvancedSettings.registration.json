@@ -67,6 +67,36 @@
           ]
         }
       }
+    },
+    "textEditor.c#.advanced.analysis.dotnetEnableInlineDiagnostics": {
+      "title": "Display diagnostics inline (experimental)",
+      "type": "boolean",
+      "default": false,
+      "requiresRestart": true,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.InlineDiagnostics"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.analysis.dotnetInlineDiagnosticsLocation": {
+      "title": "Display diagnostics inline (experimental)",
+      "type": "string",
+      "enum": [ "at the end of the line of code", "on the right edge of the editor window" ],
+      "enumLabel": [ "at the end of the line of code", "on the right edge of the editor window" ],
+      "default": "at the end of the line of code",
+      "requiresRestart": false,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.InlineDiagnostics.LocationOption"
+          }
+        }
+      }
     }
   },
   "textEditor.c#.advanced": {
