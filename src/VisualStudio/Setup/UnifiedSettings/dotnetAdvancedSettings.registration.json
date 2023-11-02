@@ -1,0 +1,49 @@
+{
+  "properties": {
+    "textEditor.dotnet.advanced.analysis.dotnetCodeAnalysisInSeparateProcess": {
+      "title": "Run code analysis in separate process (requires restart)",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": true,
+      "order": 40,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "VsUserSettingsRegistry",
+            "path": "Roslyn\\Internal\\OnOff\\Features\\OOP64Bit"
+          }
+        }
+      }
+    },
+    "textEditor.dotnet.advanced.analysis.dotnetEnableCoreClrInCodeAnalysisProcess": {
+      "title": "Run code analysis on lastest .NET (requires restart)",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": true,
+      "order": 50,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "VsUserSettingsRegistry",
+            "path": "Roslyn\\Internal\\OnOff\\Features\\OOPCoreClr"
+          }
+        }
+      }
+    },
+    "textEditor.dotnet.advanced.analysis.dotnetEnableDiagnosticsInSourceGeneratedFiles": {
+      "title": "Analyze source generated files",
+      "type": "boolean",
+      "default": false,
+      "requiresRestart": false,
+      "order": 60,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "VsUserSettingsRegistry",
+            "path": "Roslyn\\Internal\\OnOff\\Features\\OOPCoreClr"
+          }
+        }
+      }
+    }
+  }
+}
