@@ -101,6 +101,81 @@
           }
         }
       }
+    },
+    "textEditor.c#.advanced.usingDirectives.dotnetSortSystemDirectivesFirst": {
+      "title": "Place 'System' directives first when sorting usings",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 40,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.PlaceSystemNamespaceFirst"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.usingDirectives.dotnetSeperateImportDirectiveGroups": {
+      "title": "Separate using directive groups",
+      "type": "boolean",
+      "default": false,
+      "requiresRestart": false,
+      "order": 50,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.SeparateImportDirectiveGroups"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.usingDirectives.dotnetSearchReferenceAssemblies": {
+      "title": "Separate using directive groups",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 60,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.SuggestForTypesInReferenceAssemblies"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.usingDirectives.dotnetSearchNugetPackages": {
+      "title": "Suggest usings for types in NuGet packages",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 70,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.SuggestForTypesInNuGetPackages"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.usingDirectives.dotnetAddImportsOnPaste": {
+      "title": "Add missing using directives on paste",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 80,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.AddImportsOnPaste2"
+          }
+        }
+      }
     }
   },
   "textEditor.c#.advanced": {
