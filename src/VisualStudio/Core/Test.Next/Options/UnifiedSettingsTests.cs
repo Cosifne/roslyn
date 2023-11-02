@@ -2,24 +2,30 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Immutable;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using ICSharpCode.Decompiler.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.SolutionCrawler;
+using Microsoft.CodeAnalysis.UnitTests;
 using Microsoft.VisualStudio.LanguageServices;
+using Microsoft.VisualStudio.LanguageServices.Implementation.MoveStaticMembers;
 using Microsoft.VisualStudio.PlatformUI;
+using Roslyn.Utilities;
 using Xunit;
 
 namespace Roslyn.VisualStudio.Next.UnitTests.Options
 {
     public class UnifiedSettingsTests
     {
-        private static readonly ImmutableDictionary<IOption2, string> s_migratedOptionsInAdvancedOptionPage = ImmutableDictionary<IOption2, string>.Empty
-            .Add(SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption, "analysis.runBackgroundCodeAnalysisFor")
-            .Add(SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption, "analysis.showCompilerErrorsAndWarningsFor");
+        private static readonly ImmutableArray<IOption2> s_migratedOptionsInAdvancedOptionPage = ImmutableArray.Create<IOption2>(
+            SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption,
+            SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption);
 
         private const string CSharpAdvancedCatalogName = "textEditor.c#.advanced";
 
@@ -48,16 +54,66 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
         }
 
         private static void VerifyProperties(
-            JsonElement jsonElement, string expectedCatalog, ImmutableDictionary<IOption2, string> expectedOptionsInSettings)
+            JsonElement jsonElement, string expectedCatalog, ImmutableArray<IOption2> expectedOptionsInSettings)
         {
-            var expectedOptionsInSettingsSet = expectedOptionsInSettings.ToHashSet();
+            var expectedOptionsInSettingsDictionary = expectedOptionsInSettings.ToDictionary(
+                keySelector: GetCamelCaseName,
+                elementSelector: option => option);
+
             foreach (var actualProperty in jsonElement.EnumerateObject())
             {
-                // 1. Assert type
-                if (actualProperty.Value.TryGetProperty("type", out var actualType))
+                var propertyName = actualProperty.Name;
+                Assert.StartsWith(expectedCatalog, propertyName);
+                var propertyNameListedInRegistrationFile = propertyName[(propertyName.LastIndexOf(".") + 1)..];
+                if (expectedOptionsInSettingsDictionary.TryGetValue(propertyNameListedInRegistrationFile, out var expectedOption))
                 {
-
+                    VerifyOption(actualProperty.Value, expectedOption);
                 }
+                else
+                {
+                    Contract.Fail($"Option is not found in the unifiedSettings registration file. Please add the option to test list if you onboard new option to unifiedSettings. PropertyName: {propertyNameListedInRegistrationFile}.");
+                }
+            }
+        }
+
+        private static void VerifyOption(JsonElement actualProperty, IOption2 expectedOption)
+        {
+            var actualTypeValue = actualProperty.GetProperty("type").ToString();
+            var type = expectedOption.Definition.Type;
+
+            if (type.IsEnum)
+            {
+                // Enum is a string in json.
+                Assert.Equal("string", actualTypeValue);
+                VerifyEnum(actualProperty, expectedOption);
+            }
+
+            if (type == typeof(int))
+            {
+                // TODO: When int is added
+            }
+
+            if (type == typeof(bool))
+            {
+                // TODO: When bool is added
+            }
+
+            if (type == typeof(string))
+            {
+                // TODO: When string is added
+            }
+        }
+
+        private static void VerifyEnum(JsonElement actualProperty, IOption2 expectedOption)
+        {
+            var enumType = expectedOption.Definition.Type;
+            var allEnumValues = enumType.GetEnumNames();
+            var enumProperty = actualProperty.GetProperty("enum");
+            // All string value in the json file should be in the Enum,
+            // but some of the enum value might not be in the json.
+            foreach (var actualValue in enumProperty.EnumerateArray())
+            {
+                Assert.Contains(actualValue.ToString(), allEnumValues);
             }
         }
 
@@ -71,6 +127,28 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
             {
                 Assert.True(false, "Unexpected element in the Unified Settings Json");
             }
+        }
+
+        private static string GetCamelCaseName(IOption2 option)
+        {
+            using var _ = PooledStringBuilder.GetInstance(out var builder);
+
+            var names = option.Definition.ConfigName.Split('_');
+            for (var i = 0; i < names.Length; i++)
+            {
+                var name = names[i];
+                if (i == 0)
+                {
+                    builder.Append(name.ToLower());
+                }
+                else
+                {
+                    builder.Append(char.ToUpper(name[0]));
+                    builder.Append(name[1..].ToLower());
+                }
+            }
+
+            return builder.ToString();
         }
     }
 }

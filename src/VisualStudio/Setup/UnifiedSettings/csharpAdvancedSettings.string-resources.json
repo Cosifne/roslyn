@@ -1,7 +1,7 @@
 {
   "textEditor.c#.advanced.title": "Advanced",
-  "textEditor.c#.advanced.analysis.runBackgroundCodeAnalysisFor.title": "Run background code analysis for:",
-  "textEditor.c#.advanced.analysis.showCompilerErrorsAndWarningsFor.title": "Show compiler errors and warnings for:",
+  "textEditor.c#.advanced.analysis.dotnetAnalyzerDiagnosticsScope.title": "Run background code analysis for:",
+  "textEditor.c#.advanced.analysis.dotnetCompilerDiagnosticsScope.title": "Show compiler errors and warnings for:",
   "textEditor.c#.advanced.analysis.none": "None",
   "textEditor.c#.advanced.analysis.currentDocument": "Current Document",
   "textEditor.c#.advanced.analysis.OpenDocuments": "Open Documents",
