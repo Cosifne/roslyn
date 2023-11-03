@@ -431,6 +431,51 @@
           }
         }
       }
+    },
+    "textEditor.c#.advanced.comments.dotnetAutoXmlDocCommentGeneration": {
+      "title": "Generate XML documentation comments for ///",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 250,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.Automatic XML Doc Comment Generation"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.comments.dotnetSplitComments": {
+      "title": "Insert // at the start of new lines when writing // comments",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 260,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.SplitComments"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.comments.csharpInsertBlockCommentStartString": {
+      "title": "Insert * at the start of new lines when writing /**/ comments",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 270,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.Auto Insert Block Comment Start String"
+          }
+        }
+      }
     }
   },
   "textEditor.c#.advanced": {
