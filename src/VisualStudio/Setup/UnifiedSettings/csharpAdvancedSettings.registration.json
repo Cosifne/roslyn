@@ -236,6 +236,51 @@
           }
         }
       }
+    },
+    "textEditor.c#.advanced.Outlining.dotnetCollapseImportsWhenFirstOpened": {
+      "title": "Collapse usings on file open",
+      "type": "boolean",
+      "default": false,
+      "requiresRestart": false,
+      "order": 130,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CollapseImportsWhenFirstOpened"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.Outlining.dotnetCollapseMetadataImplementationWhenFirstOpened": {
+      "title": "Collapse Source Link, Embedded, and Decompiled source to definitions on file open",
+      "type": "boolean",
+      "default": false,
+      "requiresRestart": false,
+      "order": 130,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CollapseImportsWhenFirstOpened"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.Outlining.dotnetCollapseEmptyMetadataImplementationsWhenFirstOpen": {
+      "title": "Collapse Source Link, Embedded, and Decompiled source to definitions on file open",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 140,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CollapseEmptyMetadataImplementationsWhenFirstOpened"
+          }
+        }
+      }
     }
   },
   "textEditor.c#.advanced": {
