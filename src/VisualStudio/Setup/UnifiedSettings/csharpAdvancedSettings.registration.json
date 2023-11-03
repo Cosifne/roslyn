@@ -282,7 +282,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.outlining.dotnetDisplayLineSeparators": {
+    "textEditor.c#.advanced.outlining.dotnetDisplayLineSeparators": {
       "title": "Show procedure line separators",
       "type": "boolean",
       "default": false,
@@ -297,7 +297,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.outlining.dotnetShowOutliningForDeclarationLevelConstructs": {
+    "textEditor.c#.advanced.outlining.dotnetShowOutliningForDeclarationLevelConstructs": {
       "title": "Show outlining for declaration level constructs",
       "type": "boolean",
       "default": true,
@@ -312,7 +312,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.outlining.dotnetShowOutliningForCodeLevelConstructs": {
+    "textEditor.c#.advanced.outlining.dotnetShowOutliningForCodeLevelConstructs": {
       "title": "Show outlining for code level constructs",
       "type": "boolean",
       "default": true,
@@ -327,7 +327,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.outlining.dotnetShowOutliningForCommentsAndPreprocessorRegions": {
+    "textEditor.c#.advanced.outlining.dotnetShowOutliningForCommentsAndPreprocessorRegions": {
       "title": "Show outlining for comments and preprocessor regions",
       "type": "boolean",
       "default": true,
@@ -342,7 +342,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.outlining.dotnetCollapseRegionsWhenCollapsingToDefinitions": {
+    "textEditor.c#.advanced.outlining.dotnetCollapseRegionsWhenCollapsingToDefinitions": {
       "title": "Collapse #regions when collapsing to definitions",
       "type": "boolean",
       "default": true,
@@ -357,7 +357,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.outlining.dotnetCollapseLocalFunctionsWhenCollapsingToDefinitions": {
+    "textEditor.c#.advanced.outlining.dotnetCollapseLocalFunctionsWhenCollapsingToDefinitions": {
       "title": "Collapse local functions when collapsing to definitions",
       "type": "boolean",
       "default": true,
@@ -372,7 +372,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.fading.dotnetFadeOutUnusedImports": {
+    "textEditor.c#.advanced.fading.dotnetFadeOutUnusedImports": {
       "title": "Fade out unused usings",
       "type": "boolean",
       "default": true,
@@ -387,7 +387,7 @@
         }
       }
     },
-    "texteditor.c#.advanced.fading.dotnetFadeOutUnreachableCode": {
+    "textEditor.c#.advanced.fading.dotnetFadeOutUnreachableCode": {
       "title": "Fade out unreachable code",
       "type": "boolean",
       "default": true,
@@ -398,6 +398,36 @@
           "input": {
             "store": "SettingsManager",
             "path": "TextEditor.CSharp.Specific.FadeOutUnreachableCode"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.blockStructureGuides.dotnetShowBlockStructureGuidesForDeclarationLevelConstructs": {
+      "title": "Show guides for declaration level constructs",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 230,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.ShowBlockStructureGuidesForDeclarationLevelConstructs"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.blockStructureGuides.dotnetShowBlockStructureGuidesForCodeLevelConstructs": {
+      "title": "Show guies for code level constructs",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 240,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.ShowBlockStructureGuidesForCodeLevelConstructs"
           }
         }
       }
