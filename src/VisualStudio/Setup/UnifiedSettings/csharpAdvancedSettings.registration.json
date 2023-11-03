@@ -271,13 +271,103 @@
       "title": "Collapse Source Link, Embedded, and Decompiled source to definitions on file open",
       "type": "boolean",
       "default": true,
-      "requiresRestart": false,
+      "requiresrestart": false,
       "order": 140,
       "migration": {
         "pass": {
           "input": {
             "store": "SettingsManager",
             "path": "TextEditor.CSharp.Specific.CollapseEmptyMetadataImplementationsWhenFirstOpened"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.outlining.dotnetDisplayLineSeparators": {
+      "title": "Show procedure line separators",
+      "type": "boolean",
+      "default": false,
+      "requiresrestart": false,
+      "order": 150,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.Line Separator"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.outlining.dotnetShowOutliningForDeclarationLevelConstructs": {
+      "title": "Show outlining for declaration level constructs",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 160,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.ShowOutliningForDeclarationLevelConstructs"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.outlining.dotnetShowOutliningForCodeLevelConstructs": {
+      "title": "Show outlining for code level constructs",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 170,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.ShowOutliningForCodeLevelConstructs"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.outlining.dotnetShowOutliningForCommentsAndPreprocessorRegions": {
+      "title": "Show outlining for comments and preprocessor regions",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 180,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.ShowOutliningForCommentsAndPreprocessorRegions"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.outlining.dotnetCollapseRegionsWhenCollapsingToDefinitions": {
+      "title": "Collapse #regions when collapsing to definitions",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 190,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CollapseRegionsWhenCollapsingToDefinitions"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.outlining.dotnetCollapseLocalFunctionsWhenCollapsingToDefinitions": {
+      "title": "Collapse local functions when collapsing to definitions",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 200,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CollapseLocalFunctionsWhenCollapsingToDefinitions"
           }
         }
       }
