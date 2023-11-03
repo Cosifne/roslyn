@@ -371,6 +371,36 @@
           }
         }
       }
+    },
+    "texteditor.c#.advanced.fading.dotnetFadeOutUnusedImports": {
+      "title": "Fade out unused usings",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 210,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.FadeOutUnusedImports"
+          }
+        }
+      }
+    },
+    "texteditor.c#.advanced.fading.dotnetFadeOutUnreachableCode": {
+      "title": "Fade out unreachable code",
+      "type": "boolean",
+      "default": true,
+      "requiresrestart": false,
+      "order": 220,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.FadeOutUnreachableCode"
+          }
+        }
+      }
     }
   },
   "textEditor.c#.advanced": {
