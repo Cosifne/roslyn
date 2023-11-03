@@ -176,6 +176,66 @@
           }
         }
       }
+    },
+    "textEditor.c#.advanced.highlighting.dotnetHighlightReferences": {
+      "title": "Highlight references to symbol under cursor",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 90,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.Reference Highlighting"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.highlighting.dotnetHighlightKeywords": {
+      "title": "Highlight related keywords under cursor",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 100,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.Keyword Highlighting"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.Outlining.dotnetEnterOutliningModeOnFileOpen": {
+      "title": "Enter outlining mode when files open",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 110,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.Outlining"
+          }
+        }
+      }
+    },
+    "textEditor.c#.advanced.Outlining.dotnetCollapseRegionsWhenFirstOpened": {
+      "title": "Collapse #regions on file open",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": false,
+      "order": 120,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CollapseRegionsWhenFirstOpened"
+          }
+        }
+      }
     }
   },
   "textEditor.c#.advanced": {
