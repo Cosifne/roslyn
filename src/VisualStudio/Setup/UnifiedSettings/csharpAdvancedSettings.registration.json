@@ -1,10 +1,10 @@
 ﻿{
   "properties": {
     "textEditor.c#.advanced.analysis.dotnetAnalyzerDiagnosticsScope": {
-      "title": "%textEditor.c#.advanced.analysis.dotnetAnalyzerDiagnosticsScope.title%",
+      "title": "Run background code analysis for:",
       "type": "string",
       "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
-      "enumLabel": [ "%textEditor.c#.advanced.analysis.none%", "%textEditor.c#.advanced.analysis.currentDocument%", "%textEditor.c#.advanced.analysis.OpenDocuments%", "%textEditor.c#.advanced.analysis.EntireSolution%" ],
+      "enumLabel": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
       "default": "Current Document",
       "requiresRestart": false,
       "order": 0,
@@ -36,10 +36,10 @@
       }
     },
     "textEditor.c#.advanced.analysis.dotnetCompilerDiagnosticsScope": {
-      "title": "%textEditor.c#.advanced.analysis.dotnetCompilerDiagnosticsScope.title%",
+      "title": "Show compiler errors and warnings for:",
       "type": "string",
       "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
-      "enumLabel": [ "%textEditor.c#.advanced.analysis.none%", "%textEditor.c#.advanced.analysis.currentDocument%", "%textEditor.c#.advanced.analysis.OpenDocuments%", "%textEditor.c#.advanced.analysis.EntireSolution%" ],
+      "enumLabel": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
       "default": "Open Documents",
       "requiresRestart": false,
       "order": 10,
