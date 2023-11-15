@@ -268,7 +268,7 @@
       }
     },
     "textEditor.c#.advanced.outlining.dotnetCollapseEmptyMetadataImplementationsWhenFirstOpen": {
-      "title": "Collapse Source Link, Embedded, and Decompiled source to definitions on file open",
+      "title": "Collapse metadata signature files to definitions on file open",
       "type": "boolean",
       "default": true,
       "requiresRestart": false,
