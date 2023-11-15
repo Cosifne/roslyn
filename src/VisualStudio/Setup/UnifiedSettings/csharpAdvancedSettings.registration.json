@@ -207,7 +207,7 @@
         }
       }
     },
-    "textEditor.c#.advanced.Outlining.dotnetEnterOutliningModeOnFileOpen": {
+    "textEditor.c#.advanced.outlining.dotnetEnterOutliningModeOnFileOpen": {
       "title": "Enter outlining mode when files open",
       "type": "boolean",
       "default": true,
@@ -222,7 +222,7 @@
         }
       }
     },
-    "textEditor.c#.advanced.Outlining.dotnetCollapseRegionsWhenFirstOpened": {
+    "textEditor.c#.advanced.outlining.dotnetCollapseRegionsWhenFirstOpened": {
       "title": "Collapse #regions on file open",
       "type": "boolean",
       "default": true,
@@ -237,7 +237,7 @@
         }
       }
     },
-    "textEditor.c#.advanced.Outlining.dotnetCollapseImportsWhenFirstOpened": {
+    "textEditor.c#.advanced.outlining.dotnetCollapseImportsWhenFirstOpened": {
       "title": "Collapse usings on file open",
       "type": "boolean",
       "default": false,
@@ -252,7 +252,7 @@
         }
       }
     },
-    "textEditor.c#.advanced.Outlining.dotnetCollapseMetadataImplementationWhenFirstOpened": {
+    "textEditor.c#.advanced.outlining.dotnetCollapseMetadataImplementationWhenFirstOpened": {
       "title": "Collapse Source Link, Embedded, and Decompiled source to definitions on file open",
       "type": "boolean",
       "default": false,
@@ -267,7 +267,7 @@
         }
       }
     },
-    "textEditor.c#.advanced.Outlining.dotnetCollapseEmptyMetadataImplementationsWhenFirstOpen": {
+    "textEditor.c#.advanced.outlining.dotnetCollapseEmptyMetadataImplementationsWhenFirstOpen": {
       "title": "Collapse Source Link, Embedded, and Decompiled source to definitions on file open",
       "type": "boolean",
       "default": true,
