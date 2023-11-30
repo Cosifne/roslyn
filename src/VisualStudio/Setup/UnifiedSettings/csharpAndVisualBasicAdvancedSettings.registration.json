@@ -1,0 +1,18 @@
+{
+  "properties": {
+    "textEditor.c#AndVisualBasic.advanced.analysis.dotnetCodeAnalysisInSeparateProcess": {
+      "title": "Run code analysis in separate process",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": true,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "VsUserSettingsRegistry",
+            "path": "Roslyn\\Internal\\OnOff\\Features\\OOP64Bit"
+          }
+        }
+      }
+    }
+  }
+}

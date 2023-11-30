@@ -1,6 +1,6 @@
-﻿{
+{
   "properties": {
-    "textEditor.c#.advanced.analysis.dotnetAnalyzerDiagnosticsScope": {
+    "textEditor.visualBasic.advanced.analysis.dotnetAnalyzerDiagnosticsScope": {
       "title": "Run background code analysis for:",
       "type": "string",
       "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
@@ -35,7 +35,7 @@
         }
       }
     },
-    "textEditor.c#.advanced.analysis.dotnetCompilerDiagnosticsScope": {
+    "textEditor.visualBasic.advanced.analysis.dotnetCompilerDiagnosticsScope": {
       "title": "Show compiler errors and warnings for:",
       "type": "string",
       "enum": [ "None", "Current Document", "Open Documents", "Entire Solution" ],
@@ -69,11 +69,11 @@
           ]
         }
       }
-    }
-  },
-  "textEditor.c#.advanced": {
+   },
+    "textEditor.visualBasic.advanced": {
       "title": "Advanced",
-      "helpUri": "https://learn.microsoft.com/visualstudio/ide/reference/options-text-editor-csharp-advanced",
-      "legacyOptionPageId": "8FD0B177-B244-4A97-8E37-6FB7B27DE3AF"
+      "helpUri": "https://learn.microsoft.com/en-us/visualstudio/ide/reference/options-text-editor-basic-visual-basic",
+      "legacyOptionPageId": "F1E1021E-A781-4862-9F4B-88746A288A67"
+    }
   }
 }
