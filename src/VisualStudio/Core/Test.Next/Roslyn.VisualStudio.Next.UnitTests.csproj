@@ -90,5 +90,7 @@
   <ItemGroup>
     <EmbeddedResource Include="TestFiles\analyzer_input.csv" />
     <EmbeddedResource Include="..\..\Setup\UnifiedSettings\csharpAdvancedSettings.registration.json" />
+    <EmbeddedResource Include="..\..\Setup\UnifiedSettings\visualBasicAdvancedSettings.registration.json" />
+    <EmbeddedResource Include="..\..\Setup\UnifiedSettings\csharpAndVisualBasicAdvancedSettings.registration.json" />
   </ItemGroup>
 </Project>

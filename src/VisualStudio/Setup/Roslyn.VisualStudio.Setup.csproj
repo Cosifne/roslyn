@@ -362,7 +362,8 @@
       <Visible>false</Visible>
     </Content>
     <Content Include="UnifiedSettings\csharpAdvancedSettings.registration.json" IncludeInVSIX="true" />
-    <Content Include="UnifiedSettings\dotnetAdvancedSettings.registration.json" IncludeInVSIX="true" />
+    <Content Include="UnifiedSettings\csharpAndVisualBasicAdvancedSettings.registration.json" IncludeInVSIX="true" />
+    <Content Include="UnifiedSettings\visualBasicAdvancedSettings.registration.json" IncludeInVSIX="true" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
