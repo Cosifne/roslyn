@@ -9,7 +9,9 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Options;
 using Microsoft.CodeAnalysis.PooledObjects;
 using Microsoft.CodeAnalysis.Remote;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.SolutionCrawler;
+using Microsoft.CodeAnalysis.UnitTests;
 using Microsoft.VisualStudio.LanguageServices;
 using Microsoft.VisualStudio.LanguageServices.Implementation.MoveStaticMembers;
 using Roslyn.Utilities;
@@ -23,53 +25,44 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
             SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption,
             SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption);
 
-        private static readonly ImmutableArray<IOption2> s_optionsInAdvancedPage = ImmutableArray.Create<IOption2>(
-            RemoteHostOptionsStorage.OOP64Bit
-         );
+        private static readonly ImmutableArray<IOption2> s_optionsSharedAdvancedPage = ImmutableArray.Create<IOption2>(
+            RemoteHostOptionsStorage.OOP64Bit);
 
         [Theory]
         [InlineData("csharp")]
         [InlineData("visualBasic")]
-        [InlineData("csharpAndvisualBasic")]
-        public async Task TestAdvancedUnifiedSettings(string groupName)
+        [InlineData("csharpAndVisualBasic")]
+        public async Task TestAdvancedUnifiedSettings(string languageName)
         {
             var assembly = typeof(UnifiedSettingsTests).Assembly;
-            var all = typeof(UnifiedSettingsTests).Assembly.GetManifestResourceNames();
-            var registrationFileName = typeof(UnifiedSettingsTests).Assembly.GetManifestResourceNames().Single(name => name.EndsWith($"{groupName}AdvancedSettings.registration.json"));
+            var registrationFileName = typeof(UnifiedSettingsTests).Assembly.GetManifestResourceNames().Single(name => name.EndsWith($"{languageName}AdvancedSettings.registration.json"));
 
             using var fileStream = assembly.GetManifestResourceStream(registrationFileName);
             using var jsonDocument = await JsonDocument.ParseAsync(fileStream).ConfigureAwait(false);
 
             var propertyNames = jsonDocument.RootElement.EnumerateObject().SelectAsArray(property => property.Name);
-
+            var optionGroup = GetGroupName(languageName);
+            Assert.Contains(optionGroup, propertyNames);
             Assert.Contains("properties", propertyNames);
-            Assert.Contains(groupName switch
+
+            if (languageName is "csharp" or "visualBasic")
             {
-                "csharp" => "textEditor.c#.advanced",
-                "visualBasic" => "textEditor.visualBasic.advanced",
-                "csharpAndVisualBasic" => "textEditor.c#AndVisualBasic.advanced",
-                _ => throw ExceptionUtilities.UnexpectedValue(groupName)
-            }, propertyNames);
+                VerifyPerLanguageOptions(jsonDocument, languageName, s_perLanguageOptionsInAdvancedOptionPage);
+            }
         }
 
-        //private static void VerifyPerLangaugeOptions(JsonDocument actualJsonDocument, string languageName, ImmutableArray<IPerLanguageValuedOption> expectedOptionsInSettings)
-        //{
-        //    foreach (var jsonProperty in actualJsonDocument.RootElement.EnumerateObject())
-        //    {
-        //        if (jsonProperty.Name is "properties")
-        //        {
-        //            VerifyProperties(jsonProperty.Value, CSharpAdvancedCatalogName, s_migratedOptionsInAdvancedOptionPage);
-        //        }
-        //        else if (jsonProperty.Name is CSharpAdvancedCatalogName)
-        //        {
-        //            VerifyCatalog(jsonProperty.Value, Guids.CSharpOptionPageAdvancedIdString);
-        //        }
-        //        else
-        //        {
-        //            Assert.True(false, "Unexpected element in the Unified Settings Json");
-        //        }
-        //    }
-        //}
+        private static void VerifyPerLanguageOptions(JsonDocument actualJsonDocument, string languageName, ImmutableArray<IPerLanguageValuedOption> expectedOptionsInSettings)
+        {
+            var optionGroup = GetGroupName(languageName);
+            var actualOptionInJson = actualJsonDocument.RootElement.GetProperty("properties").EnumerateObject();
+
+            Assert.Equal(expectedOptionsInSettings.Length, actualOptionInJson.Count());
+            foreach (var option in expectedOptionsInSettings)
+            {
+                // 1. Verify property name
+
+            }
+        }
 
         private static void VerifyOptions(JsonDocument jsonDocument, ImmutableArray<IOption2> expectedOptionsInSettings)
         {
@@ -139,6 +132,15 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
                 Assert.Contains(actualValue.ToString(), allEnumValues);
             }
         }
+
+        private static string GetGroupName(string languageName)
+            => languageName switch
+            {
+                "csharp" => "textEditor.c#.advanced",
+                "visualBasic" => "textEditor.visualBasic.advanced",
+                "csharpAndVisualBasic" => "textEditor.c#AndVisualBasic.advanced",
+                _ => throw ExceptionUtilities.UnexpectedValue(languageName)
+            };
 
         private static void VerifyCatalog(JsonElement unifiedSettingCatalog, string legacyOptionPageId)
         {

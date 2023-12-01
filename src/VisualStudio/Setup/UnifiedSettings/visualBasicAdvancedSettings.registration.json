@@ -69,11 +69,11 @@
           ]
         }
       }
-   },
-    "textEditor.visualBasic.advanced": {
+   }
+  },
+  "textEditor.visualBasic.advanced": {
       "title": "Advanced",
       "helpUri": "https://learn.microsoft.com/en-us/visualstudio/ide/reference/options-text-editor-basic-visual-basic",
       "legacyOptionPageId": "F1E1021E-A781-4862-9F4B-88746A288A67"
-    }
   }
 }
