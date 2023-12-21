@@ -60,7 +60,6 @@ namespace Roslyn.VisualStudio.Next.UnitTests.Options
             foreach (var option in expectedOptionsInSettings)
             {
                 // 1. Verify property name
-
             }
         }
 
