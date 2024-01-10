@@ -27,15 +27,18 @@ internal sealed class VisualStudioOptionPersister : IOptionPersister
     private readonly VisualStudioSettingsOptionPersister _visualStudioSettingsOptionPersister;
     private readonly LocalUserRegistryOptionPersister _localUserRegistryPersister;
     private readonly FeatureFlagPersister _featureFlagPersister;
+    private readonly VisualStudioUnifiedSettingsOptionPersister _unifiedSettingsPersister;
 
     public VisualStudioOptionPersister(
         VisualStudioSettingsOptionPersister visualStudioSettingsOptionPersister,
         LocalUserRegistryOptionPersister localUserRegistryPersister,
-        FeatureFlagPersister featureFlagPersister)
+        FeatureFlagPersister featureFlagPersister,
+        VisualStudioUnifiedSettingsOptionPersister unifiedSettingsOptionPersister)
     {
         _visualStudioSettingsOptionPersister = visualStudioSettingsOptionPersister;
         _localUserRegistryPersister = localUserRegistryPersister;
         _featureFlagPersister = featureFlagPersister;
+        _unifiedSettingsPersister = unifiedSettingsOptionPersister;
     }
 
     public bool TryFetch(OptionKey2 optionKey, out object? value)

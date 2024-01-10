@@ -61,6 +61,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Options
             var localRegistry = await GetFreeThreadedServiceAsync<SLocalRegistry, ILocalRegistry4>().ConfigureAwait(false);
             Assumes.Present(localRegistry);
             var featureFlags = await GetFreeThreadedServiceAsync<SVsFeatureFlags, IVsFeatureFlags>().ConfigureAwait(false);
+            var unifiedSettingsManager = await GetFreeThreadedServiceAsync<SVsUnifiedSettingsManager, VisualStudio.Utilities.UnifiedSettings.ISettingsManager>().ConfigureAwait(false);
+            Assumes.Present(unifiedSettingsManager);
 
             // Cancellation is not allowed after this point
             cancellationToken = CancellationToken.None;
@@ -68,7 +70,8 @@ namespace Microsoft.VisualStudio.LanguageServices.Options
             return new VisualStudioOptionPersister(
                 new VisualStudioSettingsOptionPersister(RefreshOption, _readFallbacks, settingsManager),
                 LocalUserRegistryOptionPersister.Create(localRegistry),
-                new FeatureFlagPersister(featureFlags));
+                new FeatureFlagPersister(featureFlags),
+                new VisualStudioUnifiedSettingsOptionPersister(unifiedSettingsManager));
         }
 
         private void RefreshOption(OptionKey2 optionKey, object? newValue)

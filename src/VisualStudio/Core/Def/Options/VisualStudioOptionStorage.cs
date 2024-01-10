@@ -113,6 +113,17 @@ internal abstract class VisualStudioOptionStorage
             => persister.TryFetch(optionKey, _path, _key, out value);
     }
 
+    internal sealed class UnifiedSettingsStorage : VisualStudioOptionStorage
+    {
+        private readonly string _path;
+
+        public UnifiedSettingsStorage(string path)
+        {
+            _path = path;
+        }
+
+    }
+
     public static readonly IReadOnlyDictionary<string, VisualStudioOptionStorage> Storages = new Dictionary<string, VisualStudioOptionStorage>()
     {
         {"dotnet_collapse_empty_metadata_implementations_when_first_opened", new RoamingProfileStorage("TextEditor.%LANGUAGE%.Specific.CollapseEmptyMetadataImplementationsWhenFirstOpened")},
