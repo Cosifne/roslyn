@@ -53,6 +53,7 @@ internal sealed class VisualStudioOptionPersister : IOptionPersister
             VisualStudioOptionStorage.RoamingProfileStorage roaming => roaming.TryFetch(_visualStudioSettingsOptionPersister, optionKey, out value),
             VisualStudioOptionStorage.FeatureFlagStorage featureFlags => featureFlags.TryFetch(_featureFlagPersister, optionKey, out value),
             VisualStudioOptionStorage.LocalUserProfileStorage local => local.TryFetch(_localUserRegistryPersister, optionKey, out value),
+            VisualStudioOptionStorage.UnifiedSettingsStorage unifiedSettings => unifiedSettings.TryFetch(_unifiedSettingsPersister, optionKey, out value),
             _ => throw ExceptionUtilities.UnexpectedValue(storage)
         };
 
@@ -74,6 +75,7 @@ internal sealed class VisualStudioOptionPersister : IOptionPersister
             VisualStudioOptionStorage.RoamingProfileStorage roaming => roaming.PersistAsync(_visualStudioSettingsOptionPersister, optionKey, value),
             VisualStudioOptionStorage.FeatureFlagStorage featureFlags => featureFlags.PersistAsync(_featureFlagPersister, value),
             VisualStudioOptionStorage.LocalUserProfileStorage local => local.PersistAsync(_localUserRegistryPersister, optionKey, value),
+            VisualStudioOptionStorage.UnifiedSettingsStorage unifiedSettingsStorage => unifiedSettingsStorage.PersistAsync(_unifiedSettingsPersister, optionKey, value),
             _ => throw ExceptionUtilities.UnexpectedValue(storage)
         };
 }

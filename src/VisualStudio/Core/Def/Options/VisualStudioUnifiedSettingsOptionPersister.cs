@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Threading.Tasks;
+using Microsoft.CodeAnalysis.Options;
 using Microsoft.VisualStudio.Utilities.UnifiedSettings;
 
 namespace Microsoft.VisualStudio.LanguageServices.Options
@@ -15,10 +16,18 @@ namespace Microsoft.VisualStudio.LanguageServices.Options
         {
         }
 
-        public Task PersistAsync(string path)
+        public bool TryFetch(string path, OptionKey2 optionKey, out object? value)
         {
 
-
         }
+
+        public Task PersistAsync(string path, OptionKey2 optionKey, object? value)
+        {
+        }
+    }
+
+    abstract class A
+    {
+        public abstract T Read<T>();
     }
 }

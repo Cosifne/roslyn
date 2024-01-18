@@ -122,6 +122,11 @@ internal abstract class VisualStudioOptionStorage
             _path = path;
         }
 
+        public bool TryFetch(VisualStudioUnifiedSettingsOptionPersister unifiedSettingsOptionPersister, OptionKey2 optionKey, out object? value)
+            => unifiedSettingsOptionPersister.TryFetch(_path, optionKey, out value);
+
+        public Task PersistAsync(VisualStudioUnifiedSettingsOptionPersister unifiedSettingsOptionPersister, OptionKey2 optionKey2, object? value)
+            => unifiedSettingsOptionPersister.PersistAsync(_path, optionKey2, value);
     }
 
     public static readonly IReadOnlyDictionary<string, VisualStudioOptionStorage> Storages = new Dictionary<string, VisualStudioOptionStorage>()
