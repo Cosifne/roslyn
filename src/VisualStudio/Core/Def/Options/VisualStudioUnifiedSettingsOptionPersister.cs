@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using InteractiveHost::Roslyn.Utilities;
 using Microsoft.CodeAnalysis.ErrorReporting;
 using Microsoft.CodeAnalysis.Options;
+using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
 using Microsoft.VisualStudio.Utilities.UnifiedSettings;
 
 namespace Microsoft.VisualStudio.LanguageServices.Options
@@ -39,8 +40,7 @@ namespace Microsoft.VisualStudio.LanguageServices.Options
                }
                else
                {
-                   FatalError.ReportNonFatalError(
-                       new RoslynUnifiedSettingsReadException(path, settingRetrieval.Outcome, settingRetrieval.Message));
+                   throw ExceptionUtilities.UnexpectedValue(settingRetrieval);
                }
             }
             else
@@ -50,21 +50,33 @@ namespace Microsoft.VisualStudio.LanguageServices.Options
                 // or array type when onboard new options.
                 // 2. Option type onboarded is a nullable type. This is not supported in unified settings. We use that in many place to indicate
                 // the option is in experiment mode. In this case, change the type to non-nullable and use `alternateDefault` in registration file
-                // to let unified settings fetch the value if it's in experimental mode.
+                // to let unified settings handle the value if it's in experimental mode.
                 throw ExceptionUtilities.UnexpectedValue(optionType);
             }
-
-            value = null;
-            return false;
         }
 
         public Task PersistAsync(string path, OptionKey2 optionKey, object? value)
         {
-        }
+            // Unified Settings doesn't support nullable value. It might be an nullable option is onboarded.
+            // We use that in many place to indicate the option is in experiment mode. In this case, change the type to non-nullable and use `alternateDefault` in registration file
+            // to let unified settings handle the value if it's in experimental mode.
+            Assumes.NotNull(value);
+            var enqueueChange = _settingsWriter.EnqueueChange(path, value);
+            if (enqueueChange.Outcome is SettingChangeOutcome.PendingCommit or SettingChangeOutcome.PendingCommitWithoutValidation)
+            {
+                // Request Commit has three states:
+                // 1. NoChangesQueued
+                // 2. Success
+                // 3. PendingApproval
+                // Consider them all as success on our side.
+                _settingsWriter.RequestCommit($"Write {value} to {path}, commit by {nameof(VisualStudioUnifiedSettingsOptionPersister)}.");
+            }
+            else
+            {
+               throw ExceptionUtilities.UnexpectedValue(enqueueChange);
+            }
 
-        private class RoslynUnifiedSettingsReadException(string optionPath, SettingRetrievalOutcome outcome, string errorMessage) : Exception
-        {
-
+            return Task.CompletedTask;
         }
     }
 }
