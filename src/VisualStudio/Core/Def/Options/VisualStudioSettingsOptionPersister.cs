@@ -23,7 +23,6 @@ namespace Microsoft.VisualStudio.LanguageServices.Options
     /// </summary>
     internal sealed class VisualStudioSettingsOptionPersister
     {
-        // Microsoft.VisualStudio.Utilities.UnifiedSettings.ISettingsManager
         private readonly ISettingsManager _settingManager;
         private readonly Action<OptionKey2, object?> _refreshOption;
         private readonly ImmutableDictionary<string, Lazy<IVisualStudioStorageReadFallback, OptionNameMetadata>> _readFallbacks;
