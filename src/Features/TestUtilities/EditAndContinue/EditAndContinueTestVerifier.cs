@@ -322,11 +322,17 @@ namespace Microsoft.CodeAnalysis.EditAndContinue.UnitTests
 
                         // Symbol key will happily resolve to a definition part that has no implementation, so we validate that
                         // differently
-                        if (expectedOldSymbol is IMethodSymbol { IsPartialDefinition: true } &&
+                        if ((expectedOldSymbol is IMethodSymbol { IsPartialDefinition: true }) &&
                             symbolKey.Resolve(oldCompilation, ignoreAssemblyKey: true).Symbol is IMethodSymbol resolvedMethod)
                         {
                             Assert.Equal(expectedOldSymbol, resolvedMethod.PartialDefinitionPart);
                             Assert.Equal(null, resolvedMethod.PartialImplementationPart);
+                        }
+                        else if ((expectedOldSymbol is IPropertySymbol { IsPartialDefinition: true }) &&
+                            symbolKey.Resolve(oldCompilation, ignoreAssemblyKey: true).Symbol is IPropertySymbol resolvedProperty)
+                        {
+                            Assert.Equal(expectedOldSymbol, resolvedProperty.PartialDefinitionPart);
+                            Assert.Equal(null, resolvedProperty.PartialImplementationPart);
                         }
                         else
                         {
