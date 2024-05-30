@@ -184,7 +184,12 @@ internal static partial class Extensions
             static (symbol, constructor) => symbol is IMethodSymbol method && HasDeconstructorSignature(method, constructor), constructor)?.PartialAsImplementation();
 
     public static ISymbol PartialAsImplementation(this ISymbol symbol)
-        => symbol is IMethodSymbol { PartialImplementationPart: { } impl } ? impl : symbol;
+        => symbol.Kind switch
+        {
+            SymbolKind.Method => symbol is IMethodSymbol { PartialImplementationPart: { } impl } ? impl : symbol,
+            SymbolKind.Property => symbol is IPropertySymbol { PartialImplementationPart: { } impl } ? impl : symbol,
+            _ => symbol
+        };
 
     /// <summary>
     /// Returns true if any member of the type implements an interface member explicitly.
