@@ -3354,7 +3354,12 @@ internal abstract class AbstractEditAndContinueAnalyzer : IEditAndContinueAnalyz
                     var result = symbolKey.Resolve(compilation, ignoreAssemblyKey: true, cancellationToken).Symbol;
 
                     // If we were looking for a definition and an implementation is returned the definition does not exist.
-                    return symbol is IMethodSymbol { PartialDefinitionPart: not null } && result is IMethodSymbol { IsPartialDefinition: true } ? null : result;
+                    return symbol.Kind switch
+                    {
+                        SymbolKind.Method => ((IMethodSymbol)symbol).PartialDefinitionPart is not null && result is IMethodSymbol { IsPartialDefinition: true } ? null : result,
+                        SymbolKind.Property => ((IPropertySymbol)symbol).PartialDefinitionPart is not null && result is IPropertySymbol { IsPartialDefinition: true } ? null : result,
+                        _ => null
+                    };
                 }
 
                 var symbol = newSymbol ?? oldSymbol;
