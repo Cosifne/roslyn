@@ -3185,7 +3185,7 @@ internal abstract class AbstractEditAndContinueAnalyzer : IEditAndContinueAnalyz
                     // The partial type needs to be specified in the following cases:
                     // 1) partial method is updated (in case both implementation and definition are updated)
                     // 2) partial type is updated
-                    var partialType = editKind == SemanticEditKind.Update && symbol is IMethodSymbol { PartialDefinitionPart: not null }
+                    var partialType = editKind == SemanticEditKind.Update && symbol is IMethodSymbol { PartialDefinitionPart: not null } or IPropertySymbol { PartialDefinitionPart: not null }
                         ? symbolCache.GetKey(symbol.ContainingType, cancellationToken)
                         : IsPartialTypeEdit(oldSymbol, newSymbol, oldTree, newTree)
                         ? symbolKey
