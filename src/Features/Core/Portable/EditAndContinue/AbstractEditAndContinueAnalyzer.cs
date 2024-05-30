@@ -3667,8 +3667,9 @@ internal abstract class AbstractEditAndContinueAnalyzer : IEditAndContinueAnalyz
                 return;
 
             Debug.Assert(symbol is not IMethodSymbol { IsPartialDefinition: true });
+            Debug.Assert(symbol is not IPropertySymbol { IsPartialDefinition: true });
 
-            var partialType = symbol is IMethodSymbol { PartialDefinitionPart: not null } ? SymbolKey.Create(symbol.ContainingType, cancellationToken) : (SymbolKey?)null;
+            var partialType = symbol is IMethodSymbol { PartialDefinitionPart: not null } or IPropertySymbol { PartialDefinitionPart: not null } ? SymbolKey.Create(symbol.ContainingType, cancellationToken) : (SymbolKey?)null;
             semanticEdits.Add(SemanticEditInfo.CreateDelete(SymbolKey.Create(symbol, cancellationToken), deletedSymbolContainer, partialType));
         }
     }
