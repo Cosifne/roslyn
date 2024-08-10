@@ -3,8 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename;
 
@@ -15,10 +17,11 @@ internal abstract partial class AbstractRenameCommandHandler : IChainedCommandHa
 
     public void ExecuteCommand(OpenLineAboveCommandArgs args, Action nextHandler, CommandExecutionContext context)
     {
-        HandlePossibleTypingCommand(args, nextHandler, (activeSession, span) =>
+        var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(OpenLineAboveCommandArgs)));
+        HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
         {
             activeSession.Commit();
             nextHandler();
-        });
+        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }

@@ -4,6 +4,8 @@
 
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Editor.Shared.Utilities;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
@@ -55,7 +57,7 @@ internal abstract partial class AbstractRenameCommandHandler
     private CommandState GetCommandState()
         => _renameService.ActiveSession != null ? CommandState.Available : CommandState.Unspecified;
 
-    private void HandlePossibleTypingCommand<TArgs>(TArgs args, Action nextHandler, Action<InlineRenameSession, SnapshotSpan> actionIfInsideActiveSpan)
+    private async Task HandlePossibleTypingCommandAsync<TArgs>(TArgs args, Action nextHandler, Action<InlineRenameSession, SnapshotSpan> actionIfInsideActiveSpan, CancellationToken cancellationToken)
         where TArgs : EditorCommandArgs
     {
         if (_renameService.ActiveSession == null)
@@ -85,7 +87,7 @@ internal abstract partial class AbstractRenameCommandHandler
             // It's in a read-only area that is open, so let's commit the rename 
             // and then let the character go through
 
-            CommitIfActiveAndCallNextHandler(args, nextHandler);
+            await CommitIfActiveAndCallNextHandlerAsync(args, nextHandler, cancellationToken).ConfigureAwait(false);
         }
         else
         {
@@ -94,13 +96,13 @@ internal abstract partial class AbstractRenameCommandHandler
         }
     }
 
-    private void CommitIfActive(EditorCommandArgs args)
+    private async Task CommitIfActiveAsync(EditorCommandArgs args, CancellationToken cancellationToken)
     {
         if (_renameService.ActiveSession != null)
         {
             var selection = args.TextView.Selection.VirtualSelectedSpans.First();
 
-            _renameService.ActiveSession.Commit();
+            await _renameService.ActiveSession.CommitAsync(previewChanges: false, cancellationToken).ConfigureAwait(false);
 
             var translatedSelection = selection.TranslateTo(args.TextView.TextBuffer.CurrentSnapshot);
             args.TextView.Selection.Select(translatedSelection.Start, translatedSelection.End);
@@ -108,9 +110,9 @@ internal abstract partial class AbstractRenameCommandHandler
         }
     }
 
-    private void CommitIfActiveAndCallNextHandler(EditorCommandArgs args, Action nextHandler)
+    private async Task CommitIfActiveAndCallNextHandlerAsync(EditorCommandArgs args, Action nextHandler, CancellationToken cancellationToken)
     {
-        CommitIfActive(args);
+        await CommitIfActiveAsync(args, cancellationToken).ConfigureAwait(false);
         nextHandler();
     }
 }

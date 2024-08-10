@@ -6,8 +6,10 @@
 
 using System;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
+using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename;
 
@@ -21,25 +23,27 @@ internal abstract partial class AbstractRenameCommandHandler : IChainedCommandHa
 
     public void ExecuteCommand(BackspaceKeyCommandArgs args, Action nextHandler, CommandExecutionContext context)
     {
-        HandlePossibleTypingCommand(args, nextHandler, (activeSession, span) =>
+        var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(BackspaceKeyCommandArgs)));
+        HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
             {
                 var caretPoint = args.TextView.GetCaretPoint(args.SubjectBuffer);
                 if (!args.TextView.Selection.IsEmpty || caretPoint.Value != span.Start)
                 {
                     nextHandler();
                 }
-            });
+            }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 
     public void ExecuteCommand(DeleteKeyCommandArgs args, Action nextHandler, CommandExecutionContext context)
     {
-        HandlePossibleTypingCommand(args, nextHandler, (activeSession, span) =>
+        var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(DeleteKeyCommandArgs)));
+        HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
             {
                 var caretPoint = args.TextView.GetCaretPoint(args.SubjectBuffer);
                 if (!args.TextView.Selection.IsEmpty || caretPoint.Value != span.End)
                 {
                     nextHandler();
                 }
-            });
+            }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }

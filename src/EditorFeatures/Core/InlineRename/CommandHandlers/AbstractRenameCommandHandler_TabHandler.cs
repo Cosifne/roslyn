@@ -4,9 +4,11 @@
 
 using System;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
+using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename;
 
@@ -26,7 +28,8 @@ internal abstract partial class AbstractRenameCommandHandler :
             return;
         }
 
-        HandlePossibleTypingCommand(args, nextHandler, (activeSession, span) =>
+        var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(TabKeyCommandArgs)));
+        HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
         {
             var spans = new NormalizedSnapshotSpanCollection(
                 activeSession.GetBufferManager(args.SubjectBuffer)
@@ -43,7 +46,7 @@ internal abstract partial class AbstractRenameCommandHandler :
                     break;
                 }
             }
-        });
+        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 
     public CommandState GetCommandState(BackTabKeyCommandArgs args, Func<CommandState> nextHandler)

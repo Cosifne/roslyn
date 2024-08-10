@@ -5,9 +5,11 @@
 using System;
 using Microsoft.CodeAnalysis.LanguageService;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename;
 
@@ -19,7 +21,8 @@ internal abstract partial class AbstractRenameCommandHandler :
 
     public void ExecuteCommand(TypeCharCommandArgs args, Action nextHandler, CommandExecutionContext context)
     {
-        HandlePossibleTypingCommand(args, nextHandler, (activeSession, span) =>
+        var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(TypeCharCommandArgs)));
+        HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
         {
             var document = args.SubjectBuffer.CurrentSnapshot.GetOpenDocumentInCurrentContextWithChanges();
             if (document == null)
@@ -39,6 +42,6 @@ internal abstract partial class AbstractRenameCommandHandler :
             {
                 nextHandler();
             }
-        });
+        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }
