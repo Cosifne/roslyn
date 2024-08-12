@@ -3,6 +3,7 @@
 ' See the LICENSE file in the project root for more information.
 
 Imports System.Threading
+Imports System.Windows.Documents
 Imports System.Xml.Linq
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.Editor.Shared.Utilities
@@ -111,7 +112,7 @@ Namespace Microsoft.CodeAnalysis.Editor.VisualBasic.UnitTests.LineCommit
                     Throw New NotImplementedException()
                 End Sub
 
-                Public Function CommitAsync(previewChanges As Boolean, cancellationToken As CancellationToken) As Task Implements IInlineRenameSession.CommitAsync
+                Public Function CommitAsync(previewChanges As Boolean, cancellationToken As CancellationToken) As Task(Of Boolean) Implements IInlineRenameSession.CommitAsync
                     Throw New NotImplementedException()
                 End Function
             End Class
