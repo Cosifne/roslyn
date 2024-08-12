@@ -57,7 +57,7 @@ internal abstract partial class AbstractRenameCommandHandler
     private CommandState GetCommandState()
         => _renameService.ActiveSession != null ? CommandState.Available : CommandState.Unspecified;
 
-    private async Task HandlePossibleTypingCommandAsync<TArgs>(TArgs args, Action nextHandler, Action<InlineRenameSession, SnapshotSpan> actionIfInsideActiveSpan, CancellationToken cancellationToken)
+    private async Task HandlePossibleTypingCommandAsync<TArgs>(TArgs args, Action nextHandler, Func<InlineRenameSession, SnapshotSpan, Task> actionIfInsideActiveSpan, CancellationToken cancellationToken)
         where TArgs : EditorCommandArgs
     {
         if (_renameService.ActiveSession == null)

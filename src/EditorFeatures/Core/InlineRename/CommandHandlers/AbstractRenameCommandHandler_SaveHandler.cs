@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.VisualStudio.Commanding;
 using Microsoft.VisualStudio.Text.Editor.Commanding.Commands;
+using Roslyn.Utilities;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename;
 
@@ -14,9 +16,10 @@ internal abstract partial class AbstractRenameCommandHandler : ICommandHandler<S
 
     public bool ExecuteCommand(SaveCommandArgs args, CommandExecutionContext context)
     {
+        var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(SaveCommandArgs)));
         if (_renameService.ActiveSession != null)
         {
-            _renameService.ActiveSession.Commit();
+            _ = _renameService.ActiveSession.CommitAsync(previewChanges: false, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
             SetFocusToTextView(args.TextView);
         }
 
