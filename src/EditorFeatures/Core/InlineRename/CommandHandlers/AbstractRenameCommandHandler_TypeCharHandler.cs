@@ -28,7 +28,7 @@ internal abstract partial class AbstractRenameCommandHandler :
             if (document == null)
             {
                 nextHandler();
-                return;
+                return Task.CompletedTask;
             }
 
             var syntaxFactsService = document.GetLanguageService<ISyntaxFactsService>();
@@ -42,6 +42,8 @@ internal abstract partial class AbstractRenameCommandHandler :
             {
                 nextHandler();
             }
-        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+
+            return Task.CompletedTask;
+        }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }

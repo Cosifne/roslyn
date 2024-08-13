@@ -18,11 +18,10 @@ internal abstract partial class AbstractRenameCommandHandler : IChainedCommandHa
     public void ExecuteCommand(OpenLineAboveCommandArgs args, Action nextHandler, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(OpenLineAboveCommandArgs)));
-        var cancellationToken = context.OperationContext.UserCancellationToken;
         HandlePossibleTypingCommandAsync(args, nextHandler, async (activeSession, span) =>
         {
-            await activeSession.CommitAsync(previewChanges: false, cancellationToken).ConfigureAwait(false);
+            await activeSession.CommitAsync(previewChanges: false).ConfigureAwait(false);
             nextHandler();
-        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }

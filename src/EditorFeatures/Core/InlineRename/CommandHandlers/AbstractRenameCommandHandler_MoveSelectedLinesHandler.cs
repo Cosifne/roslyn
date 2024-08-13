@@ -18,8 +18,7 @@ internal abstract partial class AbstractRenameCommandHandler :
     public bool ExecuteCommand(MoveSelectedLinesUpCommandArgs args, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(MoveSelectedLinesUpCommandArgs)));
-        CommitIfActiveAsync(args, context.OperationContext.UserCancellationToken)
-            .ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        CommitIfActiveAsync(args).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
         return false;
     }
 
@@ -29,8 +28,7 @@ internal abstract partial class AbstractRenameCommandHandler :
     public bool ExecuteCommand(MoveSelectedLinesDownCommandArgs args, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(MoveSelectedLinesDownCommandArgs)));
-        CommitIfActiveAsync(args, context.OperationContext.UserCancellationToken)
-            .ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        CommitIfActiveAsync(args).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
         return false;
     }
 }

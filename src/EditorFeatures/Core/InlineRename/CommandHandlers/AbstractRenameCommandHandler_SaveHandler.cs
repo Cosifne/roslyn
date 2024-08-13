@@ -19,7 +19,7 @@ internal abstract partial class AbstractRenameCommandHandler : ICommandHandler<S
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(SaveCommandArgs)));
         if (_renameService.ActiveSession != null)
         {
-            _ = _renameService.ActiveSession.CommitAsync(previewChanges: false, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+            _ = _renameService.ActiveSession.CommitAsync(previewChanges: false).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
             SetFocusToTextView(args.TextView);
         }
 

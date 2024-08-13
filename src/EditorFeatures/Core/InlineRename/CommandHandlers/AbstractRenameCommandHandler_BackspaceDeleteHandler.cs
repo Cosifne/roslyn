@@ -5,6 +5,7 @@
 #nullable disable
 
 using System;
+using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.Editor.Shared.Extensions;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
 using Microsoft.VisualStudio.Commanding;
@@ -31,7 +32,9 @@ internal abstract partial class AbstractRenameCommandHandler : IChainedCommandHa
                 {
                     nextHandler();
                 }
-            }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+
+                return Task.CompletedTask;
+            }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 
     public void ExecuteCommand(DeleteKeyCommandArgs args, Action nextHandler, CommandExecutionContext context)
@@ -44,6 +47,8 @@ internal abstract partial class AbstractRenameCommandHandler : IChainedCommandHa
                 {
                     nextHandler();
                 }
-            }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+
+                return Task.CompletedTask;
+            }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }

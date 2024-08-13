@@ -22,7 +22,8 @@ internal abstract partial class AbstractRenameCommandHandler :
         HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
         {
             nextHandler();
-        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+            return Task.CompletedTask;
+        }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 
     public CommandState GetCommandState(PasteCommandArgs args, Func<CommandState> nextHandler)
@@ -34,6 +35,7 @@ internal abstract partial class AbstractRenameCommandHandler :
         HandlePossibleTypingCommandAsync(args, nextHandler, (activeSession, span) =>
         {
             nextHandler();
-        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+            return Task.CompletedTask;
+        }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 }

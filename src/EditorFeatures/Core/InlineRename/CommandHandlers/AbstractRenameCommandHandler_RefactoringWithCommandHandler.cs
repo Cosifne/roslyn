@@ -21,7 +21,7 @@ internal abstract partial class AbstractRenameCommandHandler :
     public bool ExecuteCommand(ReorderParametersCommandArgs args, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(ReorderParametersCommandArgs)));
-        CommitIfActiveAsync(args, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        CommitIfActiveAsync(args).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
         return false;
     }
 
@@ -31,7 +31,7 @@ internal abstract partial class AbstractRenameCommandHandler :
     public bool ExecuteCommand(RemoveParametersCommandArgs args, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(RemoveParametersCommandArgs)));
-        CommitIfActiveAsync(args, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        CommitIfActiveAsync(args).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
         return false;
     }
 
@@ -41,7 +41,7 @@ internal abstract partial class AbstractRenameCommandHandler :
     public bool ExecuteCommand(ExtractInterfaceCommandArgs args, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(ExtractInterfaceCommandArgs)));
-        CommitIfActiveAsync(args, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        CommitIfActiveAsync(args).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
         return false;
     }
 
@@ -51,7 +51,7 @@ internal abstract partial class AbstractRenameCommandHandler :
     public bool ExecuteCommand(EncapsulateFieldCommandArgs args, CommandExecutionContext context)
     {
         var token = _listener.BeginAsyncOperation(string.Join(nameof(ExecuteCommand), ".", nameof(EncapsulateFieldCommandArgs)));
-        CommitIfActiveAsync(args, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+        CommitIfActiveAsync(args).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
         return false;
     }
 }

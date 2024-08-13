@@ -332,7 +332,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
         {
             try
             {
-                _ = _model.Session.CommitAsync(previewChanges: false, CancellationToken.None);
+                _ = _model.Session.CommitAsync(previewChanges: false);
                 _textView.VisualElement.Focus();
             }
             catch (NotSupportedException ex)

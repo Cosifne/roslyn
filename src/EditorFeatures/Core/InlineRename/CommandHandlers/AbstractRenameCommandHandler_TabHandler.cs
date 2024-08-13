@@ -46,7 +46,9 @@ internal abstract partial class AbstractRenameCommandHandler :
                     break;
                 }
             }
-        }, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
+
+            return Task.CompletedTask;
+        }).ReportNonFatalErrorAsync().CompletesAsyncOperation(token);
     }
 
     public CommandState GetCommandState(BackTabKeyCommandArgs args, Func<CommandState> nextHandler)

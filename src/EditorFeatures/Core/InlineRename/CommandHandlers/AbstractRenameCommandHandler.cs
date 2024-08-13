@@ -57,7 +57,7 @@ internal abstract partial class AbstractRenameCommandHandler
     private CommandState GetCommandState()
         => _renameService.ActiveSession != null ? CommandState.Available : CommandState.Unspecified;
 
-    private async Task HandlePossibleTypingCommandAsync<TArgs>(TArgs args, Action nextHandler, Func<InlineRenameSession, SnapshotSpan, Task> actionIfInsideActiveSpan, CancellationToken cancellationToken)
+    private async Task HandlePossibleTypingCommandAsync<TArgs>(TArgs args, Action nextHandler, Func<InlineRenameSession, SnapshotSpan, Task> actionIfInsideActiveSpan)
         where TArgs : EditorCommandArgs
     {
         if (_renameService.ActiveSession == null)
@@ -80,14 +80,14 @@ internal abstract partial class AbstractRenameCommandHandler
         if (_renameService.ActiveSession.TryGetContainingEditableSpan(singleSpan.Start, out var containingSpan) &&
             containingSpan.Contains(singleSpan))
         {
-            actionIfInsideActiveSpan(_renameService.ActiveSession, containingSpan);
+            await actionIfInsideActiveSpan(_renameService.ActiveSession, containingSpan).ConfigureAwait(false);
         }
         else if (_renameService.ActiveSession.IsInOpenTextBuffer(singleSpan.Start))
         {
             // It's in a read-only area that is open, so let's commit the rename 
             // and then let the character go through
 
-            await CommitIfActiveAndCallNextHandlerAsync(args, nextHandler, cancellationToken).ConfigureAwait(false);
+            await CommitIfActiveAndCallNextHandlerAsync(args, nextHandler).ConfigureAwait(false);
         }
         else
         {
@@ -96,13 +96,13 @@ internal abstract partial class AbstractRenameCommandHandler
         }
     }
 
-    private async Task CommitIfActiveAsync(EditorCommandArgs args, CancellationToken cancellationToken)
+    private async Task CommitIfActiveAsync(EditorCommandArgs args)
     {
         if (_renameService.ActiveSession != null)
         {
             var selection = args.TextView.Selection.VirtualSelectedSpans.First();
 
-            await _renameService.ActiveSession.CommitAsync(previewChanges: false, cancellationToken).ConfigureAwait(false);
+            await _renameService.ActiveSession.CommitAsync(previewChanges: false).ConfigureAwait(false);
 
             var translatedSelection = selection.TranslateTo(args.TextView.TextBuffer.CurrentSnapshot);
             args.TextView.Selection.Select(translatedSelection.Start, translatedSelection.End);
@@ -110,9 +110,9 @@ internal abstract partial class AbstractRenameCommandHandler
         }
     }
 
-    private async Task CommitIfActiveAndCallNextHandlerAsync(EditorCommandArgs args, Action nextHandler, CancellationToken cancellationToken)
+    private async Task CommitIfActiveAndCallNextHandlerAsync(EditorCommandArgs args, Action nextHandler)
     {
-        await CommitIfActiveAsync(args, cancellationToken).ConfigureAwait(false);
+        await CommitIfActiveAsync(args).ConfigureAwait(false);
         nextHandler();
     }
 }

@@ -14,6 +14,8 @@ using Microsoft.CodeAnalysis.Notification;
 using Microsoft.CodeAnalysis.ErrorReporting;
 using Microsoft.CodeAnalysis.Telemetry;
 using Microsoft.CodeAnalysis.Shared.TestHooks;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 {
@@ -94,11 +96,11 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
             }
         }
 
-        protected override void Commit(InlineRenameSession activeSession, ITextView textView)
+        protected override async Task CommitAsync(InlineRenameSession activeSession, ITextView textView)
         {
             try
             {
-                base.Commit(activeSession, textView);
+                await base.CommitAsync(activeSession, textView).ConfigureAwait(false);
             }
             catch (NotSupportedException ex)
             {

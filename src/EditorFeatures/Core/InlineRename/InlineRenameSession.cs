@@ -730,23 +730,23 @@ internal partial class InlineRenameSession : IInlineRenameSession, IFeatureContr
         //=> CommitWorker(previewChanges);
     }
 
-    public async Task<bool> CommitAsync(bool previewChanges, CancellationToken cancellationToken)
+    public async Task<bool> CommitAsync(bool previewChanges)
     {
         if (this.RenameService.GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.RenameAsynchronously))
         {
-            return await CommitWorkerAsync(previewChanges, useBackgroundIndicator: true, cancellationToken).ConfigureAwait(false);
+            return await CommitWorkerAsync(previewChanges, useBackgroundIndicator: true).ConfigureAwait(false);
         }
         else
         {
-            return _threadingContext.JoinableTaskFactory.Run(() => CommitWorkerAsync(previewChanges, useBackgroundIndicator: false, cancellationToken));
+            return _threadingContext.JoinableTaskFactory.Run(() => CommitWorkerAsync(previewChanges, useBackgroundIndicator: false));
         }
     }
 
-    /// <returns><see langword="true"/> if the rename operation was commited, <see
+    /// <returns><see langword="true"/> if the rename operation was committed, <see
     /// langword="false"/> otherwise</returns>
-    private async Task<bool> CommitWorkerAsync(bool previewChanges, bool useBackgroundIndicator, CancellationToken cancellationToken)
+    private async Task<bool> CommitWorkerAsync(bool previewChanges, bool useBackgroundIndicator)
     {
-        await _threadingContext.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+        await _threadingContext.JoinableTaskFactory.SwitchToMainThreadAsync();
         VerifyNotDismissed();
 
         // If the identifier was deleted (or didn't change at all) then cancel the operation.
@@ -976,6 +976,6 @@ internal partial class InlineRenameSession : IInlineRenameSession, IFeatureContr
         private readonly InlineRenameSession _inlineRenameSession = inlineRenameSession;
 
         public Task<bool> CommitWorkerAsync(bool previewChanges)
-            => _inlineRenameSession.CommitAsync(previewChanges, CancellationToken.None);
+            => _inlineRenameSession.CommitAsync(previewChanges);
     }
 }
