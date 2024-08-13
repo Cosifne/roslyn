@@ -724,12 +724,6 @@ internal partial class InlineRenameSession : IInlineRenameSession, IFeatureContr
         }
     }
 
-    public void Commit(bool previewChanges = false)
-    {
-
-        //=> CommitWorker(previewChanges);
-    }
-
     public async Task<bool> CommitAsync(bool previewChanges)
     {
         if (this.RenameService.GlobalOptions.GetOption(InlineRenameSessionOptionsStorage.RenameAsynchronously))
