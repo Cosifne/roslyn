@@ -165,7 +165,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {
-            _viewModel.Submit();
+            _ = _viewModel.SubmitAsync();
         }
 
         private void Adornment_KeyDown(object sender, KeyEventArgs e)
@@ -175,7 +175,7 @@ namespace Microsoft.CodeAnalysis.Editor.Implementation.InlineRename
                 case Key.Enter:
                     e.Handled = true;
                     _viewModel.PreviewChangesFlag = Keyboard.Modifiers.HasFlag(ModifierKeys.Shift);
-                    _viewModel.Submit();
+                    _ = _viewModel.SubmitAsync();
                     break;
 
                 case Key.Escape:

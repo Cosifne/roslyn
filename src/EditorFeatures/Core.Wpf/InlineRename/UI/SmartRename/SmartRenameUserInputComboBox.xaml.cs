@@ -101,7 +101,7 @@ internal sealed partial class SmartRenameUserInputComboBox : ComboBox, IRenameUs
 
     private void SuggestionsPanelScrollViewer_MouseDoubleClick(object sender, MouseEventArgs e)
     {
-        _baseViewModel.Submit();
+        _ = _baseViewModel.SubmitAsync();
     }
 
     private void GetSuggestionsButtonClick(object sender, RoutedEventArgs e)
