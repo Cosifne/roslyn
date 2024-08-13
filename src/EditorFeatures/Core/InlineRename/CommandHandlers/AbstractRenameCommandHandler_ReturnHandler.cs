@@ -31,7 +31,8 @@ internal abstract partial class AbstractRenameCommandHandler : ICommandHandler<R
 
     protected virtual async Task CommitAsync(InlineRenameSession activeSession, ITextView textView)
     {
-        await activeSession.CommitAsync(previewChanges: false).ConfigureAwait(false);
+        // ConfigureAwait(true) to return back to UI thread to set focus.
+        await activeSession.CommitAsync(previewChanges: false).ConfigureAwait(true);
         SetFocusToTextView(textView);
     }
 }
