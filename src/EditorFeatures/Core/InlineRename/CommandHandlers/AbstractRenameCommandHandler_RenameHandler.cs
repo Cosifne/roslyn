@@ -63,11 +63,6 @@ internal abstract partial class AbstractRenameCommandHandler : ICommandHandler<R
             return;
         }
 
-        var backgroundWorkIndicatorFactory = workspace.Services.GetRequiredService<IBackgroundWorkIndicatorFactory>();
-        using var context = backgroundWorkIndicatorFactory.Create(
-            args.TextView,
-            args.TextView.GetTextElementSpan(caretPoint.Value),
-            EditorFeaturesResources.Finding_token_to_rename);
 
         // If there is already an active session, commit it first
         if (_renameService.ActiveSession != null)
@@ -85,6 +80,12 @@ internal abstract partial class AbstractRenameCommandHandler : ICommandHandler<R
                 await _renameService.ActiveSession.CommitAsync(previewChanges: false).ConfigureAwait(false);
             }
         }
+
+        var backgroundWorkIndicatorFactory = workspace.Services.GetRequiredService<IBackgroundWorkIndicatorFactory>();
+        using var context = backgroundWorkIndicatorFactory.Create(
+            args.TextView,
+            args.TextView.GetTextElementSpan(caretPoint.Value),
+            EditorFeaturesResources.Finding_token_to_rename);
 
         var cancellationToken = context.UserCancellationToken;
 

@@ -99,7 +99,7 @@ internal sealed class ExtractMethodCommandHandler : ICommandHandler<ExtractMetho
         if (document is null)
             return false;
 
-        _ = ExecuteAsync(view, textBuffer, document, span, context.OperationContext.UserCancellationToken).ReportNonFatalErrorAsync();
+        _ = ExecuteAsync(view, textBuffer, document, span).ReportNonFatalErrorAsync();
         return true;
     }
 
@@ -107,18 +107,17 @@ internal sealed class ExtractMethodCommandHandler : ICommandHandler<ExtractMetho
         ITextView view,
         ITextBuffer textBuffer,
         Document document,
-        SnapshotSpan span,
-        CancellationToken cancellationToken)
+        SnapshotSpan span)
     {
         using var asyncToken = _asyncListener.BeginAsyncOperation(nameof(ExecuteCommand));
         // Finish any rename that had been started. We'll do this here before we enter the
         // wait indicator for Extract Method
         if (_renameService.ActiveSession != null)
         {
-            await _renameService.ActiveSession.CommitAsync(previewChanges: false, cancellationToken).ConfigureAwait(false);
+            await _renameService.ActiveSession.CommitAsync(previewChanges: false).ConfigureAwait(false);
         }
 
-        _threadingContext.ThrowIfNotOnUIThread();
+        await _threadingContext.JoinableTaskFactory.SwitchToMainThreadAsync();
         var indicatorFactory = document.Project.Solution.Services.GetRequiredService<IBackgroundWorkIndicatorFactory>();
         using var indicatorContext = indicatorFactory.Create(
             view, span, EditorFeaturesResources.Applying_Extract_Method_refactoring, cancelOnEdit: true, cancelOnFocusLost: true);
