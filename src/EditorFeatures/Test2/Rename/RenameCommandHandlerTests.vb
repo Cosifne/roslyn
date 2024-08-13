@@ -8,6 +8,7 @@ Imports Microsoft.CodeAnalysis.Editor.Shared.Extensions
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Extensions
 Imports Microsoft.CodeAnalysis.Editor.UnitTests.Workspaces
 Imports Microsoft.CodeAnalysis.Options
+Imports Microsoft.CodeAnalysis.Shared.TestHooks
 Imports Microsoft.CodeAnalysis.Text.Shared.Extensions
 Imports Microsoft.VisualStudio.Commanding
 Imports Microsoft.VisualStudio.Text
@@ -1070,63 +1071,63 @@ partial class [|Program|]
 
         <WpfTheory, WorkItem("http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/1142701")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub MoveSelectedLinesUpDuringRename(host As RenameTestHost)
-            VerifyCommandCommitsRenameSessionAndExecutesCommand(
+        Public Async Function MoveSelectedLinesUpDuringRename(host As RenameTestHost) As Task
+            Await VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New MoveSelectedLinesUpCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory, WorkItem("http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/1142701")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub MoveSelectedLinesDownDuringRename(host As RenameTestHost)
-            VerifyCommandCommitsRenameSessionAndExecutesCommand(
+        Public Async Function MoveSelectedLinesDownDuringRename(host As RenameTestHost) As Task
+            Await VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New MoveSelectedLinesDownCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory, WorkItem("http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/991517")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub ReorderParametersDuringRename(host As RenameTestHost)
-            VerifyCommandCommitsRenameSessionAndExecutesCommand(
+        Public Async Function ReorderParametersDuringRename(host As RenameTestHost) As Task
+            Await VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New ReorderParametersCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory, WorkItem("http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/991517")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub RemoveParametersDuringRename(host As RenameTestHost)
-            VerifyCommandCommitsRenameSessionAndExecutesCommand(
+        Public Async Function RemoveParametersDuringRename(host As RenameTestHost) As Task
+            Await VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New RemoveParametersCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory, WorkItem("http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/991517")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub ExtractInterfaceDuringRename(host As RenameTestHost)
-            VerifyCommandCommitsRenameSessionAndExecutesCommand(
+        Public Async Function ExtractInterfaceDuringRename(host As RenameTestHost) As Task
+            Await VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New ExtractInterfaceCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory, WorkItem("http://vstfdevdiv:8080/DevDiv2/DevDiv/_workitems/edit/991517")>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub EncapsulateFieldDuringRename(host As RenameTestHost)
-            VerifyCommandCommitsRenameSessionAndExecutesCommand(
+        Public Async Function EncapsulateFieldDuringRename(host As RenameTestHost) As Task
+            Await VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New EncapsulateFieldCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
@@ -1150,25 +1151,25 @@ partial class [|Program|]
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub CutDuringRename_OutsideIdentifier(host As RenameTestHost)
-            VerifySessionCommittedAfterCutPasteOutsideIdentifier(
+        Public Async Function CutDuringRename_OutsideIdentifier(host As RenameTestHost) As Task
+            Await VerifySessionCommittedAfterCutPasteOutsideIdentifierAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New CutCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
         <WpfTheory>
         <CombinatorialData, Trait(Traits.Feature, Traits.Features.Rename)>
-        Public Sub PasteDuringRename_OutsideIdentifier(host As RenameTestHost)
-            VerifySessionCommittedAfterCutPasteOutsideIdentifier(
+        Public Async Function PasteDuringRename_OutsideIdentifier(host As RenameTestHost) As Task
+            Await VerifySessionCommittedAfterCutPasteOutsideIdentifierAsync(
                 host,
                 Sub(commandHandler As RenameCommandHandler, view As IWpfTextView, nextHandler As Action)
                     commandHandler.ExecuteCommand(New PasteCommandArgs(view, view.TextBuffer), nextHandler, Utilities.TestCommandExecutionContext.Create())
                 End Sub)
-        End Sub
+        End Function
 
-        Private Shared Sub VerifyCommandCommitsRenameSessionAndExecutesCommand(host As RenameTestHost, executeCommand As Action(Of RenameCommandHandler, IWpfTextView, Action))
+        Private Shared Async Function VerifyCommandCommitsRenameSessionAndExecutesCommandAsync(host As RenameTestHost, executeCommand As Action(Of RenameCommandHandler, IWpfTextView, Action)) As Task
             Using workspace = CreateWorkspaceWithWaiter(
                 <Workspace>
                     <Project Language="C#" CommonReferences="true">
@@ -1189,7 +1190,7 @@ class [|C$$|]
 
                 Dim session = StartSession(workspace)
                 Dim editorOperations = workspace.GetService(Of IEditorOperationsFactoryService)().GetEditorOperations(view)
-
+                Dim asyncWaiter = workspace.GetService(Of IAsynchronousOperationListenerProvider).GetWaiter(FeatureAttribute.Rename)
                 ' Type first in the main identifier
                 view.Selection.Clear()
                 view.Caret.MoveTo(New SnapshotPoint(view.TextBuffer.CurrentSnapshot, workspace.Documents.Single(Function(d) d.CursorPosition.HasValue).CursorPosition.Value))
@@ -1197,9 +1198,13 @@ class [|C$$|]
                                               Sub() editorOperations.InsertText("D"),
                                               Utilities.TestCommandExecutionContext.Create())
 
+                Await asyncWaiter.ExpeditedWaitAsync()
+
                 ' Then execute the command
                 Dim commandInvokedString = "/*Command Invoked*/"
                 executeCommand(commandHandler, view, Sub() editorOperations.InsertText(commandInvokedString))
+
+                Await asyncWaiter.ExpeditedWaitAsync()
 
                 ' Verify rename session was committed.
                 Assert.Null(workspace.GetService(Of IInlineRenameService).ActiveSession)
@@ -1208,7 +1213,7 @@ class [|C$$|]
                 ' Verify the command was routed to the editor.
                 Assert.Contains(commandInvokedString, view.TextBuffer.CurrentSnapshot.GetText())
             End Using
-        End Sub
+        End Function
 
         Private Shared Async Function VerifySessionActiveAfterCutPasteInsideIdentifier(host As RenameTestHost, executeCommand As Action(Of RenameCommandHandler, IWpfTextView, Action)) As Task
             Using workspace = CreateWorkspaceWithWaiter(
@@ -1242,7 +1247,7 @@ class [|C$$|]
             End Using
         End Function
 
-        Private Shared Sub VerifySessionCommittedAfterCutPasteOutsideIdentifier(host As RenameTestHost, executeCommand As Action(Of RenameCommandHandler, IWpfTextView, Action))
+        Private Shared Async Function VerifySessionCommittedAfterCutPasteOutsideIdentifierAsync(host As RenameTestHost, executeCommand As Action(Of RenameCommandHandler, IWpfTextView, Action)) As Task
             Using workspace = CreateWorkspaceWithWaiter(
                     <Workspace>
                         <Project Language="C#" CommonReferences="true">
@@ -1279,12 +1284,14 @@ class [|C$$|]
                 view.SetSelection(New SnapshotSpan(view.TextBuffer.CurrentSnapshot, New Span(selectionStart, 2)))
 
                 executeCommand(commandHandler, view, Sub() editorOperations.InsertText(commandInvokedString))
+                Dim asyncWaiter = workspace.GetService(Of IAsynchronousOperationListenerProvider).GetWaiter(FeatureAttribute.Rename)
+                Await asyncWaiter.ExpeditedWaitAsync()
 
                 ' Verify rename session was committed
                 Assert.Null(workspace.GetService(Of IInlineRenameService).ActiveSession)
                 Assert.Contains("D f", view.TextBuffer.CurrentSnapshot.GetText())
                 Assert.Contains(commandInvokedString, view.TextBuffer.CurrentSnapshot.GetText())
             End Using
-        End Sub
+        End Function
     End Class
 End Namespace
