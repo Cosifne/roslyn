@@ -99,10 +99,8 @@ internal abstract partial class AbstractRenameCommandHandler(
     {
         if (renameService.ActiveSession != null)
         {
-            var selection = args.TextView.Selection.VirtualSelectedSpans.First();
-
             Commit(operationContext);
-
+            var selection = args.TextView.Selection.VirtualSelectedSpans.First();
             var translatedSelection = selection.TranslateTo(args.TextView.TextBuffer.CurrentSnapshot);
             args.TextView.Selection.Select(translatedSelection.Start, translatedSelection.End);
             args.TextView.Caret.MoveTo(translatedSelection.End);
