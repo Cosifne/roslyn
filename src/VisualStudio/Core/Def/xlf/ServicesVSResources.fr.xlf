@@ -632,6 +632,11 @@
         <target state="translated">Interfaces héritées</target>
         <note />
       </trans-unit>
+      <trans-unit id="Inline_diagnostics_location">
+        <source>Inline diagnostics location</source>
+        <target state="new">Inline diagnostics location</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Insert_Snippet">
         <source>Insert Snippet</source>
         <target state="new">Insert Snippet</target>

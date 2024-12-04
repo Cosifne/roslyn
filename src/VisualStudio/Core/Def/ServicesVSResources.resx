@@ -1958,4 +1958,7 @@ Additional information: {1}</value>
   <data name="Show_Remove_Unused_References_command_in_Solution_Explorer" xml:space="preserve">
     <value>Show "Remove Unused References" command in Solution Explorer</value>
   </data>
+  <data name="Inline_diagnostics_location" xml:space="preserve">
+    <value>Inline diagnostics location</value>
+  </data>
 </root>
