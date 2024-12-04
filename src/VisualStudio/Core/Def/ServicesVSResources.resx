@@ -1848,7 +1848,7 @@ Additional information: {1}</value>
     <value>Show hints for collection expressions</value>
   </data>
   <data name="Automatically_reload_updated_analyzers_and_generators" xml:space="preserve">
-    <value>Automatically reload updated analyzers and generators (requires restart)</value>
+    <value>Automatically reload updated analyzers and generators</value>
   </data>
   <data name="Insert_Snippet" xml:space="preserve">
     <value>Insert Snippet</value>
@@ -1939,5 +1939,8 @@ Additional information: {1}</value>
   </data>
   <data name="Run_code_analysis_in_separate_process" xml:space="preserve">
     <value>Run code analysis in separate process</value>
+  </data>
+  <data name="Automatically_reload_updated_analyzers_and_generators_requires_restart" xml:space="preserve">
+    <value>Automatically reload updated analyzers and generators (requires restart)</value>
   </data>
 </root>

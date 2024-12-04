@@ -138,6 +138,11 @@
         <note>"Stack Trace Explorer" is a tool window that is owned by the Roslyn package</note>
       </trans-unit>
       <trans-unit id="Automatically_reload_updated_analyzers_and_generators">
+        <source>Automatically reload updated analyzers and generators</source>
+        <target state="new">Automatically reload updated analyzers and generators</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Automatically_reload_updated_analyzers_and_generators_requires_restart">
         <source>Automatically reload updated analyzers and generators (requires restart)</source>
         <target state="new">Automatically reload updated analyzers and generators (requires restart)</target>
         <note />

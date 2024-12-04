@@ -59,7 +59,7 @@
 
                     <StackPanel Margin="15, 0, 0, 0">
                         <CheckBox x:Name="Automatically_reload_updated_analyzers_and_generators"
-                                  Content="{x:Static local:AdvancedOptionPageStrings.Option_Automatically_reload_updated_analyzers_and_generators}" />
+                                  Content="{x:Static local:AdvancedOptionPageStrings.Option_Automatically_reload_updated_analyzers_and_generators_requires_restart}" />
                     </StackPanel>
 
                     <CheckBox x:Name="Show_Remove_Unused_References_command_in_Solution_Explorer_experimental"
