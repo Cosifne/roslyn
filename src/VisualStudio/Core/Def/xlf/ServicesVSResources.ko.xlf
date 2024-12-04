@@ -367,6 +367,11 @@
         <target state="translated">Alt+F1을 누른 채 모든 힌트 표시</target>
         <note />
       </trans-unit>
+      <trans-unit id="Display_diagnostics_inline">
+        <source>Display diagnostics inline</source>
+        <target state="new">Display diagnostics inline</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Display_diagnostics_inline_experimental">
         <source>Display diagnostics inline (experimental)</source>
         <target state="translated">진단 인라인 표시(실험적)</target>
@@ -423,8 +428,13 @@
         <note />
       </trans-unit>
       <trans-unit id="Enable_file_logging_for_diagnostics">
+        <source>Enable file logging for diagnostics</source>
+        <target state="needs-review-translation">진단용 파일 로깅 사용('%Temp%\Roslyn' 폴더에 로그인)</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Enable_file_logging_for_diagnostics_logged_in_temp_roslyn_folder">
         <source>Enable file logging for diagnostics (logged in '%Temp%\Roslyn' folder)</source>
-        <target state="translated">진단용 파일 로깅 사용('%Temp%\Roslyn' 폴더에 로그인)</target>
+        <target state="new">Enable file logging for diagnostics (logged in '%Temp%\Roslyn' folder)</target>
         <note />
       </trans-unit>
       <trans-unit id="Enable_navigation_to_sourcelink_and_embedded_sources">
@@ -470,6 +480,11 @@
       <trans-unit id="Error_updating_suppressions_0">
         <source>Error updating suppressions: {0}</source>
         <target state="translated">표시 중지를 업데이트하는 동안 오류가 발생했습니다. {0}</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Experimental_feature">
+        <source>Experimental feature</source>
+        <target state="new">Experimental feature</target>
         <note />
       </trans-unit>
       <trans-unit id="External_sources">
@@ -685,6 +700,11 @@
       <trans-unit id="Location">
         <source>Location</source>
         <target state="translated">위치</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Logged_in_temp_roslyn_folder">
+        <source>Logged in '%Temp%\Roslyn' folder</source>
+        <target state="new">Logged in '%Temp%\Roslyn' folder</target>
         <note />
       </trans-unit>
       <trans-unit id="Make_0_abstract">
@@ -1395,6 +1415,11 @@
       <trans-unit id="Semantic_search_results">
         <source>Semantic Search Results</source>
         <target state="translated">의미 체계 검색 결과</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Show_Remove_Unused_References_command_in_Solution_Explorer">
+        <source>Show "Remove Unused References" command in Solution Explorer</source>
+        <target state="new">Show "Remove Unused References" command in Solution Explorer</target>
         <note />
       </trans-unit>
       <trans-unit id="Show_Remove_Unused_References_command_in_Solution_Explorer_experimental">

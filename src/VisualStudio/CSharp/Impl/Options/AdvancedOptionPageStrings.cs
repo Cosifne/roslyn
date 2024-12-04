@@ -337,8 +337,8 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
         public static string Option_Show_Remove_Unused_References_command_in_Solution_Explorer_experimental
             => ServicesVSResources.Show_Remove_Unused_References_command_in_Solution_Explorer_experimental;
 
-        public static string Option_Enable_file_logging_for_diagnostics
-            => ServicesVSResources.Enable_file_logging_for_diagnostics;
+        public static string Option_Enable_file_logging_for_diagnostics_logged_in_temp_roslyn_folder
+            => ServicesVSResources.Enable_file_logging_for_diagnostics_logged_in_temp_roslyn_folder;
 
         public static string Option_Skip_analyzers_for_implicitly_triggered_builds
             => ServicesVSResources.Skip_analyzers_for_implicitly_triggered_builds;
@@ -409,7 +409,7 @@ namespace Microsoft.VisualStudio.LanguageServices.CSharp.Options
         public static string Option_Balanced_Run_generators_after_saving_or_building
             => ServicesVSResources.Balanced_Run_generators_after_saving_or_building;
 
-        public static string Option_Automatically_reload_updated_analyzers_and_generators
+        public static string Option_Automatically_reload_updated_analyzers_and_generators_requires_restart
             => ServicesVSResources.Automatically_reload_updated_analyzers_and_generators_requires_restart;
     }
 }

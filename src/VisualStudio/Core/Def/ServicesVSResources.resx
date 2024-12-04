@@ -1438,9 +1438,6 @@ Additional information: {1}</value>
   <data name="Show_Remove_Unused_References_command_in_Solution_Explorer_experimental" xml:space="preserve">
     <value>Show "Remove Unused References" command in Solution Explorer (experimental)</value>
   </data>
-  <data name="Enable_file_logging_for_diagnostics" xml:space="preserve">
-    <value>Enable file logging for diagnostics (logged in '%Temp%\Roslyn' folder)</value>
-  </data>
   <data name="Skip_analyzers_for_implicitly_triggered_builds" xml:space="preserve">
     <value>Skip analyzers for implicitly triggered builds</value>
   </data>
@@ -1942,5 +1939,23 @@ Additional information: {1}</value>
   </data>
   <data name="Automatically_reload_updated_analyzers_and_generators_requires_restart" xml:space="preserve">
     <value>Automatically reload updated analyzers and generators (requires restart)</value>
+  </data>
+  <data name="Experimental_feature" xml:space="preserve">
+    <value>Experimental feature</value>
+  </data>
+  <data name="Display_diagnostics_inline" xml:space="preserve">
+    <value>Display diagnostics inline</value>
+  </data>
+  <data name="Enable_file_logging_for_diagnostics" xml:space="preserve">
+    <value>Enable file logging for diagnostics</value>
+  </data>
+  <data name="Enable_file_logging_for_diagnostics_logged_in_temp_roslyn_folder" xml:space="preserve">
+    <value>Enable file logging for diagnostics (logged in '%Temp%\Roslyn' folder)</value>
+  </data>
+  <data name="Logged_in_temp_roslyn_folder" xml:space="preserve">
+    <value>Logged in '%Temp%\Roslyn' folder</value>
+  </data>
+  <data name="Show_Remove_Unused_References_command_in_Solution_Explorer" xml:space="preserve">
+    <value>Show "Remove Unused References" command in Solution Explorer</value>
   </data>
 </root>

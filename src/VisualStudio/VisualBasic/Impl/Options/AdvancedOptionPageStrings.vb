@@ -328,8 +328,8 @@ Namespace Microsoft.VisualStudio.LanguageServices.VisualBasic.Options
         Public ReadOnly Property Option_Show_Remove_Unused_References_command_in_Solution_Explorer_experimental As String =
             ServicesVSResources.Show_Remove_Unused_References_command_in_Solution_Explorer_experimental
 
-        Public ReadOnly Property Option_Enable_file_logging_for_diagnostics As String =
-            ServicesVSResources.Enable_file_logging_for_diagnostics
+        Public ReadOnly Property Option_Enable_file_logging_for_diagnostics_logged_in_temp_roslyn_folder As String =
+            ServicesVSResources.Enable_file_logging_for_diagnostics_logged_in_temp_roslyn_folder
 
         Public ReadOnly Property Option_Skip_analyzers_for_implicitly_triggered_builds As String =
             ServicesVSResources.Skip_analyzers_for_implicitly_triggered_builds

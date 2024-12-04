@@ -78,7 +78,12 @@
     },
     // InlineDiagnosticsOptionsStorage.EnableInlineDiagnostics
     "textEditor.csharp.advanced.analysis.enableInlineDiagnostics": {
-      "title": "@Display_diagnostics_inline_experimental;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "title": "@Display_diagnostics_inline;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "messages": [
+        {
+          "text": "@Experimental_feature;..\\Microsoft.VisualStudio.LanguageServices.dll"
+        }
+      ],
       "type": "boolean",
       "default": false,
       "order": 20,
@@ -162,8 +167,13 @@
     },
     // FeatureOnOffOptions.OfferRemoveUnusedReferences
     "textEditor.csharpAndVisualBasic.analysis.offerRemoveUnusedReferences": {
-      "title": "@Show_Remove_Unused_References_command_in_Solution_Explorer_experimental;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "title": "@Show_Remove_Unused_References_command_in_Solution_Explorer;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "boolean",
+      "messages": [
+        {
+          "text": "@Experimental_feature;..\\Microsoft.VisualStudio.LanguageServices.dll"
+        }
+      ],
       "alternateDefault": {
         // WorkspaceConfigurationOptionsStorage.ReloadChangedAnalyzerReferencesFeatureFlag
         "flagName": "Roslyn.RemoveUnusedReferences",
@@ -188,6 +198,11 @@
     // VisualStudioLoggingOptionsStorage.EnableFileLoggingForDiagnostics
     "textEditor.csharpAndVisualBasic.analysis.enableFileLoggingForDiagnostics": {
       "title": "@Enable_file_logging_for_diagnostics;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "messages": [
+        {
+          "text": "@Logged_in_temp_roslyn_folder;..\\Microsoft.VisualStudio.LanguageServices.dll"
+        }
+      ],
       "type": "boolean",
       "default": false,
       "placements": [
