@@ -4,6 +4,229 @@
 // See https://devdiv.visualstudio.com/DevDiv/_wiki/wikis/DevDiv.wiki/39345/Manifest-Build-Deployment-and-Setup-Authoring-In-Depth?anchor=example-pkgdef-key for more details
 {
   "properties": {
+    //
+    // Options -> Text Editor -> C# -> Advanced
+    // SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption
+    "textEditor.csharp.advanced.analysis.analyzerDiagnosticsScope": {
+      "title": "@Run_background_code_analysis_for_colon;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "string",
+      "enum": [ "minimal", "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics", "openFiles", "fullSolution" ],
+      "enumItemLabels": [ "@None;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Current_document;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Open_documents;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Entire_solution;..\\Microsoft.VisualStudio.LanguageServices.dll" ],
+      "default": "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics",
+      "order": 0,
+      "migration": {
+        "enumIntegerToString": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.BackgroundAnalysisScopeOption"
+          },
+          "map": [
+            {
+              "result": "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics",
+              "match": 0
+            },
+            {
+              "result": "openFiles",
+              "match": 1
+            },
+            {
+              "result": "fullSolution",
+              "match": 2
+            },
+            {
+              "result": "minimal",
+              "match": 3
+            }
+          ]
+        }
+      }
+    },
+    // SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption
+    "textEditor.csharp.advanced.analysis.compilerDiagnosticsScope": {
+      "title": "@Show_compiler_errors_and_warnings_for_colon;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "string",
+      "enum": [ "none", "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics", "openFiles", "fullSolution" ],
+      "enumItemLabels": [ "@None;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Current_document;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Open_documents;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Entire_solution;..\\Microsoft.VisualStudio.LanguageServices.dll" ],
+      "default": "openFiles",
+      "order": 10,
+      "migration": {
+        "enumIntegerToString": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.CompilerDiagnosticsScopeOption"
+          },
+          "map": [
+            {
+              "result": "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics",
+              "match": 1
+            },
+            {
+              "result": "openFiles",
+              "match": 2
+            },
+            {
+              "result": "fullSolution",
+              "match": 3
+            },
+            {
+              "result": "none",
+              "match": 0
+            }
+          ]
+        }
+      }
+    },
+    // InlineDiagnosticsOptionsStorage.EnableInlineDiagnostics
+    "textEditor.csharp.advanced.analysis.enableInlineDiagnostics": {
+      "title": "@Display_diagnostics_inline_experimental;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "boolean",
+      "default": false,
+      "order": 20,
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.InlineDiagnostics"
+          }
+        }
+      }
+    },
+    // InlineDiagnosticsOptionsStorage.Location
+    "textEditor.csharp.advanced.analysis.inlineDiagnosticsLocation": {
+      "title": "@Inline_diagnostics_location;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "string",
+      "enum": [ "placedAtEndOfCode", "placedAtEndOfEditor" ],
+      "enumItemLabels": [ "@at_the_end_of_the_line_of_code;..\\Microsoft.VisualStudio.LanguageServices.dll", "@on_the_right_edge_of_the_editor_window;..\\Microsoft.VisualStudio.LanguageServices.dll" ],
+      "default": "placedAtEndOfCode",
+      "enableWhen": "${config:textEditor.csharp.advanced.analysis.enableInlineDiagnostics}=='true'",
+      "migration": {
+        "enumIntegerToString": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.CSharp.Specific.InlineDiagnostics.LocationOption"
+          },
+          "map": [
+            {
+              "result": "placedAtEndOfCode",
+              "match": 0
+            },
+            {
+              "result": "placedAtEndOfEditor",
+              "match": 1
+            }
+          ]
+        }
+      }
+    },
+    // RemoteHostOptionsStorage.OOP64Bit
+    "textEditor.csharpAndVisualBasic.analysis.codeAnalysisInSeparateProcess": {
+      "title": "@Run_code_analysis_in_separate_process_requires_restart;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "boolean",
+      "default": true,
+      "requiresRestart": true,
+      "placements": [
+        {
+          "category": "textEditor.csharp.advanced.analysis",
+          "order": 30
+        }
+      ],
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "VsUserSettingsRegistry",
+            "path": "Roslyn\\Internal\\OnOff\\Features\\OOP64Bit"
+          }
+        }
+      }
+    },
+    // WorkspaceConfigurationOptionsStorage.ReloadChangedAnalyzerReferences
+    "textEditor.csharpAndVisualBasic.analysis.reloadChangedAnalyzerReferences": {
+      "title": "@Automatically_reload_updated_analyzers_and_generators;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "boolean",
+      "default": true,
+      "enableWhen": "${config:textEditor.csharpAndVisualBasic.analysis.codeAnalysisInSeparateProcess}=='true'",
+      "requiresRestart": true,
+      "alternateDefault": {
+        // WorkspaceConfigurationOptionsStorage.ReloadChangedAnalyzerReferencesFeatureFlag
+        "flagName": "Roslyn.ReloadChangedAnalyzerReferences",
+        "default": true
+      },
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.Roslyn.Specific.ReloadChangedAnalyzerReferences"
+          }
+        }
+      }
+    },
+    // FeatureOnOffOptions.OfferRemoveUnusedReferences
+    "textEditor.csharpAndVisualBasic.analysis.offerRemoveUnusedReferences": {
+      "title": "@Show_Remove_Unused_References_command_in_Solution_Explorer_experimental;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "boolean",
+      "alternateDefault": {
+        // WorkspaceConfigurationOptionsStorage.ReloadChangedAnalyzerReferencesFeatureFlag
+        "flagName": "Roslyn.RemoveUnusedReferences",
+        "default": false
+      },
+      "default": true,
+      "placements": [
+        {
+          "category": "textEditor.csharp.advanced.analysis",
+          "order": 50
+        }
+      ],
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.OfferRemoveUnusedReferences"
+          }
+        }
+      }
+    },
+    // VisualStudioLoggingOptionsStorage.EnableFileLoggingForDiagnostics
+    "textEditor.csharpAndVisualBasic.analysis.enableFileLoggingForDiagnostics": {
+      "title": "@Enable_file_logging_for_diagnostics;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "boolean",
+      "default": false,
+      "placements": [
+        {
+          "category": "textEditor.csharp.advanced.analysis",
+          "order": 60
+        }
+      ],
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "VsUserSettingsRegistry",
+            "path": "Roslyn\\Internal\\Diagnostics\\EnableFileLoggingForDiagnostics"
+          }
+        }
+      }
+    },
+    // FeatureOnOffOptions.SkipAnalyzersForImplicitlyTriggeredBuilds
+    "textEditor.csharpAndVisualBasic.analysis.skipAnalyzersForImplicitlyTriggeredBuilds": {
+      "title": "@Skip_analyzers_for_implicitly_triggered_builds;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "type": "boolean",
+      "default": true,
+      "placements": [
+        {
+          "category": "textEditor.csharp.advanced.analysis",
+          "order": 70
+        }
+      ],
+      "migration": {
+        "pass": {
+          "input": {
+            "store": "SettingsManager",
+            "path": "TextEditor.SkipAnalyzersForImplicitlyTriggeredBuilds"
+          }
+        }
+      }
+    },
+    //
+    // Options -> Text Editor -> C# -> Intellisense
     // CompletionOptionsStorage.TriggerOnTypingLetters
     "textEditor.csharp.intellisense.triggerCompletionOnTypingLetters": {
       "title": "@Show_completion_list_after_a_character_is_typed;..\\Microsoft.VisualStudio.LanguageServices.CSharp.dll",
@@ -240,12 +463,24 @@
     }
   },
   "categories": {
-    "textEditor.csharp":{
+    "textEditor.csharp": {
       "title": "C#"
+    },
+    // This is a placeholder group used to include options shared between C# and Visual Basic
+    "textEditor.csharpAndVisualBasic": {
+      "title": "@CSharp_And_VisualBasic;..\\Microsoft.VisualStudio.LanguageServices.dll"
     },
     "textEditor.csharp.intellisense": {
       "title": "@103;{13c3bbb4-f18f-4111-9f54-a0fb010d9194}",
       "legacyOptionPageId": "EDE66829-7A36-4c5d-8E20-9290195DCF80"
+    },
+    "textEditor.csharp.advanced": {
+      "title": "@102;{13c3bbb4-f18f-4111-9f54-a0fb010d9194}",
+      "legacyOptionPageId": "8FD0B177-B244-4A97-8E37-6FB7B27DE3AF"
+    },
+    "textEditor.csharp.advanced.analysis": {
+      "title": "@Analysis;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "order": 0
     }
   }
 }

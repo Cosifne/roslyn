@@ -182,6 +182,11 @@
         <target state="translated">64 位元</target>
         <note />
       </trans-unit>
+      <trans-unit id="CSharp_And_VisualBasic">
+        <source>C# and Visual Basic</source>
+        <target state="new">C# and Visual Basic</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Calculating">
         <source>Calculating...</source>
         <target state="translated">正在計算...</target>

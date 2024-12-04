@@ -1925,4 +1925,7 @@ Additional information: {1}</value>
   <data name="Show_preview_for_rename_tracking" xml:space="preserve">
     <value>Show preview for rename _tracking</value>
   </data>
+  <data name="CSharp_And_VisualBasic" xml:space="preserve">
+    <value>C# and Visual Basic</value>
+  </data>
 </root>
