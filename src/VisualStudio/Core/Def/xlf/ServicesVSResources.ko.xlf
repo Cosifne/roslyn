@@ -957,6 +957,11 @@
         <target state="translated">public이 아닌 메서드</target>
         <note />
       </trans-unit>
+      <trans-unit id="None">
+        <source>None</source>
+        <target state="new">None</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Not_applicable">
         <source>Not applicable</source>
         <target state="translated">해당 사항 없음</target>
@@ -1287,9 +1292,19 @@
         <target state="translated">{0}에서 코드 분석 실행</target>
         <note />
       </trans-unit>
+      <trans-unit id="Run_background_code_analysis_for">
+        <source>Run background code analysis for</source>
+        <target state="new">Run background code analysis for</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Run_background_code_analysis_for_colon">
         <source>Run background code analysis for:</source>
         <target state="translated">다음을 위해 백그라운드 코드 분석을 실행합니다.</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Run_code_analysis_in_separate_process">
+        <source>Run code analysis in separate process</source>
+        <target state="new">Run code analysis in separate process</target>
         <note />
       </trans-unit>
       <trans-unit id="Run_code_analysis_in_separate_process_requires_restart">
@@ -1391,6 +1406,11 @@
         <source>Show UI Inline</source>
         <target state="translated">UI 인라인 표시</target>
         <note>"UI" is an acronym for "User Interface"</note>
+      </trans-unit>
+      <trans-unit id="Show_compiler_errors_and_warnings_for">
+        <source>Show compiler errors and warnings for</source>
+        <target state="new">Show compiler errors and warnings for</target>
+        <note />
       </trans-unit>
       <trans-unit id="Show_compiler_errors_and_warnings_for_colon">
         <source>Show compiler errors and warnings for:</source>

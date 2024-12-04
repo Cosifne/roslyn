@@ -8,7 +8,7 @@
     // Options -> Text Editor -> C# -> Advanced
     // SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption
     "textEditor.csharp.advanced.analysis.analyzerDiagnosticsScope": {
-      "title": "@Run_background_code_analysis_for_colon;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "title": "@Run_background_code_analysis_for;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "string",
       "enum": [ "minimal", "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics", "openFiles", "fullSolution" ],
       "enumItemLabels": [ "@None;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Current_document;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Open_documents;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Entire_solution;..\\Microsoft.VisualStudio.LanguageServices.dll" ],
@@ -43,7 +43,7 @@
     },
     // SolutionCrawlerOptionsStorage.CompilerDiagnosticsScopeOption
     "textEditor.csharp.advanced.analysis.compilerDiagnosticsScope": {
-      "title": "@Show_compiler_errors_and_warnings_for_colon;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "title": "@Show_compiler_errors_and_warnings_for;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "string",
       "enum": [ "none", "visibleFilesAndOpenFilesWithPreviouslyReportedDiagnostics", "openFiles", "fullSolution" ],
       "enumItemLabels": [ "@None;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Current_document;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Open_documents;..\\Microsoft.VisualStudio.LanguageServices.dll", "@Entire_solution;..\\Microsoft.VisualStudio.LanguageServices.dll" ],
@@ -120,7 +120,7 @@
     },
     // RemoteHostOptionsStorage.OOP64Bit
     "textEditor.csharpAndVisualBasic.analysis.codeAnalysisInSeparateProcess": {
-      "title": "@Run_code_analysis_in_separate_process_requires_restart;..\\Microsoft.VisualStudio.LanguageServices.dll",
+      "title": "@Run_code_analysis_in_separate_process;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "boolean",
       "default": true,
       "requiresRestart": true,

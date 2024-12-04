@@ -957,6 +957,11 @@
         <target state="translated">Neveřejné metody</target>
         <note />
       </trans-unit>
+      <trans-unit id="None">
+        <source>None</source>
+        <target state="new">None</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Not_applicable">
         <source>Not applicable</source>
         <target state="translated">Neužívá se</target>
@@ -1287,9 +1292,19 @@
         <target state="translated">Spustit analýzu kódu {0}</target>
         <note />
       </trans-unit>
+      <trans-unit id="Run_background_code_analysis_for">
+        <source>Run background code analysis for</source>
+        <target state="new">Run background code analysis for</target>
+        <note />
+      </trans-unit>
       <trans-unit id="Run_background_code_analysis_for_colon">
         <source>Run background code analysis for:</source>
         <target state="translated">Spustit analýzu kódu na pozadí pro:</target>
+        <note />
+      </trans-unit>
+      <trans-unit id="Run_code_analysis_in_separate_process">
+        <source>Run code analysis in separate process</source>
+        <target state="new">Run code analysis in separate process</target>
         <note />
       </trans-unit>
       <trans-unit id="Run_code_analysis_in_separate_process_requires_restart">
@@ -1391,6 +1406,11 @@
         <source>Show UI Inline</source>
         <target state="translated">Zobrazit vložené uživatelské rozhraní</target>
         <note>"UI" is an acronym for "User Interface"</note>
+      </trans-unit>
+      <trans-unit id="Show_compiler_errors_and_warnings_for">
+        <source>Show compiler errors and warnings for</source>
+        <target state="new">Show compiler errors and warnings for</target>
+        <note />
       </trans-unit>
       <trans-unit id="Show_compiler_errors_and_warnings_for_colon">
         <source>Show compiler errors and warnings for:</source>

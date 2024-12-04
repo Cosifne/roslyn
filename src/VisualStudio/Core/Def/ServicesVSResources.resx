@@ -1928,4 +1928,16 @@ Additional information: {1}</value>
   <data name="CSharp_And_VisualBasic" xml:space="preserve">
     <value>C# and Visual Basic</value>
   </data>
+  <data name="Run_background_code_analysis_for" xml:space="preserve">
+    <value>Run background code analysis for</value>
+  </data>
+  <data name="None" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="Show_compiler_errors_and_warnings_for" xml:space="preserve">
+    <value>Show compiler errors and warnings for</value>
+  </data>
+  <data name="Run_code_analysis_in_separate_process" xml:space="preserve">
+    <value>Run code analysis in separate process</value>
+  </data>
 </root>
