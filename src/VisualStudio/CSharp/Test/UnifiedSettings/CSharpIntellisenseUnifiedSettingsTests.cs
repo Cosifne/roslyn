@@ -19,22 +19,21 @@ using Xunit;
 
 namespace Roslyn.VisualStudio.CSharp.UnitTests.UnifiedSettings
 {
-    public class CSharpUnifiedSettingsTests : UnifiedSettingsTests
+    public class CSharpIntellisenseUnifiedSettingsTests : UnifiedSettingsTests
     {
-        internal override ImmutableArray<IOption2> OnboardedOptions => ImmutableArray.Create<IOption2>(
-            CompletionOptionsStorage.TriggerOnTypingLetters,
-            CompletionOptionsStorage.TriggerOnDeletion,
-            CompletionOptionsStorage.TriggerInArgumentLists,
-            CompletionViewOptionsStorage.HighlightMatchingPortionsOfCompletionListItems,
-            CompletionViewOptionsStorage.ShowCompletionItemFilters,
-            CompleteStatementOptionsStorage.AutomaticallyCompleteStatementOnSemicolon,
-            CompletionOptionsStorage.SnippetsBehavior,
-            CompletionOptionsStorage.EnterKeyBehavior,
-            CompletionOptionsStorage.ShowNameSuggestions,
-            CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces,
-            CompletionViewOptionsStorage.EnableArgumentCompletionSnippets,
-            CompletionOptionsStorage.ShowNewSnippetExperienceUserOption
-        );
+        internal override ImmutableArray<(string unifiedSettingsPath, IOption2 roslynOption)> OnboardedOptions
+            => [("textEditor.csharp.intellisense.triggerCompletionOnTypingLetters", CompletionOptionsStorage.TriggerOnTypingLetters),
+                ("textEditor.csharp.intellisense.triggerCompletionOnDeletion", CompletionOptionsStorage.TriggerOnDeletion),
+                ("textEditor.csharp.intellisense.triggerCompletionInArgumentLists", CompletionOptionsStorage.TriggerInArgumentLists),
+                ("textEditor.csharp.intellisense.highlightMatchingPortionsOfCompletionListItems", CompletionViewOptionsStorage.HighlightMatchingPortionsOfCompletionListItems),
+                ("textEditor.csharp.intellisense.showCompletionItemFilters", CompletionViewOptionsStorage.ShowCompletionItemFilters),
+                ("textEditor.csharp.intellisense.completeStatementOnSemicolon", CompleteStatementOptionsStorage.AutomaticallyCompleteStatementOnSemicolon),
+                ("textEditor.csharp.intellisense.snippetsBehavior", CompletionOptionsStorage.SnippetsBehavior),
+                ("textEditor.csharp.intellisense.returnKeyCompletionBehavior", CompletionOptionsStorage.EnterKeyBehavior),
+                ("textEditor.csharp.intellisense.showNameCompletionSuggestions", CompletionOptionsStorage.ShowNameSuggestions),
+                ("textEditor.csharp.intellisense.showCompletionItemsFromUnimportedNamespaces", CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces),
+                ("textEditor.csharp.intellisense.enableArgumentCompletionSnippets", CompletionViewOptionsStorage.EnableArgumentCompletionSnippets),
+                ("textEditor.csharp.intellisense.showNewSnippetExperience", CompletionOptionsStorage.ShowNewSnippetExperienceUserOption)];
 
         internal override object[] GetEnumOptionValues(IOption2 option)
         {
@@ -77,12 +76,6 @@ namespace Roslyn.VisualStudio.CSharp.UnitTests.UnifiedSettings
                 // It's disabled by default for C#
                 return false;
             }
-            else if (option == CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces)
-            {
-                // CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces's default value is null
-                // It's enabled by default for C#
-                return true;
-            }
             else if (option == CompletionViewOptionsStorage.EnableArgumentCompletionSnippets)
             {
                 // CompletionViewOptionsStorage.EnableArgumentCompletionSnippets' default value is null
@@ -100,9 +93,9 @@ namespace Roslyn.VisualStudio.CSharp.UnitTests.UnifiedSettings
         }
 
         [Fact]
-        public async Task IntelliSensePageTests()
+        public async Task IntelliSensePageTest()
         {
-            using var registrationFileStream = typeof(CSharpUnifiedSettingsTests).GetTypeInfo().Assembly.GetManifestResourceStream("Roslyn.VisualStudio.CSharp.UnitTests.csharpSettings.registration.json");
+            using var registrationFileStream = typeof(CSharpIntellisenseUnifiedSettingsTests).GetTypeInfo().Assembly.GetManifestResourceStream("Roslyn.VisualStudio.CSharp.UnitTests.csharpSettings.registration.json");
             using var reader = new StreamReader(registrationFileStream);
             var registrationFile = await reader.ReadToEndAsync().ConfigureAwait(false);
             var registrationJsonObject = JObject.Parse(registrationFile, new JsonLoadSettings() { CommentHandling = CommentHandling.Ignore });
@@ -110,7 +103,7 @@ namespace Roslyn.VisualStudio.CSharp.UnitTests.UnifiedSettings
             Assert.Equal("C#", actual: categoriesTitle.ToString());
             var optionPageId = registrationJsonObject.SelectToken("$.categories['textEditor.csharp.intellisense'].legacyOptionPageId");
             Assert.Equal(Guids.CSharpOptionPageIntelliSenseIdString, optionPageId!.ToString());
-            using var pkgdefFileStream = typeof(CSharpUnifiedSettingsTests).GetTypeInfo().Assembly.GetManifestResourceStream("Roslyn.VisualStudio.CSharp.UnitTests.PackageRegistration.pkgdef");
+            using var pkgdefFileStream = typeof(CSharpIntellisenseUnifiedSettingsTests).GetTypeInfo().Assembly.GetManifestResourceStream("Roslyn.VisualStudio.CSharp.UnitTests.PackageRegistration.pkgdef");
             using var pkgdefReader = new StreamReader(pkgdefFileStream);
             var pkgdefFile = await pkgdefReader.ReadToEndAsync().ConfigureAwait(false);
             TestUnifiedSettingsCategory(registrationJsonObject, categoryBasePath: "textEditor.csharp.intellisense", languageName: LanguageNames.CSharp, pkgdefFile);

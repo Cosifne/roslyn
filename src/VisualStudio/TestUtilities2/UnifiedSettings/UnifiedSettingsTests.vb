@@ -16,8 +16,9 @@ Imports Roslyn.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
     Partial Public MustInherit Class UnifiedSettingsTests
+
         ' Onboarded options in Unified Settings registration file
-        Friend MustOverride ReadOnly Property OnboardedOptions As ImmutableArray(Of IOption2)
+        Friend MustOverride ReadOnly Property OnboardedOptions As ImmutableArray(Of (unifiedSettingsPath As String, roslynOption As IOption2))
 
         ' Override this method to if the option use different default value.
         Friend Overridable Function GetOptionsDefaultValue([option] As IOption2) As Object
@@ -38,31 +39,27 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
                 OrderBy(Function(name) name).
                 ToArray()
 
-            Dim expectedAllSettings = OnboardedOptions.Select(Function(onboardedOption) s_unifiedSettingsStorage(onboardedOption.Definition.ConfigName).GetUnifiedSettingsPath(languageName)).
+            Dim expectedAllSettings = OnboardedOptions.Select(Function(settingNameToOption) settingNameToOption.unifiedSettingsPath).
                 OrderBy(Function(name) name).
                 ToArray()
+
             Assert.Equal(expectedAllSettings, actualAllSettings)
 
-            For Each onboardedOption In OnboardedOptions
-                Dim optionName = onboardedOption.Definition.ConfigName
-                Dim settingStorage As UnifiedSettingsStorage = Nothing
-                If s_unifiedSettingsStorage.TryGetValue(optionName, settingStorage) Then
-                    Dim unifiedSettingsPath = settingStorage.GetUnifiedSettingsPath(languageName)
-                    VerifyType(registrationJsonObject, unifiedSettingsPath, onboardedOption)
+            For Each settingNameToOption In OnboardedOptions
+                Dim unifiedSettingsPath = settingNameToOption.unifiedSettingsPath
+                Dim onboardedOption = settingNameToOption.roslynOption
 
-                    Dim expectedDefaultValue = GetOptionsDefaultValue(onboardedOption)
-                    Dim actualDefaultValue = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingsPath}').default")
-                    Assert.Equal(expectedDefaultValue.ToString().ToCamelCase(), actualDefaultValue.ToString().ToCamelCase())
+                VerifyType(registrationJsonObject, unifiedSettingsPath, onboardedOption)
 
-                    If onboardedOption.Type.IsEnum Then
-                        ' Enum settings contains special setup.
-                        VerifyEnum(registrationJsonObject, unifiedSettingsPath, onboardedOption, languageName)
-                    Else
-                        VerifySettings(registrationJsonObject, unifiedSettingsPath, onboardedOption, languageName)
-                    End If
+                Dim expectedDefaultValue = GetOptionsDefaultValue(onboardedOption)
+                Dim actualDefaultValue = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingsPath}').default")
+                Assert.Equal(expectedDefaultValue.ToString().ToCamelCase(), actualDefaultValue.ToString().ToCamelCase())
+
+                If onboardedOption.Type.IsEnum Then
+                    ' Enum settings contains special setup.
+                    VerifyEnum(registrationJsonObject, unifiedSettingsPath, onboardedOption, languageName)
                 Else
-                    ' Can't find the option in the storage dictionary
-                    Throw ExceptionUtilities.UnexpectedValue(optionName)
+                    VerifySettings(registrationJsonObject, unifiedSettingsPath, onboardedOption, languageName)
                 End If
             Next
 
@@ -74,7 +71,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Dim regexExp = New Regex("""CacheTag""=qword:\w{16}")
             Dim match = regexExp.Match(pkdDefFile, 0).Value
             Dim actual = match.Substring(match.Length - 16)
-            ' Please change the CacheTag value in pkddef if you modify the unified settings regirstration file
+            ' Please change the CacheTag value in pkddef if you modify the unified settings registration file
             Assert.Equal(expectedCacheTagValue, actual)
         End Sub
 
@@ -193,7 +190,9 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             ' ]
             Dim actualMappings = CType(registrationJsonObject.SelectToken(String.Format("$.properties['{0}'].migration.enumIntegerToString.map", unifiedSettingPath)), JArray).Select(Function(mapping) (mapping("result").ToString(), Integer.Parse(mapping("match").ToString()))).ToArray()
 
-            Dim enumValues = [option].Type.GetEnumValues().Cast(Of Object).ToDictionary(
+            ' Call Distinct() because some option like SolutionCrawlerOptionsStorage.BackgroundAnalysisScopeOption,
+            ' BackgroundAnalysisScope.None is the alias for BackgroundAnalysisScope.Minimal
+            Dim enumValues = [option].Type.GetEnumValues().Cast(Of Object).Distinct().ToDictionary(
                 keySelector:=Function(enumValue) enumValue.ToString().ToCamelCase(),
                 elementSelector:=Function(enumValue)
                                      Dim actualDefaultValue = GetOptionsDefaultValue([option])
@@ -218,11 +217,13 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             ' If the default value of the enum is a stub value, verify the real value mapping is put in font of the default value mapping.
             ' It makes sure the default value would be converted to the real value by unified settings engine.
             Dim realDefaultValue = GetOptionsDefaultValue([option])
-            Dim indexOfTheRealDefaultMapping = Array.IndexOf(actualMappings, (realDefaultValue.ToString().ToCamelCase(), CInt(realDefaultValue)))
-            Assert.NotEqual(-1, indexOfTheRealDefaultMapping)
-            Dim indexOfTheDefaultMapping = Array.IndexOf(actualMappings, (realDefaultValue.ToString().ToCamelCase(), CInt([option].DefaultValue)))
-            Assert.NotEqual(-1, indexOfTheDefaultMapping)
-            Assert.True(indexOfTheRealDefaultMapping < indexOfTheDefaultMapping)
+            If Not realDefaultValue.Equals([option].DefaultValue) Then
+                Dim indexOfTheRealDefaultMapping = Array.IndexOf(actualMappings, (realDefaultValue.ToString().ToCamelCase(), CInt(realDefaultValue)))
+                Assert.NotEqual(-1, indexOfTheRealDefaultMapping)
+                Dim indexOfTheDefaultMapping = Array.IndexOf(actualMappings, (realDefaultValue.ToString().ToCamelCase(), CInt([option].DefaultValue)))
+                Assert.NotEqual(-1, indexOfTheDefaultMapping)
+                Assert.True(indexOfTheRealDefaultMapping < indexOfTheDefaultMapping)
+            End If
         End Sub
     End Class
 End Namespace

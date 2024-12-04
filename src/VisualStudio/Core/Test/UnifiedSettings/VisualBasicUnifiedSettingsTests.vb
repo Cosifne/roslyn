@@ -15,19 +15,17 @@ Imports Newtonsoft.Json.Linq
 Namespace Roslyn.VisualStudio.VisualBasic.UnitTests.UnifiedSettings
     Public Class VisualBasicUnifiedSettingsTests
         Inherits UnifiedSettingsTests
-
-        Friend Overrides ReadOnly Property OnboardedOptions As ImmutableArray(Of IOption2)
+        Friend Overrides ReadOnly Property OnboardedOptions As ImmutableArray(Of (unifiedSettingsPath As String, roslynOption As IOption2))
             Get
-                Return ImmutableArray.Create(Of IOption2)(
-                CompletionOptionsStorage.TriggerOnTypingLetters,
-                CompletionOptionsStorage.TriggerOnDeletion,
-                CompletionViewOptionsStorage.HighlightMatchingPortionsOfCompletionListItems,
-                CompletionViewOptionsStorage.ShowCompletionItemFilters,
-                CompletionOptionsStorage.SnippetsBehavior,
-                CompletionOptionsStorage.EnterKeyBehavior,
-                CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces,
-                CompletionViewOptionsStorage.EnableArgumentCompletionSnippets
-                )
+                Return ImmutableArray.Create(Of (String, IOption2))(
+                ("textEditor.basic.intellisense.triggerCompletionOnTypingLetters", CompletionOptionsStorage.TriggerOnTypingLetters),
+                ("textEditor.basic.intellisense.triggerCompletionOnDeletion", CompletionOptionsStorage.TriggerOnDeletion),
+                ("textEditor.basic.intellisense.highlightMatchingPortionsOfCompletionListItems", CompletionViewOptionsStorage.HighlightMatchingPortionsOfCompletionListItems),
+                ("textEditor.basic.intellisense.showCompletionItemFilters", CompletionViewOptionsStorage.ShowCompletionItemFilters),
+                ("textEditor.basic.intellisense.snippetsBehavior", CompletionOptionsStorage.SnippetsBehavior),
+                ("textEditor.basic.intellisense.returnKeyCompletionBehavior", CompletionOptionsStorage.EnterKeyBehavior),
+                ("textEditor.basic.intellisense.showCompletionItemsFromUnimportedNamespaces", CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces),
+                ("textEditor.basic.intellisense.enableArgumentCompletionSnippets", CompletionViewOptionsStorage.EnableArgumentCompletionSnippets))
             End Get
         End Property
 
@@ -59,10 +57,6 @@ Namespace Roslyn.VisualStudio.VisualBasic.UnitTests.UnifiedSettings
                 Return EnterKeyRule.Always
             ElseIf [option].Equals(CompletionOptionsStorage.TriggerOnDeletion) Then
                 ' CompletionOptionsStorage.TriggerOnDeletion's default value is null.
-                ' It's enabled by default for Visual Basic
-                Return True
-            ElseIf [option].Equals(CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces) Then
-                ' CompletionOptionsStorage.ShowItemsFromUnimportedNamespaces's default value is null
                 ' It's enabled by default for Visual Basic
                 Return True
             ElseIf [option].Equals(CompletionViewOptionsStorage.EnableArgumentCompletionSnippets) Then
