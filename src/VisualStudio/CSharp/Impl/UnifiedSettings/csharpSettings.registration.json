@@ -174,11 +174,6 @@
           "text": "@Experimental_feature;..\\Microsoft.VisualStudio.LanguageServices.dll"
         }
       ],
-      "alternateDefault": {
-        // WorkspaceConfigurationOptionsStorage.OfferRemoveUnusedReferencesFeatureFlag
-        "flagName": "Roslyn.RemoveUnusedReferences",
-        "default": false
-      },
       "default": true,
       "placements": [
         {
