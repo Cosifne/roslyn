@@ -106,7 +106,7 @@ namespace Roslyn.VisualStudio.CSharp.UnitTests.UnifiedSettings
             using var pkgdefFileStream = typeof(CSharpIntellisenseUnifiedSettingsTests).GetTypeInfo().Assembly.GetManifestResourceStream("Roslyn.VisualStudio.CSharp.UnitTests.PackageRegistration.pkgdef");
             using var pkgdefReader = new StreamReader(pkgdefFileStream);
             var pkgdefFile = await pkgdefReader.ReadToEndAsync().ConfigureAwait(false);
-            TestUnifiedSettingsCategory(registrationJsonObject, categoryBasePath: "textEditor.csharp.intellisense", languageName: LanguageNames.CSharp, pkgdefFile);
+            TestUnifiedSettingsCategory(registrationJsonObject, categoryBasePaths: ["textEditor.csharp.intellisense"], languageName: LanguageNames.CSharp, pkgdefFile);
         }
     }
 }

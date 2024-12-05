@@ -32,9 +32,9 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Return [Enum].GetValues(type).Cast(Of Object).AsArray()
         End Function
 
-        Protected Sub TestUnifiedSettingsCategory(registrationJsonObject As JObject, categoryBasePath As String, languageName As String, pkdDefFile As String)
+        Protected Sub TestUnifiedSettingsCategory(registrationJsonObject As JObject, categoryBasePaths As String(), languageName As String, pkdDefFile As String)
             Dim actualAllSettings = registrationJsonObject.SelectToken($"$.properties").Children.OfType(Of JProperty).
-                Where(Function(setting) setting.Name.StartsWith(categoryBasePath)).
+                Where(Function(setting) categoryBasePaths.Any(Function(basePath) setting.Name.StartsWith(basePath))).
                 Select(Function(setting) setting.Name).
                 OrderBy(Function(name) name).
                 ToArray()
@@ -73,6 +73,10 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Dim actual = match.Substring(match.Length - 16)
             ' Please change the CacheTag value in pkddef if you modify the unified settings registration file
             Assert.Equal(expectedCacheTagValue, actual)
+        End Sub
+
+        Private Shared Sub VerifyDefault(registrationJsonObject As JObject, unifiedSettingPath As String, [option] As IOption2)
+
         End Sub
 
         Private Shared Sub VerifySettings(registrationJsonObject As JObject, unifiedSettingPath As String, [option] As IOption2, languageName As String)
@@ -143,10 +147,14 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Dim path = input.SelectToken("path").ToString()
             Dim configName = [option].Definition.ConfigName
             Dim visualStudioStorage = Storages(configName)
-            If TypeOf visualStudioStorage Is VisualStudioOptionStorage.RoamingProfileStorage Then
-                Dim roamingProfileStorage = DirectCast(visualStudioStorage, VisualStudioOptionStorage.RoamingProfileStorage)
+            If TypeOf visualStudioStorage Is RoamingProfileStorage Then
+                Dim roamingProfileStorage = DirectCast(visualStudioStorage, RoamingProfileStorage)
                 Assert.Equal("SettingsManager", store)
                 Assert.Equal(roamingProfileStorage.Key.Replace("%LANGUAGE%", GetSubstituteLanguage(languageName)), path)
+            ElseIf TypeOf visualStudioStorage Is LocalUserProfileStorage Then
+                Dim localUserProfileStorage = DirectCast(visualStudioStorage, LocalUserProfileStorage)
+                Assert.Equal("VsUserSettingsRegistry", store)
+                Assert.Equal(String.Join("\", localUserProfileStorage.Path, localUserProfileStorage.Key), path)
             Else
                 ' Not supported yet
                 Throw ExceptionUtilities.Unreachable

@@ -81,7 +81,7 @@ Namespace Roslyn.VisualStudio.VisualBasic.UnitTests.UnifiedSettings
                             Assert.Equal("Visual Basic", categoriesTitle)
                             Dim optionPageId = registrationJsonObject.SelectToken("$.categories['textEditor.basic.intellisense'].legacyOptionPageId")
                             Assert.Equal(Guids.VisualBasicOptionPageIntelliSenseIdString, optionPageId.ToString())
-                            TestUnifiedSettingsCategory(registrationJsonObject, categoryBasePath:="textEditor.basic.intellisense", languageName:=LanguageNames.VisualBasic, pkgDefFile)
+                            TestUnifiedSettingsCategory(registrationJsonObject, categoryBasePaths:=New String() {"textEditor.basic.intellisense"}, languageName:=LanguageNames.VisualBasic, pkgDefFile)
                         End Using
                     End Using
                 End Using

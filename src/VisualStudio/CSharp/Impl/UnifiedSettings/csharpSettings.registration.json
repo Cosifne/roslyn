@@ -124,7 +124,7 @@
       }
     },
     // RemoteHostOptionsStorage.OOP64Bit
-    "textEditor.csharpAndVisualBasic.analysis.codeAnalysisInSeparateProcess": {
+    "textEditor.csharpAndVisualBasic.advanced.analysis.codeAnalysisInSeparateProcess": {
       "title": "@Run_code_analysis_in_separate_process;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "boolean",
       "default": true,
@@ -145,7 +145,7 @@
       }
     },
     // WorkspaceConfigurationOptionsStorage.ReloadChangedAnalyzerReferences
-    "textEditor.csharpAndVisualBasic.analysis.reloadChangedAnalyzerReferences": {
+    "textEditor.csharpAndVisualBasic.advanced.analysis.reloadChangedAnalyzerReferences": {
       "title": "@Automatically_reload_updated_analyzers_and_generators;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "boolean",
       "default": true,
@@ -166,7 +166,7 @@
       }
     },
     // FeatureOnOffOptions.OfferRemoveUnusedReferences
-    "textEditor.csharpAndVisualBasic.analysis.offerRemoveUnusedReferences": {
+    "textEditor.csharpAndVisualBasic.advanced.analysis.offerRemoveUnusedReferences": {
       "title": "@Show_Remove_Unused_References_command_in_Solution_Explorer;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "boolean",
       "messages": [
@@ -196,7 +196,7 @@
       }
     },
     // VisualStudioLoggingOptionsStorage.EnableFileLoggingForDiagnostics
-    "textEditor.csharpAndVisualBasic.analysis.enableFileLoggingForDiagnostics": {
+    "textEditor.csharpAndVisualBasic.advanced.analysis.enableFileLoggingForDiagnostics": {
       "title": "@Enable_file_logging_for_diagnostics;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "messages": [
         {
@@ -221,7 +221,7 @@
       }
     },
     // FeatureOnOffOptions.SkipAnalyzersForImplicitlyTriggeredBuilds
-    "textEditor.csharpAndVisualBasic.analysis.skipAnalyzersForImplicitlyTriggeredBuilds": {
+    "textEditor.csharpAndVisualBasic.advanced.analysis.skipAnalyzersForImplicitlyTriggeredBuilds": {
       "title": "@Skip_analyzers_for_implicitly_triggered_builds;..\\Microsoft.VisualStudio.LanguageServices.dll",
       "type": "boolean",
       "default": true,
