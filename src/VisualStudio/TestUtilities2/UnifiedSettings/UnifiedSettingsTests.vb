@@ -76,7 +76,28 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Assert.Equal(expectedCacheTagValue, actual)
         End Sub
 
-        Private Shared Sub VerifyDefaultAndAlternativeDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject, unifiedSettingPath As String)
+        Private Shared Sub VerifyDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject, unifiedSettingPath As String)
+            Dim defaultValue = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingPath}').default").ToString()
+            Dim optionDefaultValue = unifiedSettingOption.RoslynOption.DefaultValue
+            If optionDefaultValue Is Nothing Then
+                ' The option default value  is null, it means this option is backed-up by a featureFlag. The registration looks like
+                ' "optionExp": {
+                '    "default": false
+                '    "alternateDefault": {
+                '       "flagName": "optionExpFeatureFlag",
+                '       "default" : true
+                '    }
+                ' }
+                ' In Unified Settings, the semantics is:
+                ' When 'optionExpFeatureFlag' is on, 'true' will override 'false' as the default value.
+                ' In our code, we usually use this pattern to decide if the feature is on:
+                ' `var isEnable = globalOption.GetOption(optionExp) ?? globalOption.GetOption(optionExpFeatureFlag);
+                ' This al
+                ' So here the real default value in registration file should be: whether the feature is on by default.
+                Assert.Equal(unifiedSettingOption.RoslynOption)
+            Else
+                Assert.Equal(optionDefaultValue.ToString(), defaultValue)
+            End If
         End Sub
 
         Private Shared Sub VerifyAlternativeDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject, unifiedSettingPath As String)
@@ -87,7 +108,8 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
                 Assert.Equal(unifiedSettingOption.FeatureFlagSetting.GetStoragePath(), actualPathInSettings)
 
                 Dim actualAlternateDefaultInSettings = alternateDefault.SelectToken("default")
-                Assert.Equal(unifiedSettingOption.FeatureFlagSetting.OptionValueWhenExperimentIsOn, actualAlternateDefaultInSettings)
+                Assert.Equal(unifiedSettingOption.FeatureFlagSetting.OptionValueWhenExperimentIsOn, actualAlternateDefaultInSettings.ToString())
+
             Else
                 Assert.Null(alternateDefault)
             End If

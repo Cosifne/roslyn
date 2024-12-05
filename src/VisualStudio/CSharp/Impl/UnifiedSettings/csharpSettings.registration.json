@@ -175,7 +175,7 @@
         }
       ],
       "alternateDefault": {
-        // WorkspaceConfigurationOptionsStorage.ReloadChangedAnalyzerReferencesFeatureFlag
+        // WorkspaceConfigurationOptionsStorage.OfferRemoveUnusedReferencesFeatureFlag
         "flagName": "Roslyn.RemoveUnusedReferences",
         "default": false
       },

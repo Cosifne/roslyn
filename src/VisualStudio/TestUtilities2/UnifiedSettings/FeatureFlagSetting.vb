@@ -8,9 +8,9 @@ Imports Microsoft.VisualStudio.LanguageServices.Options.VisualStudioOptionStorag
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
     Friend Class FeatureFlagSetting
         Public Property FeatureFlagOption As IOption2
-        Public Property OptionValueWhenExperimentIsOn As Object
+        Public Property OptionValueWhenExperimentIsOn As String
 
-        Public Sub New(featureFlagOption As IOption2, optionValueWhenExperimentIsOn As Object)
+        Public Sub New(featureFlagOption As IOption2, optionValueWhenExperimentIsOn As String)
             Me.FeatureFlagOption = featureFlagOption
             Me.OptionValueWhenExperimentIsOn = optionValueWhenExperimentIsOn
         End Sub
