@@ -8,17 +8,18 @@ Imports System.Text
 Imports System.Text.RegularExpressions
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.Options
-Imports Microsoft.VisualStudio.LanguageServices.Options
 Imports Microsoft.VisualStudio.LanguageServices.Options.VisualStudioOptionStorage
 Imports Newtonsoft.Json.Linq
 Imports Roslyn.Test.Utilities
 Imports Roslyn.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
-    Partial Public MustInherit Class UnifiedSettingsTests
+    Public MustInherit Class UnifiedSettingsTests
 
         ' Onboarded options in Unified Settings registration file
         Friend MustOverride ReadOnly Property OnboardedOptions As ImmutableArray(Of (unifiedSettingsPath As String, roslynOption As IOption2))
+
+        Friend MustOverride ReadOnly Property OnboardedOptions2 As ImmutableArray(Of UnifiedSettingsOption)
 
         ' Override this method to if the option use different default value.
         Friend Overridable Function GetOptionsDefaultValue([option] As IOption2) As Object
@@ -45,9 +46,9 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
 
             Assert.Equal(expectedAllSettings, actualAllSettings)
 
-            For Each settingNameToOption In OnboardedOptions
-                Dim unifiedSettingsPath = settingNameToOption.unifiedSettingsPath
-                Dim onboardedOption = settingNameToOption.roslynOption
+            For Each unifiedSettingOption In OnboardedOptions2
+                Dim unifiedSettingsPath = unifiedSettingOption.UnifiedSettingsPath
+                Dim onboardedOption = unifiedSettingOption.RoslynOption
 
                 VerifyType(registrationJsonObject, unifiedSettingsPath, onboardedOption)
 
@@ -75,8 +76,21 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Assert.Equal(expectedCacheTagValue, actual)
         End Sub
 
-        Private Shared Sub VerifyDefault(registrationJsonObject As JObject, unifiedSettingPath As String, [option] As IOption2)
+        Private Shared Sub VerifyDefaultAndAlternativeDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject, unifiedSettingPath As String)
+        End Sub
 
+        Private Shared Sub VerifyAlternativeDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject, unifiedSettingPath As String)
+            Dim alternateDefault = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingPath}').alternateDefault")
+            If unifiedSettingOption.FeatureFlagSetting IsNot Nothing Then
+                Assert.NotNull(alternateDefault)
+                Dim actualPathInSettings = alternateDefault.SelectToken("flagName")
+                Assert.Equal(unifiedSettingOption.FeatureFlagSetting.GetStoragePath(), actualPathInSettings)
+
+                Dim actualAlternateDefaultInSettings = alternateDefault.SelectToken("default")
+                Assert.Equal(unifiedSettingOption.FeatureFlagSetting.OptionValueWhenExperimentIsOn, actualAlternateDefaultInSettings)
+            Else
+                Assert.Null(alternateDefault)
+            End If
         End Sub
 
         Private Shared Sub VerifySettings(registrationJsonObject As JObject, unifiedSettingPath As String, [option] As IOption2, languageName As String)

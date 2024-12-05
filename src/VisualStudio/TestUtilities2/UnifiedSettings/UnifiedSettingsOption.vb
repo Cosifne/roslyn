@@ -20,10 +20,11 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
         ''' Onboarded Roslyn option.
         ''' </summary>
         Public Property RoslynOption As IOption2
+
         ''' <summary>
-        ''' FeatureFlag option if the onboarded option is in experiment.
+        ''' FeatureFlag option and the option value when the featureFlag is on, if the onboarded option is in experiment.
         ''' </summary>
-        Public Property FeatureFlag As IOption2
+        Public Property FeatureFlagSetting As FeatureFlagSetting
 
         ''' <summary>
         ''' If the option needs restart VS to take effect.
@@ -54,5 +55,17 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
         ''' The enableWhen condition, when set to true, this onboarded option will be enabled in unifiedSettings page.
         ''' </summary>
         Public Property EnabledWhenOptionIsTrue As IOption2
+
+        Public Sub New(unifiedSettingsPath As String, roslynOption As IOption2, featureFlagSetting As FeatureFlagSetting, requireRestart As Boolean, title As String, enumLabels As ImmutableArray(Of String), messages As ImmutableArray(Of String), placements As ImmutableArray(Of String), enabledWhenOptionIsTrue As IOption2)
+            Me.UnifiedSettingsPath = unifiedSettingsPath
+            Me.RoslynOption = roslynOption
+            Me.FeatureFlagSetting = featureFlagSetting
+            Me.RequireRestart = requireRestart
+            Me.Title = title
+            Me.EnumLabels = enumLabels
+            Me.Messages = messages
+            Me.Placements = placements
+            Me.EnabledWhenOptionIsTrue = enabledWhenOptionIsTrue
+        End Sub
     End Class
 End Namespace
