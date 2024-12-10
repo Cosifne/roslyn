@@ -7,7 +7,7 @@ Imports Microsoft.CodeAnalysis.Options
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
     ''' <summary>
-    ''' Helper class to record all the unified settings information in unit test
+    ''' Helper class to record all the unified settings information covered in unit test
     ''' </summary>
     Friend Class UnifiedSettingsOption
 

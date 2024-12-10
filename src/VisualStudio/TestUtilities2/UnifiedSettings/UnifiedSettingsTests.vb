@@ -3,18 +3,30 @@
 ' See the LICENSE file in the project root for more information.
 
 Imports System.Collections.Immutable
+Imports System.Globalization
 Imports System.IO.Hashing
+Imports System.Reflection
+Imports System.Resources
 Imports System.Text
 Imports System.Text.RegularExpressions
 Imports Microsoft.CodeAnalysis
 Imports Microsoft.CodeAnalysis.Options
+Imports Microsoft.VisualStudio.LanguageServices.CSharp
+Imports Microsoft.VisualStudio.LanguageServices.CSharp.LanguageService
 Imports Microsoft.VisualStudio.LanguageServices.Options.VisualStudioOptionStorage
+Imports Microsoft.VisualStudio.LanguageServices.VisualBasic
+Imports Moq
 Imports Newtonsoft.Json.Linq
 Imports Roslyn.Test.Utilities
 Imports Roslyn.Utilities
 
 Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
     Public MustInherit Class UnifiedSettingsTests
+        Private Const CSharpLanguageServiceDllName As String = "Microsoft.VisualStudio.LanguageServices.CSharp.dll"
+
+        Private Const VisualBasicLanguageServiceDllName As String = "Microsoft.VisualStudio.LanguageServices.VisualBasic.dll"
+
+        Private Const LanguageServiceDllName As String = "Microsoft.VisualStudio.LanguageServices.dll"
 
         ' Onboarded options in Unified Settings registration file
         Friend MustOverride ReadOnly Property OnboardedOptions As ImmutableArray(Of (unifiedSettingsPath As String, roslynOption As IOption2))
@@ -49,12 +61,15 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             For Each unifiedSettingOption In OnboardedOptions2
                 Dim unifiedSettingsPath = unifiedSettingOption.UnifiedSettingsPath
                 Dim onboardedOption = unifiedSettingOption.RoslynOption
+                ' 1. Verify title
+                Dim actualTitle = registrationJsonObject.SelectToken($"$.properties['{unifiedSettingsPath}'].title")
+                Assert.NotNull(actualTitle)
+                VerifyString(actualTitle.ToString(), unifiedSettingOption.Title)
 
-                VerifyType(registrationJsonObject, unifiedSettingsPath, onboardedOption)
-
-                Dim expectedDefaultValue = GetOptionsDefaultValue(onboardedOption)
-                Dim actualDefaultValue = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingsPath}').default")
-                Assert.Equal(expectedDefaultValue.ToString().ToCamelCase(), actualDefaultValue.ToString().ToCamelCase())
+                ' 2. Verify Type
+                Dim actualType = registrationJsonObject.SelectToken($"$.properties['{unifiedSettingsPath}'].type")
+                Assert.NotNull(actualType)
+                VerifyType(registrationJsonObject, onboardedOption)
 
                 If onboardedOption.Type.IsEnum Then
                     ' Enum settings contains special setup.
@@ -62,6 +77,10 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
                 Else
                     VerifySettings(registrationJsonObject, unifiedSettingsPath, onboardedOption, languageName)
                 End If
+
+                Dim expectedDefaultValue = GetOptionsDefaultValue(onboardedOption)
+                Dim actualDefaultValue = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingsPath}').default")
+                Assert.Equal(expectedDefaultValue.ToString().ToCamelCase(), actualDefaultValue.ToString().ToCamelCase())
             Next
 
             Dim registrationFileBytes = ASCIIEncoding.ASCII.GetBytes(registrationJsonObject.ToString())
@@ -76,7 +95,41 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             Assert.Equal(expectedCacheTagValue, actual)
         End Sub
 
-        Private Shared Sub VerifyDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject, unifiedSettingPath As String)
+        Private Shared Sub VerifyString(actualString As String, expectedString As String)
+            Dim resourcesIdentifier = actualString.Substring(0, actualString.IndexOf(";"))
+            Dim resources = actualString.Substring(actualString.IndexOf(";") + 1)
+            Dim resourceDll As String = Nothing
+            ' We reference the string in two ways
+            ' 1. "@102;{13c3bbb4-f18f-4111-9f54-a0fb010d9194}" where the guid is the package guid. It is the recommended way to locate string.
+            ' 2. "@Analysis;..\\Microsoft.VisualStudio.LanguageServices.dll". It is a special way we asked to locate string
+            Dim packageGuid As Guid = Nothing
+            If Guid.TryParse(resources, packageGuid) Then
+                If packageGuid = Guids.CSharpPackageId Then
+                    resourceDll = CSharpLanguageServiceDllName
+                ElseIf packageGuid = Guids.VisualBasicPackageId Then
+                    resourceDll = VisualBasicLanguageServiceDllName
+                End If
+            Else
+                resourceDll = actualString.Substring(actualString.IndexOf("\\") + 1)
+            End If
+
+            Dim localizedString As String = Nothing
+            Dim culture = New CultureInfo("en")
+            Select Case resourceDll
+                Case CSharpLanguageServiceDllName
+                    localizedString = CSharpVSResources.ResourceManager.GetString(resourcesIdentifier, culture)
+                Case VisualBasicLanguageServiceDllName
+                    localizedString = BasicVSResources.ResourceManager.GetString(resourcesIdentifier, culture)
+                Case LanguageServiceDllName
+                    localizedString = ServicesVSResources.ResourceManager.GetString(resourcesIdentifier, culture)
+                Case Else
+                    Assert.Fail($"Resources should only the fetched from {CSharpLanguageServiceDllName}, {VisualBasicLanguageServiceDllName} or {LanguageServiceDllName}.")
+            End Select
+            Assert.Equal(expectedString, localizedString)
+        End Sub
+
+        Private Shared Sub VerifyDefault(unifiedSettingOption As UnifiedSettingsOption, registrationJsonObject As JObject)
+            Dim unifiedSettingPath = unifiedSettingOption.UnifiedSettingsPath
             Dim defaultValue = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingPath}').default").ToString()
             Dim optionDefaultValue = unifiedSettingOption.RoslynOption.DefaultValue
             If optionDefaultValue Is Nothing Then
@@ -92,9 +145,11 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
                 ' When 'optionExpFeatureFlag' is on, 'true' will override 'false' as the default value.
                 ' In our code, we usually use this pattern to decide if the feature is on:
                 ' `var isEnable = globalOption.GetOption(optionExp) ?? globalOption.GetOption(optionExpFeatureFlag);
-                ' This al
-                ' So here the real default value in registration file should be: whether the feature is on by default.
-                Assert.Equal(unifiedSettingOption.RoslynOption)
+                Dim alternateDefault = registrationJsonObject.SelectToken($"$.properties('{unifiedSettingPath}').alternateDefault")
+                Assert.NotNull(alternateDefault)
+
+                Assert.NotEqual(unifiedSettingOption.RoslynOption)
+
             Else
                 Assert.Equal(optionDefaultValue.ToString(), defaultValue)
             End If
@@ -126,8 +181,7 @@ Namespace Microsoft.VisualStudio.LanguageServices.UnitTests.UnifiedSettings
             VerifyEnumMigration(registrationJsonObject, unifiedSettingPath, [option], languageName)
         End Sub
 
-        Private Shared Sub VerifyType(registrationJsonObject As JObject, unifiedSettingPath As String, [option] As IOption2)
-            Dim actualType = registrationJsonObject.SelectToken($"$.properties['{unifiedSettingPath}'].type")
+        Private Shared Sub VerifyType(actualType As JToken, [option] As IOption2)
             Dim expectedType = [option].Definition.Type
             If expectedType.IsEnum Then
                 ' Enum is string in json
